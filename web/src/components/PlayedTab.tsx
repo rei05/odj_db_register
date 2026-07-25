@@ -5,16 +5,31 @@ import type { Play } from '../lib/types.ts'
 
 const SAMPLE = '硝子ドール\n残酷な天使のテーゼ\nふわふわ時間'
 
+const SHOW_AT_FIRST = 8
+
 function History({ plays }: { plays: Play[] }) {
+  const [all, setAll] = useState(false)
+  const shown = all ? plays : plays.slice(0, SHOW_AT_FIRST)
   return (
-    <ul className="history">
-      {plays.map((p, i) => (
-        <li key={i}>
-          第{p.eventNo}回（{p.eventDate}）・{p.dj}
-          {p.trackNo ? ` ${p.trackNo}曲目` : ''} — {p.title}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="history">
+        {shown.map((p, i) => (
+          <li key={i}>
+            第{p.eventNo}回（{p.eventDate}）・{p.dj}
+            {p.trackNo ? ` ${p.trackNo}曲目` : ''} — {p.title}
+          </li>
+        ))}
+      </ul>
+      {plays.length > SHOW_AT_FIRST && (
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => setAll((v) => !v)}
+        >
+          {all ? '折りたたむ' : `残り ${plays.length - SHOW_AT_FIRST} 件を表示`}
+        </button>
+      )}
+    </>
   )
 }
 
@@ -40,8 +55,11 @@ export default function PlayedTab({ data }: { data: Loaded }) {
         <h2>かけたい曲が既出か調べる</h2>
         <p className="result-count">
           1行に1曲ずつ貼り付けてください。表記ゆれ（全角半角・記号・スペース）は
-          吸収します。リミックス表記を外した原曲名でも照合するので、
-          「別のリミックスなら過去にかかっている」ケースも拾えます。
+          吸収します。確かさの高い順に、曲名がそのまま一致する
+          <strong>完全一致</strong>、リミックス表記を外すと一致する
+          <strong>原曲一致</strong>、どちらかがもう一方を含む
+          <strong>部分一致</strong>の3段階で出します。
+          「硝子」のような一部だけでも構いません（2文字以上、漢字なら1文字でも）。
         </p>
         <textarea
           className="field"
@@ -55,7 +73,10 @@ export default function PlayedTab({ data }: { data: Loaded }) {
       {results.length > 0 && (
         <div className="card">
           {results.map((r, i) => {
-            const isNew = r.exact.length === 0 && r.sameBase.length === 0
+            const isNew =
+              r.exact.length === 0 &&
+              r.sameBase.length === 0 &&
+              r.partial.length === 0
             return (
               <div className="played-item" key={i}>
                 <p className="played-query">{r.query}</p>
@@ -78,6 +99,21 @@ export default function PlayedTab({ data }: { data: Loaded }) {
                       原曲一致（別リミックス）— {r.sameBase.length} 回
                     </p>
                     <History plays={r.sameBase} />
+                  </div>
+                )}
+                {r.partial.length > 0 && (
+                  <div
+                    className={
+                      r.exact.length > 0 || r.sameBase.length > 0
+                        ? 'history-sub'
+                        : undefined
+                    }
+                  >
+                    <p className="played-verdict">
+                      部分一致 — {r.partial.length} 回
+                      <span className="muted">（別の曲かもしれません）</span>
+                    </p>
+                    <History plays={r.partial} />
                   </div>
                 )}
               </div>

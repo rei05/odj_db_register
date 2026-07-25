@@ -122,11 +122,36 @@ export function perEvent(plays: Play[]): EventSummary[] {
 
 export interface PlayedResult {
   query: string
+  /** 曲名がそのまま一致 */
   exact: Play[]
+  /** リミックス表記を外すと一致 */
   sameBase: Play[]
+  /** どちらかがもう一方を含む */
+  partial: Play[]
 }
 
-/** 既出判定。完全一致と「同じ原曲の別リミックス」を分けて返す。 */
+/**
+ * 部分一致を試してよい問い合わせか。
+ *
+ * 短すぎる語は何にでも当たって役に立たない。ただし絞り込める度合いは文字種で
+ * 大きく違い、実データ 2,410 曲では漢字1文字なら「夢」5件・「恋」36件に収まる
+ * のに対し、かな・英字1文字は「ラ」173件・「e」1,195件と使い物にならない。
+ * そこで漢字だけ1文字を許し、それ以外は2文字以上を求める。
+ */
+export function canPartialMatch(key: string): boolean {
+  if (key.length >= 2) return true
+  return key.length === 1 && /\p{Script=Han}/u.test(key)
+}
+
+/**
+ * 既出判定。確かさの高い順に3段階へ振り分ける。
+ *
+ * 1. 完全一致 … 曲名が（表記ゆれを均したうえで）そのまま一致
+ * 2. 原曲一致 … リミックス表記を外すと一致。別アレンジでかかっている
+ * 3. 部分一致 … どちらかがもう一方を含む。曲名うろ覚えや副題違いを拾う
+ *
+ * 同じプレイが複数の段に出ることはない。
+ */
 export function checkPlayed(plays: Play[], queries: string[]): PlayedResult[] {
   const byKey = new Map<string, Play[]>()
   const byBase = new Map<string, Play[]>()
@@ -147,14 +172,31 @@ export function checkPlayed(plays: Play[], queries: string[]): PlayedResult[] {
     a.eventNo - b.eventNo || (a.trackNo ?? 0) - (b.trackNo ?? 0)
 
   return queries.map((query) => {
-    const exact = byKey.get(normKey(query)) ?? []
+    const key = normKey(query)
+    const exact = byKey.get(key) ?? []
+    const taken = new Set(exact)
+
     const sameBase = (byBase.get(baseKey(query)) ?? []).filter(
-      (p) => !exact.includes(p),
+      (p) => !taken.has(p),
     )
+    for (const p of sameBase) taken.add(p)
+
+    // 「硝子」で「硝子ドール」を、逆に副題まで打った長い曲名で
+    // 短く登録されている曲を拾う
+    const partial = canPartialMatch(key)
+      ? plays.filter(
+          (p) =>
+            !taken.has(p) &&
+            p.key.length > 0 &&
+            (p.key.includes(key) || key.includes(p.key)),
+        )
+      : []
+
     return {
       query,
       exact: [...exact].sort(order),
       sameBase: [...sameBase].sort(order),
+      partial: partial.sort(order),
     }
   })
 }

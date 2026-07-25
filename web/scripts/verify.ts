@@ -65,7 +65,41 @@ check(
 const [unknown] = checkPlayed(plays, ['この曲は絶対にかかっていないはず12345'])
 check(
   '未プレイの曲は該当なしになる',
-  unknown.exact.length === 0 && unknown.sameBase.length === 0,
+  unknown.exact.length === 0 &&
+    unknown.sameBase.length === 0 &&
+    unknown.partial.length === 0,
+)
+
+// 部分一致
+const [fragment] = checkPlayed(plays, ['硝子'])
+check(
+  '部分一致「硝子」が硝子ドールを拾う',
+  fragment.partial.some((p) => p.title.includes('硝子ドール')),
+  `部分一致 ${fragment.partial.length} 件`,
+)
+check(
+  '部分一致は完全一致・原曲一致と重複しない',
+  checkPlayed(plays, ['硝子ドール']).every((r) => {
+    const seen = new Set([...r.exact, ...r.sameBase, ...r.partial])
+    return seen.size === r.exact.length + r.sameBase.length + r.partial.length
+  }),
+)
+const [longer] = checkPlayed(plays, ['ふわふわ時間 けいおん 劇中歌バージョン'])
+check(
+  '長く打っても、短く登録されている曲を部分一致で拾う',
+  [...longer.exact, ...longer.sameBase, ...longer.partial].some(
+    (p) => p.title === 'ふわふわ時間',
+  ),
+)
+const [kana1] = checkPlayed(plays, ['ラ'])
+check('かな1文字では部分一致を試さない', kana1.partial.length === 0)
+const [latin1] = checkPlayed(plays, ['e'])
+check('英字1文字では部分一致を試さない', latin1.partial.length === 0)
+const [kanji1] = checkPlayed(plays, ['恋'])
+check(
+  '漢字1文字なら部分一致する',
+  kanji1.partial.length > 0 && kanji1.partial.every((p) => p.title.includes('恋')),
+  `${kanji1.partial.length} 件`,
 )
 
 // 10. セトリ（play順）
