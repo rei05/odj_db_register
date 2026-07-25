@@ -15,9 +15,10 @@ import sqlite3
 import tomllib
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 from . import drive, normalize as nz, readers, xlsx
 from .crawl import DJ_PREFIX_RE
@@ -106,7 +107,7 @@ def load_master_db(fixes: list[dict]) -> list[dict]:
 
     out: list[dict] = []
     for row in rows[1:]:
-        rec = {
+        rec: dict[str, Any] = {
             col: nz.clean(row[i]) if i < len(row) else None
             for i, col in enumerate(MASTER_COLUMNS)
         }
@@ -140,14 +141,32 @@ def load_master_db(fixes: list[dict]) -> list[dict]:
 # --------------------------------------------------------------------------
 
 
-def read_dj_files(dj: dict, ov: Overrides) -> tuple[list[dict], dict]:
+@dataclass
+class ChosenFile:
+    id: str
+    name: str
+    kind: str
+    detail: str
+
+
+@dataclass
+class ReadInfo:
+    """どのファイルを採ってどれを見送ったか。レポートに出す。"""
+
+    tried: list[dict] = field(default_factory=list)
+    skipped: list[dict] = field(default_factory=list)
+    chosen: ChosenFile | None = None
+
+
+def read_dj_files(dj: dict, ov: Overrides) -> tuple[list[dict], ReadInfo]:
     """DJ の候補ファイルを全部読み、最も内容の濃いものを採用する。"""
-    info = {"tried": [], "chosen": None, "skipped": []}
-    best: tuple[tuple[int, ...], list[dict], dict] = ((0, 0, 0, 0), [], {})
+    info = ReadInfo()
+    best_score: tuple[int, ...] = (0, 0, 0, 0)
+    best_records: list[dict] = []
 
     for entry in dj["setlists"]:
         if entry["id"] in ov.skips:
-            info["skipped"].append(
+            info.skipped.append(
                 {"name": entry["name"], "reason": ov.skips[entry["id"]]["reason"]}
             )
             continue
@@ -156,12 +175,10 @@ def read_dj_files(dj: dict, ov: Overrides) -> tuple[list[dict], dict]:
             path = drive.fetch(item, RAW_DIR)
             result = readers.read(path, item.id)
         except Exception as exc:  # ネットワーク・破損ファイル
-            info["skipped"].append({"name": entry["name"], "reason": f"読込失敗: {exc}"})
+            info.skipped.append({"name": entry["name"], "reason": f"読込失敗: {exc}"})
             continue
         if result.skipped_reason:
-            info["skipped"].append(
-                {"name": entry["name"], "reason": result.skipped_reason}
-            )
+            info.skipped.append({"name": entry["name"], "reason": result.skipped_reason})
             continue
         drop_titles = ov.drop_rows.get(item.id)
         if drop_titles:
@@ -169,22 +186,19 @@ def read_dj_files(dj: dict, ov: Overrides) -> tuple[list[dict], dict]:
                 r for r in result.records if r.get(nz.TITLE) not in drop_titles
             ]
 
-        info["tried"].append({"name": entry["name"], "rows": len(result.records)})
+        info.tried.append({"name": entry["name"], "rows": len(result.records)})
         score = readers._score(result.records)
-        if score > best[0]:
-            best = (
-                score,
-                result.records,
-                {
-                    "id": item.id,
-                    "name": item.name,
-                    "kind": result.source_kind,
-                    "detail": result.detail,
-                },
+        if score > best_score:
+            best_score = score
+            best_records = result.records
+            info.chosen = ChosenFile(
+                id=item.id,
+                name=item.name,
+                kind=result.source_kind,
+                detail=result.detail,
             )
 
-    info["chosen"] = best[2] or None
-    return best[1], info
+    return best_records, info
 
 
 def infer_from_filenames(dj: dict) -> list[dict]:
@@ -237,12 +251,12 @@ def build(*, infer_filenames: bool = False) -> tuple[list[Play], dict]:
         master_rows = master_by_pair.get(pair, [])
         master_by_track = {r["track_no"]: r for r in master_rows if r["track_no"]}
 
-        for skipped in info["skipped"]:
+        for skipped in info.skipped:
             report["skipped_files"].append(
                 {"event": event["no"], "dj": dj["dj"], **skipped}
             )
 
-        source_kind = info["chosen"]["kind"] if info["chosen"] else None
+        source_kind = info.chosen.kind if info.chosen else None
         if not records and infer_filenames and not master_rows:
             records = infer_from_filenames(dj)
             if records:
@@ -272,8 +286,8 @@ def build(*, infer_filenames: bool = False) -> tuple[list[Play], dict]:
                         bpm=rec.get(nz.BPM),
                         year=rec.get(nz.YEAR),
                         note=rec.get(nz.NOTE),
-                        source_file_id=(info["chosen"] or {}).get("id"),
-                        source_file_name=(info["chosen"] or {}).get("name"),
+                        source_file_id=info.chosen.id if info.chosen else None,
+                        source_file_name=info.chosen.name if info.chosen else None,
                         source_kind=source_kind or "unknown",
                         confidence=CONFIDENCE.get(source_kind or "", "medium"),
                     )
@@ -281,7 +295,7 @@ def build(*, infer_filenames: bool = False) -> tuple[list[Play], dict]:
             report["from_file"].append(
                 {
                     "event": event["no"], "dj": dj["dj"], "rows": len(records),
-                    "file": (info["chosen"] or {}).get("name"),
+                    "file": info.chosen.name if info.chosen else None,
                     "kind": source_kind,
                     "master_rows": len(master_rows),
                 }
@@ -291,7 +305,7 @@ def build(*, infer_filenames: bool = False) -> tuple[list[Play], dict]:
                     {
                         "event": event["no"], "dj": dj["dj"],
                         "file_rows": len(records), "master_rows": len(master_rows),
-                        "file": (info["chosen"] or {}).get("name"),
+                        "file": info.chosen.name if info.chosen else None,
                     }
                 )
         elif master_rows:
@@ -489,9 +503,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--infer-from-filenames",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         help="セトリもマスターDBの行も無い DJ に限り、音源ファイル名から曲順と"
-        "曲名を推定する（confidence=low）",
+        "曲名を推定する（confidence=low、既定で有効）",
     )
     args = parser.parse_args()
 
