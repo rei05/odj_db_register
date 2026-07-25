@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# ダウンロードキャッシュ（Drive から再取得できる）
+data/raw/
+
+# 生成物
+out/
+
+.DS_Store

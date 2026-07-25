@@ -1,0 +1,2356 @@
+{
+ "root_folder_id": "1Ti5vLERqTNbK1WMLuTh1Xk_Y6o9ZL_Ud",
+ "crawled_at": "2026-07-25",
+ "events": [
+  {
+   "no": 1,
+   "date": "2022-03-12",
+   "folder": "第1回_20220312",
+   "folder_id": "1fC-uSW_DechkgpnnVLB-0FSvJf5ZZCbC",
+   "djs": [
+    {
+     "dj": "ha",
+     "folder": "ha",
+     "folder_id": "18ljXt0L50HHlLCEzPwDHWn9_Xxp4cIIs",
+     "play_order": null,
+     "setlists": [
+      {
+       "id": "1CiVgNxhFatd1p60x-ki7yL2lpG_js-ru",
+       "name": "list.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "SetList_miyahara.mp3"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "あちょ",
+     "folder_id": "1b9Kr-6H79fA_4bsrZCKcYYWsy01t5Ixk",
+     "play_order": null,
+     "setlists": [
+      {
+       "id": "1jMIFm2peKAx4dfA_Z6lO2Cf67963cLAiOYNcgpwkv6w",
+       "name": "お品書き",
+       "mime": "application/vnd.google-apps.document"
+      },
+      {
+       "id": "1K5seSG89rDYtB4uLMOQIibvoyWzi8jQP",
+       "name": "お品書き.txt",
+       "mime": "text/plain"
+      }
+     ],
+     "media_files": [
+      "0312 (21).mp3"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "あぴす",
+     "folder_id": "19nsqP_PT_vddPFK_EkvV7BYalz--5MHZ",
+     "play_order": null,
+     "setlists": [
+      {
+       "id": "1V_rIaCNx4EWFgF2HiDw0qUTyQiKMPJJsA-mWTuC7DWg",
+       "name": "セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "apissDJsetlist.mp3",
+      "スクリーンショット 2022-03-13 18.07.02.png"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "ふっちー",
+     "folder_id": "1IVv_fPksi3mKRB8QdoV_lCRFvyFCk02C",
+     "play_order": null,
+     "setlists": [],
+     "media_files": [
+      "DJotaku_Fuchi.wav",
+      "DJotakuセトリ_Fuchi.png"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "レイクン",
+     "folder_id": "1IqI0We29VNaCA68XOFhFFxsT0fAwkyX8",
+     "play_order": null,
+     "setlists": [
+      {
+       "id": "1g4wgtd9uijXY9GlwMt46nr2aTUOy2HuIDiDUgmXyN0w",
+       "name": "セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "オタクDJ大会 - 2022_03_10 1.25.wav",
+      "スクリーンショット 2022-03-13 18.01.06.png"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "神社の人",
+     "folder_id": "1oHvrqpSbDZS3o9PzGaoGre6Kj4hCg-N-",
+     "play_order": null,
+     "setlists": [],
+     "media_files": [
+      "0-マーシャル・マキシマイザー_8bit_.mp3",
+      "1-more_one_night.mp3",
+      "2-ReボカロMIX.mp3",
+      "3-Reアイカツ.mp3",
+      "4-koi_no_uta.mp3",
+      "5-Reアニソン.mp3",
+      "6-Re終末シリーズ.mp3",
+      "7-乙女解剖 (TeddyLoid Alllies Remix).mp3",
+      "8-ishinami.mp3",
+      "9-「宇宙よりも遠い場所」ED「ここから、ここから」(ヒゲドライバー Pico Pico Cover).mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 2,
+   "date": "2022-05-28",
+   "folder": "第2回_20220528",
+   "folder_id": "1qhqrgzD2XLiJKKNV7GVe463wyxjFfdWR",
+   "djs": [
+    {
+     "dj": "おかりん",
+     "folder": "01_おかりん",
+     "folder_id": "13kle9oS_gDirmQ6up8-mEJDkYp3ESYBO",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1Cej2919awwlMvZoBGqH6XstYrTJXmbJ8",
+       "name": "20220528_オタクDJ大会_おかりん_セトリ.pdf",
+       "mime": "application/pdf"
+      }
+     ],
+     "media_files": [
+      "20220528_オタクDJ大会_おかりん.mp3"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "02_ふっちー",
+     "folder_id": "1uUEfAqZk76OyockP6_GgBoDz9iA7AYTH",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1ofdu-m-uEtc9Mc1lAj8_eLNpOXJflzCh",
+       "name": "第2回オタクDJ_セトリ_Fuchi.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      " 第2回オタクDJ_Fuchi.wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "03_あぴす",
+     "folder_id": "1g_qtK_Tgnkofinukouz0iZk-UMvlsrzv",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1v3Et45c_Dt_Y33N1VJIccbkoo35ULIGDQhnJsqCdscs",
+       "name": "セトリ（あぴす）",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "OtakuDJ02_03_あぴす.mp4"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "04_レイクン",
+     "folder_id": "1YOvI6lQghChnsjJ47JexrfulQLqqaJKt",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1gL3aCeceJIclqPhL8YfckzgHBUw3OHw5Fp0gfoBLeBE",
+       "name": "オタクDJ大会2_レイクン",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "オタクDJ大会2_レイクン.wav"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "05_⛩",
+     "folder_id": "1NkBCuo0AAFg-3QjHe82UsPdRki8cc3fw",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "136d7KvAf1LnPf2Wk3t_93yUHmBhACfOF",
+       "name": "セトリ_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "OtakuDJ2_tri.mp3",
+      "オタク3rd_ver5.wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "06_ha",
+     "folder_id": "1ysRkgVygxG9Q8G0bm3B51LzqImRLNGMa",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1m6Gmu3v0OLcp5-un-kSfS53eAegoSnSk",
+       "name": "miyahara2nd.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "OtakuDJ2nd.mp3"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "07_マスオ",
+     "folder_id": "15sKb4DhJwxlKZOL9CsjEHlBWaU1sXtkT",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1F3X9tfJjv9UVT1Po3FDdagwtaMZMuZPC",
+       "name": "お品書き.txt",
+       "mime": "text/plain"
+      }
+     ],
+     "media_files": [
+      "5月28日オタクDJ大会用音源_マスオ.wav"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "08_あちょ",
+     "folder_id": "1ukdJIX_zyN7WwT7GiWMsX9lpu7bYnGTs",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1mvjTMDGCGlQKQdNzPQa7ekieds3H-Z8E",
+       "name": "お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "【必ず見ること】社外持ち出し厳禁(5)_OtakuDJ音源_あちょ_修正版の修正版_最新版(3)(6).wav"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 3,
+   "date": "2022-09-03",
+   "folder": "第3回_20220903",
+   "folder_id": "1tJY26YQ6tw_TEWyPTKNVVBUGbqeHf_jY",
+   "djs": [
+    {
+     "dj": "あぴす",
+     "folder": "01_あぴす",
+     "folder_id": "1RL31F-tvdZUX7Ffu8Gx8-1G-0kjD5Aeu",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1ZSo4nzqB-unrg1DhPfhkO0-s1ml2ba_u",
+       "name": "セトリ（あぴす）.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "第3回オタクDJ大会_01_あぴす.mp4"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "02_あちょ",
+     "folder_id": "1yqSFTAsIioXw7A7kWJm6yk_FSTA69DeX",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1e9Vam_2Ydq7OWQKxAKwKDvNgT94XkCSA",
+       "name": "OtakuDJ_3rd_あちょ_お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "OtakuDJ_3rd_あちょ_movie.mp4"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "03_tri",
+     "folder_id": "1oQeQd9xDZqdIVQ6VlSjBk8iZUvAfqQYP",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1leFJzahynIMT59crnE4Sn4ltTSKOgczC",
+       "name": "オタクDJ3rdセトリ_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "オタク3rd_tri.mp4",
+      "オタク3rd_ver5.wav"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "04_マスオ",
+     "folder_id": "1eqipP-vwMTDOa4iDXAQmHF5csM5gLs9e",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1yk-EvoZP_fT8c0QMc7Gu2W5U64BgEedr",
+       "name": "お品書き.pdf",
+       "mime": "application/pdf"
+      }
+     ],
+     "media_files": [
+      "人生のフルコース.mp4"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "05_ふっちー",
+     "folder_id": "1LU4UL-oDqyS2y7_O6EtvPM12iWHFHzqY",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1g6Kbsb50eaSgbk1OOZMYA0dryUjLdYMN",
+       "name": "第3回オタクDJ大会_05_セトリ.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "[本当の最終版]第3回オタクDJ大会_05_動画[修正版の修正版2].mp4",
+      "サムネイル用.png"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "06_ha",
+     "folder_id": "1o5Necad4zlKQH4aDL4JGTzF4-ZCVEgwW",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1VueMoMERLpw68UhbUZ3Ppi77Zylbn0Rb",
+       "name": "日本の夏、オタクDJの夏.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "日本の夏、オタクDJの夏.mp4"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "07_ましゅー",
+     "folder_id": "1g_yi54CKiB-k-by2TSWvUIbMgFfoOP7I",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1cYDdZHdhPP8ByDWrUcsKb_7e4DbMhMru",
+       "name": "第3回オタクDJ大会_07_ましゅー_セトリ.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "第3回オタクDJ大会_07_ましゅー.mp4",
+      "第3回オタクDJ大会_07_ましゅー.wav"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "08_おかりん",
+     "folder_id": "1imUcEMGLCOsFBXp_hE3TJdVtqg0qjkZf",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1-ygu2MJEyEg1Q4lUrIgTVkUE9QOlzedH",
+       "name": "20220903_第3回オタクDJ大会_08_おかりん_セトリ.pdf",
+       "mime": "application/pdf"
+      }
+     ],
+     "media_files": [
+      "20220903_第3回オタクDJ大会_08_おかりん.m4a",
+      "20220903_第3回オタクDJ大会_08_おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "09_レイクン",
+     "folder_id": "1RR3j8WH3lYAMQlCy6W5Wcx3wL6UzRRUh",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1yJD0c-pIDoBBxkTYy4TnQkIxbR8enzbU",
+       "name": "セトリ_rei05_h.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "otakudj3rd.yakukimero                                                                                                                                                                                             .mp4",
+      "オタクDJ大会3_rei05_h.wav"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 4,
+   "date": "2022-11-19",
+   "folder": "第4回_20221119",
+   "folder_id": "13XlwEvcK7iw5C3ZHs0ukgCziZVz_yFyX",
+   "djs": [
+    {
+     "dj": "ましゅー",
+     "folder": "01_ましゅー",
+     "folder_id": "1kR1vy-4H2PNFaGnulNrUJK4LTrhnPKsI",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1LneZyYQ_MEj6Nd5HbycIfNF0eDmUHYFh",
+       "name": "第4回オタクDJ大会_01_ましゅー.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "第4回オタクDJ大会_01_ましゅー.mp4",
+      "第4回オタクDJ大会_01_ましゅー.wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "02_ha",
+     "folder_id": "17ei0TUdkAnbIjb50iuPeQG4s903PDtmZ",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1yf49fVFV1esQatBL7h20EUF7h47IrmYK",
+       "name": "オタクDJin調布祭.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "オタクDJin調布祭.mp4",
+      "オタクDJin調布祭.wav"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "03_おかりん",
+     "folder_id": "1NlVXRxcWq-c1bbrTDnoyvZkHrlrsdDFZ",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1GaWzq35nYbz3w52h5bStABEOPgaVRJ5y",
+       "name": "ODJ_4th _おかりん_セトリ.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_4th _おかりん.mp3",
+      "ODJ_4th _おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "04_レイクン",
+     "folder_id": "18Av5MZUw3P2HWzYVOUQZf6X4sPuZkBtp",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1iwgvgcudC7xfcV2losK581X-KncjR_ml",
+       "name": "オタクDJ大会4_レイクン.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "odj4th_rei05.mp4",
+      "オタクDJ大会4_レイクン.wav"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "05_あちょ",
+     "folder_id": "1ndrxibaAeXJ-T7fQ7sPIA3xU5VvNuyA4",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1soO9meMLgAc9iP92lq8lcjp9_MhWEZBn",
+       "name": "お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "第4回オタクDJ大会‗05_あちょ.mp4",
+      "第4回オタクDJ大会‗05_あちょ.wav"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "06_マスオ",
+     "folder_id": "1MxK_DqUGA1ncTneUsMtAp8norTvcm7SB",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1BVtSFQYI-GBroNMldthXMuUDPDDx8MB-K2TwjWqQbNU",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "穏やかじゃない人生のフルコース.mp4",
+      "穏やかじゃない人生のフルコース.wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "07_あぴす",
+     "folder_id": "14Nag2ud6Pfja-1c5uM8vG-C2sZny4AHR",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1NvLCRaaRIXyAJDQKqjg7GR072haNkTAPob9nzltKHHw",
+       "name": "ODJ4thお品書き_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "yoppi",
+      "素材",
+      "ODJ4th_2.mp4",
+      "ODJ4th.mp3"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "08_ふっちー",
+     "folder_id": "1ke_E6QacR0tcZs8-RpvNlg-B13YGRoIN",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1IXgZdARmLtmqCFrCobhEmAdHJFiC7mE41m57VWWwn4w",
+       "name": "第4回オタクDJ大会_08_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "第4回オタクDJ大会_08_動画.mp4",
+      "第4回オタクDJ大会_08_音源.mp3"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "09_tri",
+     "folder_id": "162iw1Df2s_kbntcprzBY5xEq1wBVC6bN",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1Q-C8z4v_L9rsY9UCK2l7QiXwYIacGVRc",
+       "name": "ODJ4_DB_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "YODJPPI",
+      "ODJ4_[A]END.mp3",
+      "ODJ4_[B]END.mp3",
+      "ODJ4_[B]End.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 5,
+   "date": "2023-03-04",
+   "folder": "第5回_20230304",
+   "folder_id": "194GcxUkSEAivIfVTu8H0N8clZdmzUoKh",
+   "djs": [
+    {
+     "dj": "ha",
+     "folder": "01_ha",
+     "folder_id": "1zu1vgqps-aHNHqjwkbZyZRxFAZ5GwylL",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1MX57tWpDZKRZrUr1AaRPzGzPKlHgVzSg",
+       "name": "01_ODJ5th_ha_setlist.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "01_ODJ5th_ha_最終版(2).mp4",
+      "ODJ5th_ha.mp3"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "02_ましゅー",
+     "folder_id": "1TtFbjB9PeGzxv6fvYe-pgg7gNWxbXdrA",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "13yYXRpDUHm8GqGDLHUhkB4orfdo8vHnH",
+       "name": "第5回_オタクDJ大会_02_ましゅー.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "第5回オタクDJ大会_02_ましゅー.mp3",
+      "第5回オタクDJ大会_02_ましゅー.mp4"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "03_tri",
+     "folder_id": "1HQhuC-E0QWTizIO4qdQSGy-X7E-7rqzx",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1MnwVFzVgbTj6yGMUDqhccbN_N7HjSGgzERneY0Q8Ahk",
+       "name": "ODJ5_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      },
+      {
+       "id": "1Fozf0Ngau8bunvJtoax_v0kJ32hDlhe4",
+       "name": "ODJ5_DB_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ5_tri.mp3",
+      "Today Is A Beautiful ODJ Day.mp4"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "04_ふっちー",
+     "folder_id": "1HmrAdD8NdyG8LpaEpoJnsZwl85u3Jylj",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1Uy9befI0jNqCuepbpcKMY2k7B16R9DuHnC-SC6HyDrw",
+       "name": "第5回オタクDJ大会_04_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "第5回オタクDJ大会_04_動画.mp4",
+      "第5回オタクDJ大会_04_音源.mp3"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "05_おかりん",
+     "folder_id": "1DmX4OQmBIBYCvwpUttkGtBInsksJ1IHk",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1y_U2tF4iloB494z5YPILapyfFnCYSNsd",
+       "name": "ODJ_5th_おかりん_セトリ.pdf",
+       "mime": "application/pdf"
+      },
+      {
+       "id": "1x3Z1LW0BAVJWja4yfryfC6gTSx5Keu79",
+       "name": "ODJ_5th_おかりん.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_5th_おかりん.mp3",
+      "ODJ_5th_おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "06_レイクン",
+     "folder_id": "1hGjGsq9j5AQ98nKaED6AAj9UQCfomDPW",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1UIX1B-OMHy3lhW7AU1HvbAd9iq4wp_K_eWRvhsl7AKw",
+       "name": "ODJ5th_rei05h",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ5th_rei05h.mp3",
+      "ODJ5th_rei05h.mp4",
+      "ODJ5th_rei05h.wav"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "07_あちょ",
+     "folder_id": "18ARwfezaoololjDmI9be73q58I4V4yVh",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1zGUCmLhwhZh13kI2D6PmWU8OrtwjHQSM",
+       "name": "お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "readme.txt",
+      "あ、オタクくーん、おすすめのアニソン教えてよ.mp4",
+      "あ、オタクくーん、おすすめのアニソン教えてよ.wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "08_あぴす",
+     "folder_id": "1rxhpoMhlVy2RjYCLKH48qLVqiOfdiVWK",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1ruk2OhRX-KlBvDOtplWLBTeG_HgRndkUxl-Gyu59Q5Y",
+       "name": "ODJ5thお品書き_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ5th_あぴす.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "09_マスオ",
+     "folder_id": "1EPpTRDPQLMbaTuqTIkTJVtJW-fotdVTs",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1DMNoeLjv5vslMrMX-VAyhQQRLMk0vMoKoJqN8-quWqA",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ますお・ざ・ろっく.mp4",
+      "ますお・ざ・ろっく.wav"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 6,
+   "date": "2023-05-27",
+   "folder": "第6回_20230527",
+   "folder_id": "1_5paPAQudMHRfEJxHuuzF3icJ1NdXIPR",
+   "djs": [
+    {
+     "dj": "あちょ",
+     "folder": "01_あちょ",
+     "folder_id": "1ix1Zx5yMC7gB4p0eN_GHNDUDTHUpc5Qq",
+     "play_order": 1,
+     "setlists": [],
+     "media_files": []
+    },
+    {
+     "dj": "あぴす",
+     "folder": "02_あぴす",
+     "folder_id": "1EGJeIpSDjknukV3AVcRhftMcLDF5iBD3",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1HUx68cI6swIDNCwqaPtSkDo25_dHwPS7Hmy2DyiWSzY",
+       "name": "ODJ6thお品書き_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ6th_あぴす.mp3",
+      "ODJ6th_あぴす.mp4"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "03_おかりん",
+     "folder_id": "1pBjGQq4jyV7FOyKso9a7Jk_3Y9Y3i23W",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1cFocx93_xSghT_YgwsLaxecNOgVmmWnl",
+       "name": "ODJ_6th_おかりん.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_6th_おかりん.mp3",
+      "ODJ_6th_おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "04_レイクン",
+     "folder_id": "1zjNBoZX5gqvFtm-qfXkbA8pLff9z5cPW",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1D0mMnzjK6jg2wMP2be-01xbC45OVRVCA-O2yiE6ux5s",
+       "name": "オタクDJ大会6_レイクン",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ6th_rei05_h.mp3",
+      "ODJ6th_rei05_h.mp4"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "05_ha",
+     "folder_id": "1_aulnIVfV0VWRTV190wILxniFpUFop9T",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1vAea0tXae_F9YqQKMJJtFQeWOZEsqmpQ",
+       "name": "オタクDJ6th.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ6th_ha.mp3",
+      "ODJ6th_ha.mp4"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "06_tri",
+     "folder_id": "1ATFWA4pIMyNVP4ZrBPQ4O2IK83obUhVw",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1N84ypRK1QTeYZvFPiYEq8iCzXGFy37AOYcjKOZxaudg",
+       "name": "ODJ6triのセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ6_tri_retake.mp3",
+      "ODJ6_tri_retake.mp4"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "07_ましゅー",
+     "folder_id": "1CrEzT1zxRtoM2piOgsKcrdLlJZ2ChclN",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1QnXFGTeMdg1-V5cPwS6r67FGffVT0COn",
+       "name": "odj6th_mashu_setlist.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "odj6th_07_mashu.mp3",
+      "ましゅーさん@逆張らない.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "08_マスオ",
+     "folder_id": "1aak1WIEhTStdj4021_OA8ycwaIFjKUf-",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1XIoAEz29oq1AQp4FwjloP3vgXr-k3G9c7Us0mTihTYI",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "シンデレラの舞踏会.mp3",
+      "シンデレラの舞踏会.mp4",
+      "シンデレラの舞踏会.wav"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "09_ふっちー",
+     "folder_id": "1Ll7TaZF6o66b5UA3mQhc6xgFk91AnAIS",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1q3If0t9IjxsAyzkaSdrRyKTtn5TCLuxIP6TW8BoZq_s",
+       "name": "第6回オタクDJ大会_09_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "第6回オタクDJ大会_09_ふっちー_動画.mp4",
+      "第6回オタクDJ大会_09_ふっちー_音源.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 7,
+   "date": "2023-09-01",
+   "folder": "第7回_20230901",
+   "folder_id": "1JV-7lHCEGiKmkcfrdZDu2yMlDNV0P-wz",
+   "djs": [
+    {
+     "dj": "マスオ",
+     "folder": "01_マスオ",
+     "folder_id": "1BlGZPizO8lSjjbFsjQ4N6bDV_Owi9OiC",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1W8PRRGBniJbOYhn2vr1zPfas9Qnx4NwuW27gnKGxsc8",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ブタさんチーム.mp3",
+      "ブタさんチーム.mp4"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "02_ha",
+     "folder_id": "15DO3_XiN_9Y8fyxRoC0HOLtMOwiR1A87",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1LTMrG6uMYEhBlmAhWUg6ofkQlOyWMQeY",
+       "name": "オタクD7Jth_ha.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ7th_ha.mp3",
+      "ODJ7th_ha.mp4"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "03_レイクン",
+     "folder_id": "1fv6UFUzOeqm_lNLZbgyqWm__1ERIJYTO",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1AEYsIu_gk-Ve-0K6cxOxEBBpOB_2KRlV6xKRJr_poFA",
+       "name": "オタクDJ大会7_レイクン",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ7th_rei05_h.mp3",
+      "ODJ7th_rei05_h.mp4"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "04_ふっちー",
+     "folder_id": "1kuEYu6YbD7_EgiM5dcBPrYA4i7RwkcvU",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "14XhmWACHPZYpXaUjl72ceMFADCIy6Emw4_Ver-PdOXw",
+       "name": "第7回オタクDJ大会_04_ふっちー_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "第7回オタクDJ大会_04_ふっちー_動画.mp4",
+      "第7回オタクDJ大会_04_ふっちー_音源.mp3"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "05_せーや",
+     "folder_id": "17yEwxOjNaq6Pz8cJRDqq8mfva2IoHn8V",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1V-kvfm2k9oWmwMUkb6IlD9moYY_7yl5RRVMc1GfdPeE",
+       "name": "ODJ 7thせーやセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ7thせーや簡易編集版.mp4",
+      "ODJせーや7th.mp3"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "06_おかりん",
+     "folder_id": "1MOZd1RgReEaSeE0Kk1tttjStKbguSgcu",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1_P4rALy-HCElgzWtXhtQPvzoeQqbUfOa",
+       "name": "ODJ_7th_おかりん.pdf",
+       "mime": "application/pdf"
+      },
+      {
+       "id": "1SZdlsJUbi31I4yovXlnA0TbOIEmJWBgE",
+       "name": "ODJ_7th_おかりん.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_7th_おかりん.m4a",
+      "ODJ_7th_おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "07_⛩",
+     "folder_id": "1wdutLUsk-2v5uG1kS-nCw8npvYyM9VTU",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1kSFNN10uU4WyG7UsjyWkhka0AzVQAQ1h",
+       "name": "ODJ7_DB_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ7_tri.mp4",
+      "ODJ7_tri.wav",
+      "然るべきタイミングで開くこと歌詞.txt"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "08_あちょ",
+     "folder_id": "1FZFKYA4keicwgVTfreeMtNckr2LUY2gq",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1Hqok-kqoOtqMpxS8_BYKddhaTQd-rc5Z",
+       "name": "お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "【絶対変えるな！】ODJ7th_あちょ_修正版_最新版(1)のコピー(8).mp4",
+      "【絶対変えるな！】ODJ7th_あちょ_修正版_最新版(1)のコピー(8).wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "09_あぴす",
+     "folder_id": "10DQMjhBtANx0lqx397AQq3XAyyE2SE2e",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1d6dWtjYNBeSiuLmBL_U95p_3L9rfqYXMY5q1vTV7w5Y",
+       "name": "7thセトリ_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "endcard.png",
+      "ODJ07_09_あぴす.mp3",
+      "ODJ7th_あぴす～ナナ回だよスペシャル～.mp4",
+      "レイさん結婚祝い動画.mp4"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "xx_ましゅー",
+     "folder_id": "1jPGBAOJa-9cEWxHevSuADITptes1XSzA",
+     "play_order": null,
+     "setlists": [
+      {
+       "id": "1VlFu2DFFX7KZtxStPXQ4i-nqwjCODVRO",
+       "name": "ODJ7_ましゅー.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ7_2.wav",
+      "オタクの休憩スポット.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 8,
+   "date": "2023-12-09",
+   "folder": "第8回_20231209",
+   "folder_id": "1qrbat9WtPdjrkDsI7sakneJOezV4MQ66",
+   "djs": [
+    {
+     "dj": "あちょ",
+     "folder": "01_あちょ",
+     "folder_id": "1U916wYGZ4X49OwDCEc_b2Fa6kDgAGtDt",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1JIW1YAHGcMG2VFKrgcLchZniNQnfWdoY",
+       "name": "お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "[ReferenceOnly]ODJ8th_Acho.mp4",
+      "[ReferenceOnly]ODJ8th_Acho.wav"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "02_レイクン",
+     "folder_id": "16DsVXudVQg9PCfC524FZJPjJEVuF_sx5",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "18YyPvgfxHPHJFnLq2BNJTkYDwOG0LLERrAb4H1rrWx8",
+       "name": "オタクDJ大会8_レイクン",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ8th_rei05_h.mp4",
+      "ODJ8th_rei05_h.wav"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "03_おかりん",
+     "folder_id": "16n3N6ByCoXDElS9HSIY_7vU35O5CE6nf",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1qR3J7zd03sdQVmj7mK8G_SP8bqc0ivL_",
+       "name": "ODJ_8th_おかりん_セトリ.pdf",
+       "mime": "application/pdf"
+      },
+      {
+       "id": "1crO3fMV9hr_K5mTly1x4lBVudfMAVaNh",
+       "name": "ODJ_8th_おかりん_セトリ.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_8th_おかりん.m4a",
+      "ODJ_8th_おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "04_あぴす",
+     "folder_id": "1tEfLQ7SBr9DslFQwooPouKtgQtfYEnCz",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1iLZA6OKKu_dt5IsjSqRV-Y1LJze0oJGnSkUtBG4ijRQ",
+       "name": "8thセトリ_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ08_04_あぴす.mp3",
+      "ODJ8th.mp4",
+      "ODJ8th解説.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "05_マスオ",
+     "folder_id": "1lLvLpW_OGVVvyNOuKWZK3d8E-LVDmj87",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1aXKX787ylAfQLKogt8yfl-TWgPsLW4Vd9csEX2SGMEw",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "Reゼロから始めるODJ.mp4"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "06_せーや",
+     "folder_id": "1nCW5n3K5yClFb8UZFzh_nlnTkipYxJag",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1ATCWx2mkfPymihsmgnJ9sliIPe0dL5QwhyhfcDsQ7m8",
+       "name": "ODJ 8thせーやセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_せーや_8th.mp4",
+      "ODJ8th.wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "07_ha",
+     "folder_id": "1-vqwx9U267Rp9MuhTz_QlUv2f0yQRhZI",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1k1pKmJtzpM5J2fUx-3Uzlz_QyI_tKhn4",
+       "name": "オタクDJ8th_ha_超決定版.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ha_8th.mp3",
+      "ODJ_8th_ha (3).mp4"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "08_⛩️",
+     "folder_id": "1nGWTHRKcwp7mqz9q_QSsHk4WRmmI1l6l",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1r0MwvXXuXwtCFDTak2UUeQmwhIk8FY7Qp7rPkwvJiU8",
+       "name": "ODJ8_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      },
+      {
+       "id": "1D6-bscjfanCsySTeap78GzQpd-bLxjh-",
+       "name": "ODJ8_DB_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ8_tri.mp3",
+      "ODJ8_tri.wav",
+      "フェルンそれは流石に嘘だよ。ODJが始まったのは半年前だよ.mp4"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "09_ふっちー",
+     "folder_id": "1pbxaNZsBafoUCx-c5U2TxaGxCvGku9fq",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1g9XhTXk9reqYR4gfEvAI4UIzs8etMmo4vXxkNf9TsK4",
+       "name": "第8回オタクDJ大会_09_ふっちー_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "第8回オタクDJ大会_09_ふっちー.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 9,
+   "date": "2024-03-24",
+   "folder": "第9回_20240324",
+   "folder_id": "1q3sYVRf6W9xUOMRL5YPjbQv0bSEGXYpc",
+   "djs": [
+    {
+     "dj": "レイクン",
+     "folder": "01_レイクン",
+     "folder_id": "1Rgc_8jzo5t4YIKwXM72vtDViUmsIp24A",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1HRHZDn3JMUlir7XTIIxYDFr7DfzhCFf0dFALGSQDoqo",
+       "name": "オタクDJ大会9th_レイクン",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ9th_rei05_h.mp4",
+      "ODJ9th_rei05_h.wav"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "02_あちょ",
+     "folder_id": "1mzlyIf2_7spDFASUk5mlby1BQ496gfAK",
+     "play_order": 2,
+     "setlists": [],
+     "media_files": [
+      "セトリ予想",
+      "ODJ9th_02_acho_多分こんな感じ.wav"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "03_ふっちー",
+     "folder_id": "1orsIB8-D9s4jWwuwa5ogrL0IIgtxBfco",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1mp71WIGPhMBe2rvcrMz-GS5C6fbKmivmP50SFz5pMec",
+       "name": "第9回オタクDJ大会_03_ふっちー_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "動画予備",
+      "第9回オタクDJ大会_03_ふっちー_Reference(missver).wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "04_ha",
+     "folder_id": "1myDdxDwcqvQqIMn_9arMZsVFjRBIuGcU",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1yEL3si4b9kidK2TwkdTLCsd13uQ1DGz8",
+       "name": "オタクDJ9th_ha.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ9th_ha.mp3",
+      "ODJ9th_ha(春).mp4"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "05_おかりん",
+     "folder_id": "1SM4QzEy8ZxB6_NkQY1X5iw7F-lquuaPO",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1qAiku6JeiaIRPN7NmxfVlE9miWODLFQN",
+       "name": "ODJ_9th_おかりん.pdf",
+       "mime": "application/pdf"
+      },
+      {
+       "id": "1lT4np2PPJE-dSdBA0SveqEjHmcUl24Oa",
+       "name": "ODJ_9th_おかりん.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_9th_おか.mp4",
+      "ODJ_9th_おかりん.m4a"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "06_⛩",
+     "folder_id": "1xCB-i8TywRlAI5gwi60gEyIrxqdJUHel",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1M4jGMKUC4ezjOMlU1F0h8_AgHhEB90V-qJ9IIVi8zfg",
+       "name": "ODJ9_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      },
+      {
+       "id": "1xV8X595S0XCcuOLEZpKH2Q8ROPqZ3_bi",
+       "name": "ODJ9_DB_tri.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "【令和最新版 ODJ9 信号増強版】ODJ_tri mp3 wav.mp3",
+      "【令和最新版 ODJ9 信号増強版】ODJ_tri mp3 wav.wav",
+      "【令和最新版 ODJ9 信号増強版】ODJ_tri mp4.mp4"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "07_あぴす",
+     "folder_id": "1PI6mTDqitv9TAKxWyvwLesD3k-KU077o",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1U5_A9-JJe4Ttkkmr25h0oxanXMCmKLR1FOxN82gOIDk",
+       "name": "9thセトリ_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ9th_あぴす.mp3",
+      "ODJ9th_あぴす.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "08_マスオ",
+     "folder_id": "1lIuEnA33LRdNzS3oeHdphzdAhpPy28oS",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1nJjYFClVqfF_n0LPo0ycfFy7YAk9AV1ZdUMFfJ9kIpA",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "葬送のODJ.mp3",
+      "葬送のODJ.mp4"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "09_ましゅー",
+     "folder_id": "1F5WljytuP96rUcyVpRyV0qE6IOPlONcu",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1bPKCakOKaxa_KJx38oplooDgq_VFxvC1i28tacn9q0Q",
+       "name": "ODJ9th_ましゅーセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ9th_Mashu.mp3",
+      "ODJ9th_Mashu.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 10,
+   "date": "2024-07-01",
+   "folder": "第10回_20240701",
+   "folder_id": "1PIKJsQVHHaaKsqMu8XYUw8eGvUAIR9vy",
+   "djs": [
+    {
+     "dj": "tri",
+     "folder": "01_⛩️",
+     "folder_id": "1AK7sYjBvBwb2J6OGSqIylmQPoCbjJLKs",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1BC1EJ51jGLSH-TXhrzikf7-aKFI-AqwODoOcfqZ3L3M",
+       "name": "ODJ10_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ10.mp4",
+      "ODJ10.wav"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "02_レイクン",
+     "folder_id": "1170Nua1w4r50YsoMnwjcnK8aqFGBlKyA",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "13UVJwQc4f6rQ73SQ0GIqcr9FFnf3WoYnHBQUZCJA-es",
+       "name": "オタクDJ大会10th_レイクン",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ10th_rei05.mp4",
+      "ODJ10th_rei05.wav"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "03_ましゅー",
+     "folder_id": "1XRvXgu4n4B7AK64xcfxPDVqRthK0NuRY",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1Np6o4uxodnQb-vw4DSevZOoFwyTRdRsQQPwbBC3roL0",
+       "name": "いつもの！って感じのセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ10_Mashu_完成版.mp4",
+      "ODJ10_Mashu.mp4"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "04_あちょ",
+     "folder_id": "1T54A-5-zQ3bwHmBSlw-s9lspRO9lOpEf",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1EaUIhbVwnCz_FWrmZaqtFMpu7ltWjpDkKwExCa9V-ms",
+       "name": "10thセトリ_あちょ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "振り返り",
+      "01 REC-2024-06-25.wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "05_ha",
+     "folder_id": "1VJ0zkpNqDaWN7CM_76gUSOpb0ssQI54Q",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1zF_KJP-pud_VwaOMpSO9rxCz9UrskGIU",
+       "name": "オタクDJ10th_ha.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ10_ha.mp4"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "06_ふっちー",
+     "folder_id": "1HiD3P4klbesIn18gyArBQFK9yC6dMQ0o",
+     "play_order": 6,
+     "setlists": [],
+     "media_files": [
+      "第10回オタクDJ大会_06_ふっちー_Reference.mp3",
+      "第10回オタクDJ大会_06_ふっちー_Reference.mp4"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "07_あぴす",
+     "folder_id": "18iLK2oTVveLl9wZnxfQ34xxVLJ4Kx-EY",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1QNmkx3EHxxNi74WxTi3Xzq6-QItUnpoxMpRMc1XU0uQ",
+       "name": "10thセトリ_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ tutorial.pdf",
+      "私証明したいんですODJが10thまで来た神コンテンツってこと.mp3",
+      "私証明したいんですODJが10thまで来た神コンテンツってこと.mp4"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "08_せーや",
+     "folder_id": "1UDWEEnDG1I-hIn0F9T56hZbb-031DluJ",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1j7_zh-TAAfXYx8Ji8dTiHsH5dclQjE2gXsTNZIH2KJ8",
+       "name": "ODJ10th_せーや_おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ10th_せーや.mp4",
+      "ODJ10th_せーや.wav"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "09_マスオ",
+     "folder_id": "1TcEW3pu3wEABZDKQqLGpw51T-78r698i",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1tm35fUaCIxNcSd2BadAUsKl6gAbjPQnVoR_wSkjbVN0",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJが近いよ.mp3",
+      "ODJが近いよ.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 11,
+   "date": "2024-10-12",
+   "folder": "第11回_20241012",
+   "folder_id": "19YkNve0owgWPwenlRDlNavVNM7KLw3x5",
+   "djs": [
+    {
+     "dj": "tri",
+     "folder": "01_⛩️",
+     "folder_id": "1WufxWNF5Yhm3V9kEt-gYfMID8WVvH1X3",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1rErpgYjuffpTvWOBgv3-gYy1fN80NThCEBb0K_rVeV0",
+       "name": "ODJ11_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "Fighting ODJ way.mp4",
+      "ODJ11_tri.mp3"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "02_あちょ",
+     "folder_id": "14eGc8eX12aycOIj71qvRw5dLbMkmPsh8",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1G63yIXuismp8CAJdRe2YzHTD6AeMEi-U",
+       "name": "お品書き.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "[reference]_acho_11th.wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "03_あぴす",
+     "folder_id": "11VY4lQSNHOSBczy7lgfuOMwUPCG8uAvd",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1MMyi6aa_0mpZOLGtvqVF4AQ7OAs0Eg0boKErMEeHAtg",
+       "name": "11thセトリ_あぴす",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ11th_あぴす.mp3"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "04_ふっちー",
+     "folder_id": "18JTBis3lLRV3g0mC1wJ8BqXzr14IeN9c",
+     "play_order": 4,
+     "setlists": [],
+     "media_files": [
+      "11thODJ fucchie 予備",
+      "11thふち動画LINK用HD画質_予備",
+      "第11回オタクDJ大会_04_ふっちー_Reference.mp3"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "05_レイクン",
+     "folder_id": "1w0nudM9H0J4Ff_RFdo66vXRFOlg7E_CR",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1kXXJDls3fILSzsxi8_OMDytPKZMbPbNlrSfPLUfFqtc",
+       "name": "ODJ11th_rei05_h_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ11th_rei05_h.mp4",
+      "ODJ11th_rei05_h.wav"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "06_せーや",
+     "folder_id": "1lPwbTwF-OJlexuTdPLq8P_7ACF0tu-Xk",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1dhESeTCP0h2hMlE3qk2Sfg1vWkti0ML1CcIgvx4bGL4",
+       "name": "11thおしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ11th.mp3",
+      "ODJ11th.mp4"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "07_ましゅー",
+     "folder_id": "1khUnQk3v7OGFxMlS0x7vwK56Fqp2aSW6",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1rhis7B5-v1M8Q4uZRTdXyhNgaIBir1x8108ZNrVJZ0U",
+       "name": "ODJ11_Mashu_setlist",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ11_M@shu.mp4",
+      "ODJ11_Mashu_setlist.png",
+      "ODJ11_Mashu完成版.wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "08_ha",
+     "folder_id": "1YJbiXA96FHecK9DcBywDdw2tF4_N6HGj",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1pMrKWA2uQUhyDtZJDxTtvtHMIzKKMML3",
+       "name": "オタクDJ11th_ha.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "08_ha.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "09_マスオ",
+     "folder_id": "1hcoPAT4o_d5YBwEWFIoj-XqjN_nts8zu",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1SFfojvXtidB0GgVyt-UYCSZrXRJFmqtjzRAi7R67X0c",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "Feel ODJ Dream.mp3",
+      "Feel ODJ Dream.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 12,
+   "date": "2025-01-18",
+   "folder": "第12回_20250118",
+   "folder_id": "1mk59THiQpxM7q8_XW7ZuiMCQ_q9c-nYR",
+   "djs": [
+    {
+     "dj": "レイクン",
+     "folder": "01_レイクン",
+     "folder_id": "1ryCKZWBjCCTXhl_x9AsG9diJ5vO_TlBo",
+     "play_order": 1,
+     "setlists": [
+      {
+       "id": "1GNU97pkr3DjBBgrY1RvHHvC0xJY0uiBXCSBcrFq0e-g",
+       "name": "ODJ12th_rei05",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "VIDEO",
+      "ODJ12th_rei05.mp3",
+      "ODJ12th_rei05.mp4"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "02_ましゅー",
+     "folder_id": "1zUiFRiE3EdPzitmLwrqu9r25WJ1SlOSG",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1I3v75MzoOY7a-urctUIJOrXT6JVLHLpBCgpizIF2CUU",
+       "name": "ODJ12_Mashu_setlist",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ12_Mashu_setlist.png",
+      "ODJ12_Mashu.mp4",
+      "ODJ12_Mashu.wav"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "03_あちょ",
+     "folder_id": "1PwsIU-RaJjwebpAqBFwu-PurxQ6AUDwW",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1ZUi6rLEAhkGeCctIvKrdSZUQ2nRWZ67F2v13lf79GNU",
+       "name": "おしながき_Result",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "video",
+      "まとめ12th.mp4",
+      "本番30分越えてたかもODJ12th.mp3"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "04_⛩️",
+     "folder_id": "1GngVGbni-tVaxu99qNwXe908VbVI2yHC",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1FtvzvfSzyZ38dUNWp5eVmnrLQBvaKLqjhCZGzuEB060",
+       "name": "ODJ12_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "Ex音源",
+      "ODJ12.mp3",
+      "幸せになれる隠しODJがあるらしい"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "05_おかりん",
+     "folder_id": "1sjmXLTHdgSwmgKePLn449255Hu8mQm67",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1qQHrZq4Lqx7OwfbEPZgz6niwsWUUUJ3_D5zV04U17OI",
+       "name": "ODJ_12th_おかりん_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_12th_おかりん_v2.mp4",
+      "ODJ_12th_おかりん.m4a"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "06_ha",
+     "folder_id": "14-S77BsuIvgNFux-te6TL998RTHel35q",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1CeUWckZeK1VIlQRLK2iOsm27KdErzhzE",
+       "name": "ODJ12th_ha .xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_12th_ha.mp4",
+      "ODJ12th_ha.mp3"
+     ]
+    },
+    {
+     "dj": "がっきー",
+     "folder": "07_がっきー",
+     "folder_id": "173x7BkqRTuUJBr4dbPX6cVcrqS1wXoz7",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1HZ5QqXxPmKXxY0eGHCv0bQz7NkIT5m1AzfVuTtIOg0I",
+       "name": "ODJ12th_itagaki",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_12th_itagaki.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "08_マスオ",
+     "folder_id": "1dUQJsXArC8TJ5fqVfkhr-4QqVm0_KOoy",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "12M3TWb-naJnTzmmy5dwnjlr4onIGyjIjPS4Xns6wD_k",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "mp3",
+      "mp4",
+      "Outsoar The ODJ.wav"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "09_ふっちー",
+     "folder_id": "16Gkpsw6ZyBSk3PKXwQ-TGmHJnZMEnzOg",
+     "play_order": 9,
+     "setlists": [],
+     "media_files": [
+      "fuchi12_video"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "10_あぴす",
+     "folder_id": "11XP0iM_zSw6nr5Y9aJG3ORJl5whHWies",
+     "play_order": 10,
+     "setlists": [
+      {
+       "id": "108tNVvz-1Sfh0FmSikPsQRdy1qoyuZBEPJ7JkJ7yOrQ",
+       "name": "ODJ12th_あぴす_おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "movie",
+      "music",
+      "ODJは可愛い12th.mp3"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 13,
+   "date": "2025-05-10",
+   "folder": "第13回_20250510",
+   "folder_id": "1kIicshUk9lj2jAaAjcgHiigVUxI1_ZMK",
+   "djs": [
+    {
+     "dj": "ふっちー",
+     "folder": "01_ふっちー",
+     "folder_id": "1vqnDzghL6BvOiA60UU34dhd4EiZONJNE",
+     "play_order": 1,
+     "setlists": [],
+     "media_files": [
+      "13thfuchi動画",
+      "01 13thODJ_01_Fucchie.wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "02_あぴす",
+     "folder_id": "1XiXtD9brpk9ntl31ZGnDZuNSarbhYNZ3",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "15FT5N59Dp4fxmh23N8bj7LjURMQS4Ek7Cu9aukBwUEo",
+       "name": "セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "日々は過ぎれどODJは楽し.mp3"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "03_⛩️",
+     "folder_id": "1acoWQlRslUB2FY5bsg0zk3iEAYfKU_jV",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1kYdA09yUnOjop4G3GxLzSqhDV22cRtVQLn4DUjg2WNk",
+       "name": "ODJ13_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "odj13.mp3",
+      "odj13.wav",
+      "ざつODJ -That's ODJ-.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "04_マスオ",
+     "folder_id": "1Mtw18LNXWOFQMxqAtgHVcKmQEAlkSgkZ",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "11wmKHjJYkJ3l2jzvAdM_3PhY3WiyphVFN96VoSVEDdA",
+       "name": "おしながき",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "私がODJを特別にするんだ.mp3",
+      "私がODJを特別にするんだ.mp4"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "05_せーや",
+     "folder_id": "1s5QV1MDh002rIc3irDiWW5o-z36b_X4x",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1V4NSW-GCjYKa5mn8oJz2p8hyJcm-a9PLE3l0KD9u3nM",
+       "name": "ODJ13th_せーやセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ13th_せーや.mp4",
+      "ODJ13th_せーや改.wav"
+     ]
+    },
+    {
+     "dj": "あちょ",
+     "folder": "06_あちょ",
+     "folder_id": "1v-O3HAc3KgQoYe-iinl66bbqHxBbvBYq",
+     "play_order": 6,
+     "setlists": [],
+     "media_files": [
+      "acho_ODJ_13th.wav"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "07_レイクン",
+     "folder_id": "1q2FPQbPsVnMiWZg2pj_sLKd2BrqPb_SP",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1_j14DPgLZUmZkRpKrOxm0VLDMu5UVbmws0fHqmsJvRY",
+       "name": "ODJ13th_rei05",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "動画",
+      "ODJ13_rei05.wav",
+      "ODJ13th_rei05.mp4"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "08_ha",
+     "folder_id": "1NVngzs-j-SCyPwfL7Ypc-OJ6OjAX47qQ",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1YzWiOBv4PVJGXnyyK6JJ6dodgWweP4na",
+       "name": "オタクDJ13th_ha .xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ13th_ha.mp3",
+      "ODJ13th_ha.mp4"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "09_おかりん",
+     "folder_id": "14ZmHbTg_j0RHoTLVi7H1v400Nc8sc2Vk",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1baecGB3DImbyTwplOa0a355cN8n8AXNQ",
+       "name": "ODJ_13th_おかりん_セトリ.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_13th_おかりん.m4a",
+      "ODJ_13th_おかりん.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 14,
+   "date": "2025-09-27",
+   "folder": "第14回_20250927",
+   "folder_id": "1bDpL_99ctWf_w-cpDsLRKT5QCoxyKLjJ",
+   "djs": [
+    {
+     "dj": "あちょ",
+     "folder": "01_あちょ",
+     "folder_id": "1UKC3tkSv_n3vZUBl0C-uXp3_y-Jy7bBW",
+     "play_order": 1,
+     "setlists": [],
+     "media_files": [
+      "ODJ14th_acho.mp3"
+     ]
+    },
+    {
+     "dj": "ましゅー",
+     "folder": "02_ましゅー",
+     "folder_id": "1N_HES0Be1_Vw9Hbinkf4i7xuh5EkYURB",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1PtB8A2yzNUdiIM6ilStdP6emzrj7eyeVxPGd_38qUiY",
+       "name": "ODJ14_Mashu_setlist",
+       "mime": "application/vnd.google-apps.document"
+      }
+     ],
+     "media_files": [
+      "ODJ14_Mashu_setlist.png",
+      "ODJ14_Mashu.wav"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "03_ふっちー",
+     "folder_id": "1N3vQ-vr-UnModQr2byqRH3rN2KiA2U5Y",
+     "play_order": 3,
+     "setlists": [],
+     "media_files": [
+      "14th_fucchie_本当はこれがやりたかったmix.wav",
+      "Downloads.zip"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "04_⛩️",
+     "folder_id": "1jAv3DuF66CyjCwD8pDyjkrbP1Ycystxa",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1DJG9FpOF7o6ZRXPc7-y2KRrXE99X36BMQxQ03vnE3GI",
+       "name": "ODJ14_DB_tri",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "2025年振り返りみたいなセットリスト",
+      "ODJ14_tri.wav"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "05_ha",
+     "folder_id": "1Z058dKn8BlWSHr2RUKHbA0Gti7KLvjRM",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1i7rcIF1_FU3y7xNr6ZtdcUK208xKIzmF",
+       "name": "ODJ14th_ha.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ14th_ha.mp3",
+      "ODJ14th_ha.mp4"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "06_あぴす",
+     "folder_id": "1J0XovQoZOIvb-4XCNEOIpeH6GSfP_YFj",
+     "play_order": 6,
+     "setlists": [
+      {
+       "id": "1MiE29WTDXRWyjX7irIMJUeSXpbe9wRzj9rzcpedRyiM",
+       "name": "ODJ14th_あぴす_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      },
+      {
+       "id": "1DyyDqHYuFBCEHxgK8JbwpFjaWEjbx9fHyovdbx7TIYQ",
+       "name": "ODJ14thセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ14_あぴす.mp3"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "07_せーや",
+     "folder_id": "13zvFvuy-YLCiDBPffPORoJnd6SOMop3R",
+     "play_order": 7,
+     "setlists": [
+      {
+       "id": "1Hyprx8eF_mo6F1L8B0Dv02Dtd5tPQiXGU6CLcZY_x3A",
+       "name": "ODJ 14thせーやセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      " ODJ14th_せーや.mp4",
+      "ODJ14th_せーや.wav"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "08_おかりん",
+     "folder_id": "1JBlQSU5QsyNvxZX4Fmn6LKGu1PN-YGgE",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "1KT-pZ-Hi53HY3Hj_E2VvYKnaJzceyUmm",
+       "name": "ODJ_14th_おかりん_セトリ.pdf",
+       "mime": "application/pdf"
+      },
+      {
+       "id": "1KGJua-yzOf1FQEdJYdVEv3SJbODNRElK",
+       "name": "ODJ_14th_おかりん_セトリ.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ_14th_おかりん_セトリ.numbers",
+      "ODJ_14th_おかりん.m4a",
+      "ODJ_14th_おかりん.mp4"
+     ]
+    },
+    {
+     "dj": "マスオ",
+     "folder": "09_マスオ",
+     "folder_id": "16gtowt5iv821LSznvW9A9W-dz1DmM-gV",
+     "play_order": 9,
+     "setlists": [
+      {
+       "id": "1Xu2MjEOZTR8_igDGb9SBQ-jeTu4FCISUj-m7Mp7NeXI",
+       "name": "セットリスト",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "プロデューサーさん！12月はアイマス合同ライブですよ！アイマス合同ライブ！.mp3",
+      "プロデューサーさん！12月はアイマス合同ライブですよ！アイマス合同ライブ！.mp4"
+     ]
+    }
+   ]
+  },
+  {
+   "no": 15,
+   "date": "2026-05-23",
+   "folder": "第15回_20260523",
+   "folder_id": "1yIgh8MBF9rn0JLQ5_xcyx-Mw7c9FvADY",
+   "djs": [
+    {
+     "dj": "マスオ",
+     "folder": "01_マスオ",
+     "folder_id": "1pjj5HPxSO8dQNypOAXY-DBIeouSmjQHs",
+     "play_order": 1,
+     "setlists": [],
+     "media_files": [
+      "わたしがトップバッターになれるわけないじゃん、ムリムリ！（※ムリじゃなかった!?）.mp3",
+      "わたしがトップバッターになれるわけないじゃん、ムリムリ！（※ムリじゃなかった!?）.mp4"
+     ]
+    },
+    {
+     "dj": "ふっちー",
+     "folder": "02_ふっちー",
+     "folder_id": "1vbRIh-zNi09G8Iydac4mrchoSQFacfqx",
+     "play_order": 2,
+     "setlists": [
+      {
+       "id": "1sU5CcXUZRfdVe66UfAEZF3Ncz4QXmYEHXCAvAbXlPRQ",
+       "name": "ODJ15th_Fucchie_list",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ15th_fucchie_mp4",
+      "15th_Fucchie_生前葬.mp3",
+      "15th_Fucchie_生前葬.wav"
+     ]
+    },
+    {
+     "dj": "あぴす",
+     "folder": "03_あぴす",
+     "folder_id": "1sOsvpbcp4nXdr_HdrVIiXjptdOA_wS8w",
+     "play_order": 3,
+     "setlists": [
+      {
+       "id": "1UCH-krTXcF9dmHOoAqGDghUxM8p_onseD5ZAyruomLo",
+       "name": "ODJ15_あぴす_セトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ15_04_あぴす.mp4",
+      "ODJ15th.m4a"
+     ]
+    },
+    {
+     "dj": "ha",
+     "folder": "04_ha",
+     "folder_id": "15IF6MWT6A1MkOlnQUVpPvkEe95ip9z_3",
+     "play_order": 4,
+     "setlists": [
+      {
+       "id": "1qU_eDiYn6NzJhp8GX_HrrW2LouhnEpFN",
+       "name": "ODJ15th_ha.xlsx",
+       "mime": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      }
+     ],
+     "media_files": [
+      "ODJ15rh_ha.mp3",
+      "ODJ15th_ha.mp4"
+     ]
+    },
+    {
+     "dj": "おかりん",
+     "folder": "05_おかりん",
+     "folder_id": "1dD2A0a3mQHvkNjpkg4_vL-O7yWg3BE5M",
+     "play_order": 5,
+     "setlists": [
+      {
+       "id": "1qKGrmuM5Pu3G9RQ_RpxF2BKU63C3x_4z",
+       "name": "ODJ_15th_おかりん_セトリ.pdf",
+       "mime": "application/pdf"
+      }
+     ],
+     "media_files": [
+      "ODJ_15th_おかりん_v2.mp4",
+      "ODJ_15th_おかりん_セトリ.numbers",
+      "ODJ_15th_おかりん.m4a"
+     ]
+    },
+    {
+     "dj": "tri",
+     "folder": "06_⛩️",
+     "folder_id": "1JkUHc3JVa9SvR4yHcss1DquR5VWe2oXb",
+     "play_order": 6,
+     "setlists": [],
+     "media_files": []
+    },
+    {
+     "dj": "あちょ",
+     "folder": "07_あちょ",
+     "folder_id": "1YFOjkVnzzZpjLdCba1QO0hjCrjwPxJ0X",
+     "play_order": 7,
+     "setlists": [],
+     "media_files": [
+      "セトリ予想.mp3"
+     ]
+    },
+    {
+     "dj": "レイクン",
+     "folder": "08_レイクン",
+     "folder_id": "1he3jlaywEU1MdyBt0um9kJvveRgfpREA",
+     "play_order": 8,
+     "setlists": [
+      {
+       "id": "11211sU_qgMUeubd0xxLKWYMV_EVkecrEsKIXTgI53zQ",
+       "name": "ODJ15th_rei05",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ15_rei05.wav",
+      "ODJ15th_rei05.mp4",
+      "動画.zip"
+     ]
+    },
+    {
+     "dj": "せーや",
+     "folder": "XX_せーや",
+     "folder_id": "1THnBE-5Olimkk3dS6NAi_wbx6wMfb_vI",
+     "play_order": null,
+     "setlists": [
+      {
+       "id": "1N3rxgksuP8bV1di6FnX4pGU8gL4Gw6lUwyaqNNbSnD4",
+       "name": "ODJ 15thせーやセトリ",
+       "mime": "application/vnd.google-apps.spreadsheet"
+      }
+     ],
+     "media_files": [
+      "ODJ15th.mp4",
+      "ODJ15th.wav"
+     ]
+    }
+   ]
+  }
+ ]
+}
