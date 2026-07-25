@@ -1,0 +1,134 @@
+.evchart {
+  margin: 0;
+}
+
+.evchart-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.evchart-legend {
+  display: flex;
+  gap: 12px;
+}
+
+.evchart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.evchart-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.evchart-swatch-new {
+  background: var(--series-1);
+}
+
+.evchart-swatch-old {
+  background: var(--series-2);
+}
+
+.evchart-plot {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 190px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.evchart-col {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 22px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: default;
+}
+
+.evchart-col:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.evchart-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  height: 100%;
+  justify-content: flex-start;
+  /* 積み上げの境目に地色を 2px 覗かせる */
+  gap: 2px;
+}
+
+.evchart-seg {
+  border-radius: 0;
+}
+
+.evchart-seg-new {
+  background: var(--series-1);
+  border-radius: 4px 4px 0 0;
+}
+
+.evchart-seg-old {
+  background: var(--series-2);
+}
+
+.evchart-col-on .evchart-seg {
+  filter: brightness(1.12);
+}
+
+.evchart-tick {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.evchart-axis {
+  margin: 24px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.evchart-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.evchart-tip strong {
+  color: var(--text-primary);
+}

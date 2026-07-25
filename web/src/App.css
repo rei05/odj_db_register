@@ -1,0 +1,328 @@
+.app {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+/* --- ヘッダ --- */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-top: 20px;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.app-title h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+}
+
+.app-sub {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.app-stamp {
+  color: var(--text-muted);
+  margin-left: 6px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.tab {
+  flex: none;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+
+.tab-on,
+.tab-on:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+  background: none;
+  font-weight: 600;
+}
+
+.app-main {
+  padding-top: 22px;
+}
+
+.notice {
+  color: var(--text-secondary);
+}
+
+.notice-error {
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--series-2);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+/* --- 絞り込み --- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filters label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.field {
+  padding: 8px 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.field-grow {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+textarea.field {
+  width: 100%;
+  min-height: 108px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.result-count {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+/* --- 表 --- */
+
+.table-wrap {
+  overflow-x: auto;
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* --- タグ --- */
+
+.tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* --- カード --- */
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.card h2,
+.card h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.card-grid .card {
+  margin-bottom: 0;
+}
+
+/* --- 既出判定 --- */
+
+.played-item {
+  border-bottom: 1px solid var(--line-soft);
+  padding: 14px 0;
+}
+
+.played-item:first-child {
+  padding-top: 0;
+}
+
+.played-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.played-query {
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.played-verdict {
+  font-size: 13px;
+  margin: 0 0 8px;
+  color: var(--text-secondary);
+}
+
+.played-new {
+  color: var(--text-primary);
+}
+
+.history {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.history li {
+  padding: 2px 0;
+}
+
+.history-sub {
+  margin-top: 6px;
+}
+
+/* --- セトリ --- */
+
+.setlist-dj {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.setlist-order {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.setlist-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.setlist-tracks {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.setlist-tracks li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.setlist-tracks li:last-child {
+  border-bottom: none;
+}
+
+.setlist-no {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  text-align: right;
+}
+
+.setlist-work {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.empty-set {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+}

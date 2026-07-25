@@ -1,0 +1,49 @@
+.barlist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rank;
+}
+
+.barlist li {
+  display: grid;
+  grid-template-columns: 1fr 96px 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.barlist-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.barlist-track {
+  height: 10px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barlist-fill {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  background: var(--series-1);
+  border-radius: 0 4px 4px 0;
+}
+
+.barlist-value {
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.barlist-unit {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 1px;
+}
