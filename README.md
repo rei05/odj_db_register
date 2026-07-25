@@ -22,6 +22,12 @@ uv run python -m odj.build
 cd web && npm install && npm run dev
 ```
 
+dev サーバーは **`q` + Enter** で終了する（Vite のキー操作。`h` + Enter で一覧）。
+`npm run` 経由だと Ctrl+C が子プロセスに届かないことがあるため、そちらが確実。
+ターミナルを閉じてしまって残った場合は `npm run stop` で落とせる。
+ポートは 5173 に固定してある（`--strictPort`）ので、繰り上がって
+どこにいるか分からなくなることはない。
+
 GUI は `web/public/data/plays.json` だけを読む静的サイトなので、
 `npm run build` した `web/dist` をそのまま配れる。`main` への push で
 GitHub Pages に上がる。
