@@ -35,6 +35,8 @@ GitHub Pages に上がる。
 `uv` を使わない場合は `PYTHONPATH=src python3 -m odj.build` でも動く。
 標準ライブラリのみで書いてあるので追加インストールは不要。
 
+xlsx リーダの回帰テストは `python3 -m unittest discover -s tests`。
+
 ## 作り
 
 ```

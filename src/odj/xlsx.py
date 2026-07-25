@@ -64,7 +64,26 @@ def _cell_text(cell: ET.Element, shared: list[str]) -> str:
         return shared[idx] if idx < len(shared) else ""
     if kind == "e":
         return ""  # #REF! などのエラー値は欠損扱い
-    return v.text
+    if kind == "b":
+        # スプレッドシートは文字列 "TRUE" を真偽値に変換してしまうので、
+        # 1/0 のまま読むとアーティスト名の TRUE（響け！ユーフォニアム）が
+        # 数字の 1 になる。文字に戻す。
+        return "TRUE" if v.text.strip() == "1" else "FALSE"
+    return _plain_number(v.text)
+
+
+def _plain_number(text: str) -> str:
+    """整数値は小数点を落とす。
+
+    Google スプレッドシートの xlsx 書き出しは数値を "14.0" "2024.0" のように
+    書くため、そのままだと数字が名前になっている項目が濁る
+    （アーティスト "14" が "14.0" になる）。画面表示に合わせて整数に戻す。
+    """
+    try:
+        value = float(text)
+    except ValueError:
+        return text
+    return str(int(value)) if value.is_integer() else text
 
 
 def sheet_names(path: Path) -> list[str]:
@@ -78,9 +97,13 @@ def read_sheets(path: Path) -> list[tuple[str, list[list[str]]]]:
     with zipfile.ZipFile(path) as zf:
         shared = _shared_strings(zf)
         names = sheet_names(path)
+        def sheet_number(name: str) -> int:
+            m = re.search(r"(\d+)", name)
+            return int(m.group(1)) if m else 0
+
         paths = sorted(
             (n for n in zf.namelist() if _SHEET_PATH_RE.fullmatch(n)),
-            key=lambda n: int(re.search(r"(\d+)", n).group(1)),
+            key=sheet_number,
         )
         out: list[tuple[str, list[list[str]]]] = []
         for i, sheet_path in enumerate(paths):
