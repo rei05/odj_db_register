@@ -1,0 +1,358 @@
+/* レビュー画面専用のスタイル。配色トークンは web/src/index.css のものを流用し、
+   クラス名は review- 接頭辞で既存タブ（App.css）と衝突しないようにしてある。
+   タブの見た目だけは .tab / .tab-on を再利用したいので、その2クラスだけ
+   App.css と同じ定義をここにも置く（review 画面は App.css を読み込まないため）。 */
+
+.review-app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+.review-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-top: 20px;
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.review-title h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+}
+
+.review-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.review-field-toggle {
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.tab {
+  flex: none;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+
+.tab-on,
+.tab-on:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+  background: none;
+  font-weight: 600;
+}
+
+.review-main {
+  padding-top: 18px;
+}
+
+.notice {
+  color: var(--text-secondary);
+}
+
+.notice-error {
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--series-2);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.review-notice-ok {
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--series-1);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.review-progress {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.field {
+  padding: 8px 11px;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.link-button {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+/* --- カード本体 --- */
+
+.review-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.review-card-id {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-card-rows {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.review-values {
+  margin: 0 0 4px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.review-value {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.review-value:last-child {
+  border-bottom: none;
+}
+
+.review-value-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  cursor: pointer;
+}
+
+.review-value-rows {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.review-value-meta {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.review-hint {
+  font-size: 12px;
+  margin: 6px 0 16px;
+}
+
+.review-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-1);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.review-chip-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* --- 検索プレビュー --- */
+
+.review-preview {
+  background: var(--surface-0);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 4px 0 16px;
+}
+
+.review-preview-summary {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-preview-delta {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.review-preview-empty {
+  margin: 0;
+  font-size: 12px;
+}
+
+.review-preview-list {
+  margin: 6px 0 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.review-preview-list li {
+  padding: 1px 0;
+}
+
+/* --- 提案 / 理由 --- */
+
+.review-proposal {
+  margin-top: 4px;
+}
+
+.review-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.review-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.review-proposal-meta {
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.review-reason-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.review-reason {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.review-reason-warn {
+  border-color: var(--series-2);
+}
+
+.review-reason-warn-text {
+  color: var(--series-2);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+/* --- 操作ボタン --- */
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.review-btn:hover {
+  background: var(--surface-2);
+}
+
+.review-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.review-btn kbd,
+.review-hint kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-0);
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.review-footer {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}

@@ -12,6 +12,13 @@ function rank(
   keyOf: (p: Play) => string | null,
   labelOf: (p: Play) => string,
   limit: number,
+  /**
+   * 束ねられた生表記を detail に併記したいときに渡す（辞書適用後の
+   * topWorks / topArtists 用）。canonical と異なる生値がグループ内に
+   * あれば「canonical ← 生値1、生値2」を detail の頭に足す。辞書を
+   * 適用しても黙って統合しない、が方針なので常に出所を見せる。
+   */
+  rawOf?: (p: Play) => string | null,
 ): Ranked[] {
   const buckets = new Map<string, { label: string; plays: Play[] }>()
   for (const p of plays) {
@@ -22,11 +29,15 @@ function rank(
     else buckets.set(key, { label: labelOf(p), plays: [p] })
   }
   return [...buckets.values()]
-    .map(({ label, plays: group }) => ({
-      label,
-      count: group.length,
-      detail: [...new Set(group.map((g) => g.dj))].join('・'),
-    }))
+    .map(({ label, plays: group }) => {
+      const djDetail = [...new Set(group.map((g) => g.dj))].join('・')
+      const raws = rawOf
+        ? [...new Set(group.map(rawOf).filter((r): r is string => !!r && r !== label))]
+        : []
+      const detail =
+        raws.length > 0 ? `${label} ← ${raws.join('、')} / ${djDetail}` : djDetail
+      return { label, count: group.length, detail }
+    })
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'ja'))
     .slice(0, limit)
 }
@@ -35,21 +46,35 @@ export function topTitles(plays: Play[], limit = 20): Ranked[] {
   return rank(plays, (p) => p.base || null, (p) => p.title, limit)
 }
 
+/**
+ * 作品・元ネタランキング。辞書適用後の workCanon でまとめる。
+ *
+ * workKind が 'work' 以外（ボカロ・VTuber・オタクDJ大会自体・
+ * アーティスト名が元ネタ欄に書かれたもの等）は作品ではないので除外する。
+ * ただし workKind が null（辞書にまだ無い、大半のレコードがこれ）は
+ * 除外しない。除外すると辞書が育つまでランキングが空になってしまう。
+ */
 export function topWorks(plays: Play[], limit = 20): Ranked[] {
   return rank(
     plays,
-    (p) => (p.work ? p.work.normalize('NFKC').toLowerCase() : null),
-    (p) => p.work ?? '',
+    (p) => {
+      if (!p.workCanon) return null
+      if (p.workKind && p.workKind !== 'work') return null
+      return normKey(p.workCanon)
+    },
+    (p) => p.workCanon ?? '',
     limit,
+    (p) => p.work,
   )
 }
 
 export function topArtists(plays: Play[], limit = 20): Ranked[] {
   return rank(
     plays,
-    (p) => (p.artist ? p.artist.normalize('NFKC').toLowerCase() : null),
-    (p) => p.artist ?? '',
+    (p) => (p.artistCanon ? normKey(p.artistCanon) : null),
+    (p) => p.artistCanon ?? '',
     limit,
+    (p) => p.artist,
   )
 }
 

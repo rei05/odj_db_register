@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "verify": "node --experimental-strip-types scripts/verify.ts",
-    "stop": "node scripts/stop.mjs"
+    "stop": "node scripts/stop.mjs",
+    "review": "vite --mode review"
   },
   "dependencies": {
     "react": "^19.2.7",
