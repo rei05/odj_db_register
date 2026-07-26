@@ -1,0 +1,46 @@
+name: Generate alias candidates with GitHub Models
+
+on:
+  workflow_dispatch:
+    inputs:
+      field:
+        description: 'work / artist'
+        default: 'work'
+
+permissions:
+  models: read
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Block duplicate clusters
+        run: PYTHONPATH=src python -m odj.aliases block --field ${{ inputs.field }}
+
+      - name: Fetch evidence from external APIs
+        run: PYTHONPATH=src python -m odj.aliases fetch --field ${{ inputs.field }}
+
+      - name: Ask GitHub Models to generate candidates
+        run: PYTHONPATH=src python -m odj.aliases ask --field ${{ inputs.field }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create pull request with candidates
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: aliases/${{ inputs.field }}-proposal
+          add-paths: data/aliases/_proposed/
+          title: Alias candidates for ${{ inputs.field }} field
+          body: |
+            GitHub Models が生成した候補です。**中身のレビューは不要**。すべて approved=false なので公開データ（aliases.json）には出ません。マージ後、ローカルで `npm run review` を実行して1件ずつ判断してください。
+          delete-branch: false
