@@ -83,6 +83,12 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
             f"  ヒット {result['hits']} / 空 {result['misses']}"
             f"（evidence.json 全体では {result['totalEvidence']} 件）"
         )
+        if result["failed"]:
+            # 裏取りに失敗した値は空として記録済み。ここで名前を出しておかないと
+            # 「ヒット無し」と区別が付かない。
+            names = "、".join(result["failed"][:5])
+            more = f" ほか{len(result['failed']) - 5}件" if len(result["failed"]) > 5 else ""
+            print(f"  取得に失敗（空として記録）: {names}{more}")
     return 0
 
 
