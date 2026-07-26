@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from . import drive, normalize as nz, readers, xlsx
+from .aliases import store as aliases_store
 from .crawl import DJ_PREFIX_RE
 from .drive import DriveItem
 from .paths import (
@@ -525,6 +526,7 @@ def main() -> None:
     print(f"  {PASTE_TSV}")
     print(f"  {WEB_DATA_JSON}")
     print(f"  {REPORT_PATH}")
+    print(f"  {aliases_store.export_json()['path']}")  # 承認済みの名寄せ辞書
     if report["missing"]:
         print(f"  セトリ未登録 {len(report['missing'])} 件（レポート参照）")
     if report["count_mismatch"]:
