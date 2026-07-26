@@ -1,0 +1,59 @@
+# LLM が生成した統合候補（未承認）。
+# このディレクトリのファイルは提案であって辞書ではない。
+# 人間が npm run review で1件ずつ判断し、承認したものだけが
+# data/aliases/works.toml に移る。approved は LLM も自動処理も書かない。
+
+[[work]]
+id = "work-1db7a31e"
+canonical = "ボカロ"
+series = "ボーカロイド"
+kind = "vocaloid"
+variants = ["ボカロ", "ボカロ?"]
+confidence = "high"
+source = "llm"
+reason = """「ボカロ?」は「ボカロ」の表記ゆれ。実データで 141 行と 2 行。
+同じボーカロイド曲に付けられているタグで、記号の有無の違いだけ。"""
+
+[[work]]
+id = "work-deaa9d6b"
+canonical = "初音ミク"
+series = "ボーカロイド"
+kind = "vocaloid"
+variants = ["初音ミク", "初音ミク 楽曲"]
+confidence = "high"
+source = "llm"
+reason = """「初音ミク 楽曲」は「初音ミク」に注記が付いただけ。
+実データで 54 行と 1 行。どちらもボカロ曲に付けられているタグ。"""
+
+[[work]]
+id = "work-a7113180"
+canonical = "ラブライブ!"
+series = "ラブライブ"
+kind = "work"
+variants = ["ラブライブ", "ラブライブ!", "ラブライブ! 楽曲"]
+confidence = "high"
+source = "llm"
+reason = """「ラブライブ」「ラブライブ!」「ラブライブ! 楽曲」は全て
+同じアニメシリーズの表記ゆれ。実データで 8 行・19 行・1 行。
+記号と注記の有無だけが異なり、同じ作品を指す。"""
+
+[[work]]
+id = "work-5ff14b50"
+canonical = "アイドルマスターシンデレラガールズ"
+series = "アイドルマスター"
+kind = "work"
+variants = ["アイドルマスター シンデレラガールズ", "アイドルマスターシンデレラガールズ"]
+confidence = "high"
+source = "llm"
+reason = """スペースの有無だけの表記ゆれ。実データで 6 行と 15 行。
+同じゲーム・アニメシリーズの両方に含まれる同一の作品。"""
+
+[[work]]
+id = "work-a234f839"
+canonical = "涼宮ハルヒの憂鬱"
+kind = "work"
+variants = ["涼宮ハルヒの憂鬱", "TVアニメ「涼宮ハルヒの憂鬱」 OP", "涼宮ハルヒの憂鬱 楽曲"]
+confidence = "high"
+source = "llm"
+reason = """OP 表記や「楽曲」注記が付いているだけで、全て同じアニメシリーズ。
+実データで 13 行・1 行・1 行。曲の出典表記を含めた注記の有無だけ異なる。"""

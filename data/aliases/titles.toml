@@ -1,0 +1,209 @@
+# 曲名欄から原曲名を取り出せない行の手当て。
+#
+# 検索で当てたいのは原曲名であって、どのリミックスかは関心事ではない。
+# リミックス表記の除去は web/src/lib/normalize.ts の baseKey() が規則でやるので、
+# ここに書くのは**規則では原曲名にならないもの**だけ。
+#
+# 実データの 2410 行に baseKey() を当てて残ったのは、ほぼ全部が
+# 「アーティスト名 - 曲名」の形で動画サイトの表記をそのまま貼ったもの。
+# どちらが曲名かは文字列からは決まらない（「ray - Leo/need」は左が曲名、
+# 「米津玄師 Kenshi Yonezu - KICKBACK」は右が曲名）ので、人間が読んで書く。
+#
+# raw    … plays.json の曲名そのまま。完全一致で引く
+# title  … 原曲名。これが baseKey の入力になる
+# artist … 曲名欄に紛れていたアーティスト名。分かる場合だけ書く（推測しない）
+# where  … どの回の誰のセトリか
+# reason … なぜそう読んだか
+
+# ---------------------------------------------------------------------------
+# アーティスト名 - 曲名
+# ---------------------------------------------------------------------------
+
+[[title]]
+raw = "ray - Leo/need"
+title = "ray"
+artist = "Leo/need"
+where = "第4回 レイクン"
+reason = """Leo/need はプロジェクトセカイのユニット名。元ネタ列も
+「ボカロ・プロセカ」なので、左が曲名で右がアーティスト。"""
+
+[[title]]
+raw = "Triad Primus - Trancing Pulse (brz_bootleg_remix)"
+title = "Trancing Pulse"
+artist = "Triad Primus"
+where = "第5回 レイクン"
+reason = "元ネタ列が「デレマス」。Triad Primus はデレマスのユニット名。"
+
+[[title]]
+raw = "THE IDOLM@STER OP - READY!! (Sanaas remix)"
+title = "READY!!"
+where = "第6回 レイクン"
+reason = """左は「THE IDOLM@STER OP」という出典の書き方で曲名ではない。
+元ネタ列も「アニマス」。"""
+
+[[title]]
+raw = "Kizuna AI - melty world (Prod.TeddyLoid)"
+title = "melty world"
+artist = "Kizuna AI"
+where = "第6回 tri"
+reason = """アーティスト列は TeddyLoid だがこれはリミキサー。
+原曲のアーティストは曲名欄の側に書かれている。"""
+
+[[title]]
+raw = "米津玄師 Kenshi Yonezu - KICKBACK"
+title = "KICKBACK"
+artist = "米津玄師"
+where = "第6回 tri"
+reason = "アーティスト列も「米津玄師」で一致する。曲名は KICKBACK。"
+
+[[title]]
+raw = "picco - Tokyo Future Girl feat. 初音ミク (Nyacktas Remix)"
+title = "Tokyo Future Girl"
+artist = "picco"
+where = "第8回 tri"
+reason = "アーティスト列も「picco」で一致する。"
+
+[[title]]
+raw = "NNNS - SOS (Prod. by Purukichi)"
+title = "SOS"
+artist = "NNNS"
+where = "第8回 tri"
+reason = """第12回ふっちーが同じ曲を「NNNS - SOS (prod. by Purukichi)」で
+登録していて、そちらは元ネタ列が「NNNS」。NNNS がアーティスト。"""
+
+[[title]]
+raw = "NNNS - SOS (prod. by Purukichi)"
+title = "SOS"
+artist = "NNNS"
+where = "第12回 ふっちー"
+reason = "元ネタ列が「NNNS」。第8回 tri の同じ曲と大小だけが違う。"
+
+[[title]]
+raw = "MYTH & ROID - FOREVER LOST (あやとり DnB Edit)"
+title = "FOREVER LOST"
+artist = "MYTH & ROID"
+where = "第9回 tri"
+reason = "アーティスト列は「あやとり」でリミキサー。原曲は MYTH & ROID。"
+
+[[title]]
+raw = "Hatsune Miku, Wowaka - Rolling Girl (LLFA Festival Mix)"
+title = "Rolling Girl"
+artist = "wowaka"
+where = "第9回 tri"
+reason = """アーティスト列は「LLFA」でリミキサー。ローリンガールの
+ボカロP は wowaka で、アーティスト列の他の行と表記を揃えた。"""
+
+[[title]]
+raw = "VOLTA - ACE (HITECH FRONTIER)"
+title = "ACE"
+artist = "VOLTA"
+where = "第10回 あちょ"
+reason = "アーティスト列・元ネタ列とも空。ダッシュの左がアーティスト。"
+
+[[title]]
+raw = "紫雲清夏 - Tame-Lie-One-Step (eharamiori Remix)"
+title = "Tame-Lie-One-Step"
+artist = "紫雲清夏"
+where = "第11回 ふっちー"
+reason = """元ネタ列が「学マス」。紫雲清夏は学園アイドルマスターの
+キャラクター名で、アーティスト列の eharamiori はリミキサー。"""
+
+[[title]]
+raw = "Knock2 - dashstar_(Blue Archive EDIT)"
+title = "dashstar_"
+artist = "Knock2"
+where = "第11回 ふっちー"
+reason = "元ネタ列が「knock2 blue archive」。Knock2 がアーティスト。"
+
+[[title]]
+raw = "3dNOW - Sazae-san's theme (Funkot Remix)"
+title = "Sazae-san's theme"
+where = "第11回 ふっちー"
+reason = "元ネタ列が「サザエさん」。3dNOW はリミキサー。"
+
+[[title]]
+raw = "somunia - Connected World (わた篠 FutureCore Remix)"
+title = "Connected World"
+artist = "somunia"
+where = "第12回 あちょ"
+reason = "括弧内の「わた篠」がリミキサー。ダッシュの左が原曲アーティスト。"
+
+[[title]]
+raw = "TRICK&TREAT - Black★Party (KineticNinja Remix)"
+title = "Black★Party"
+artist = "TRICK&TREAT"
+where = "第12回 ふっちー"
+reason = """元ネタ列が「ミリオンライブ」。TRICK&TREAT はミリオンライブの
+ユニット名で、他の「アーティスト - 曲名」の行と同じ並び。"""
+
+[[title]]
+raw = "picco - image feat.初音ミク [Bass House]"
+title = "image"
+artist = "picco"
+where = "第12回 ふっちー"
+reason = "元ネタ列が「picco」。第8回 tri の picco の行と同じ並び。"
+
+[[title]]
+raw = "相対性理論 - チャイナアドバイス (covered By Toccoyaki Feat. Somunia) (cexiria Bootleg)"
+title = "チャイナアドバイス"
+artist = "相対性理論"
+where = "第12回 ふっちー"
+reason = "元ネタ列が「相対性理論」。括弧内はカバーとブートレグの情報。"
+
+[[title]]
+raw = "beatmania IIDX - smooooch・∀・"
+title = "smooooch・∀・"
+where = "第12回 ふっちー"
+reason = "元ネタ列が「beatmania」。左は曲名ではなく収録作品。"
+
+# ---------------------------------------------------------------------------
+# 曲名 / アーティスト
+# ---------------------------------------------------------------------------
+
+[[title]]
+raw = "ロウワー / 星街すいせい(cover)"
+title = "ロウワー"
+artist = "星街すいせい"
+where = "第3回 レイクン"
+reason = """アーティスト列も「星街すいせい」。スラッシュの左が曲名で、
+上の「アーティスト - 曲名」とは並びが逆になっている。"""
+
+[[title]]
+raw = "フォニイ / 星街すいせい(Cover)"
+title = "フォニイ"
+artist = "星街すいせい"
+where = "第3回 レイクン"
+reason = "同上。同じ回・同じ DJ が同じ書き方をしている。"
+
+[[title]]
+raw = "おめがシスターズ / シンクロニティ(J-CORE Bootleg Remix)"
+title = "シンクロニティ"
+artist = "おめがシスターズ"
+where = "第3回 レイクン"
+reason = """元ネタ列が「おめがシスターズ」なので、こちらはスラッシュの
+左がアーティスト。同じ DJ でも並びが揃っていない。"""
+
+# ---------------------------------------------------------------------------
+# 副題・動画タイトルの貼り付け
+# ---------------------------------------------------------------------------
+
+[[title]]
+raw = "Dear You -Higurashi Vocal (DnB Remix)"
+title = "Dear You"
+where = "第3回 tri"
+reason = """「-Higurashi Vocal-」は副題。ダッシュの後ろにリミックス語が
+無いので baseKey では落ちない。元ネタ列は「ひぐらしのなく頃に」。"""
+
+[[title]]
+raw = "TVアニメ『アイカツスターズ!』EDテーマ「Bon Bon Voyage!」ノンクレジット映像"
+title = "Bon Bon Voyage!"
+where = "第6回 tri"
+reason = "動画タイトルをそのまま貼ったもの。曲名は鉤括弧の中。"
+
+[[title]]
+raw = "INNOCENCE By Aoi Eir ~ REMIX"
+title = "INNOCENCE"
+artist = "藍井エイル"
+where = "第9回 レイクン"
+reason = """「By Aoi Eir」はアーティスト名のローマ字表記。アーティスト列の
+「藍井エイル」と同一人物なので、そちらの表記に揃えた。"""
