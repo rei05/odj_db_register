@@ -58,7 +58,16 @@ ENDPOINT = "https://models.github.ai/inference/chat/completions"
 
 # **Anthropic Claude は GitHub Models のカタログに無い**（実際に引いて確認済み）。
 # 使えるのは openai/* と meta/*、mistral-ai/* など。
-DEFAULT_MODEL = "openai/gpt-5"
+#
+# gpt-5 ではない理由: カタログには載っているが rate_limit_tier が "custom" で、
+# 標準の無料枠には含まれない。Actions から投げると 400 が返る:
+#   {"code":"unavailable_model","message":"Unavailable model: gpt-5"}
+# **カタログに載っていることと使えることは別**だった。gpt-4.1 は "high" tier で
+# 標準の無料枠に入っている。
+#
+# gpt-5 は reasoning 持ちで、出力トークンを思考にも使う。max_completion_tokens
+# の枠を思考が食って答えが途中で切れる心配があり、その意味でも 4.1 のほうが素直。
+DEFAULT_MODEL = "openai/gpt-4.1"
 
 # 入力の上限。**実測値**で、事前の調べで 8000 としていたのは誤りだった。
 # GitHub Actions 上で 413 が返って判明した:
@@ -474,8 +483,9 @@ def estimate_tokens(text: str) -> int:
 def request_body(model: str, system: str, user: str) -> dict[str, Any]:
     """OpenAI 互換のリクエスト本文。
 
-    temperature は送らない。gpt-5 系は既定値（1）以外を受け付けず、指定すると
-    400 が返る。再現性はこちらのキャッシュで担保しているので実害は無い。
+    temperature は送らない。既定値以外を受け付けないモデル（gpt-5 系）があり、
+    --model で差し替えられる以上、どれでも通る形にしておきたい。再現性は
+    プロンプトの SHA256 キャッシュで担保しているので実害は無い。
     max_tokens ではなく max_completion_tokens なのも同じ理由。
     """
     return {
@@ -553,7 +563,21 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:  # noqa: PERF203
             detail = exc.read().decode("utf-8", "replace")[:500]
-            last = AliasError(f"GitHub Models が {exc.code} を返しました: {detail}")
+            hint = ""
+            if "unavailable_model" in detail:
+                # カタログに載っていても、rate_limit_tier が "custom" のモデルは
+                # 標準の無料枠では使えない（gpt-5 がこれで、Actions から 400 が
+                # 返る）。tier は下のコマンドで確認できる。
+                hint = (
+                    f"\n  モデル {model!r} はこのトークンでは使えません。"
+                    "\n  無料枠で使えるのは rate_limit_tier が low / high のものです:"
+                    "\n    curl -s https://models.github.ai/catalog/models |"
+                    " python3 -c \"import sys,json;"
+                    " [print(m['id'], m['rate_limit_tier'])"
+                    " for m in json.load(sys.stdin)]\""
+                    "\n  --model で切り替えられます。"
+                )
+            last = AliasError(f"GitHub Models が {exc.code} を返しました: {detail}{hint}")
             # 400（プロンプトが長すぎる等）や 401 は待っても直らないので即座に上げる。
             if exc.code not in (429, 500, 502, 503, 504):
                 raise last from exc
