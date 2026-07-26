@@ -114,9 +114,8 @@ def _print_plan(prepared: dict, model: str, dry_run: bool) -> None:
     print(f"  裏取り: {'evidence ' + str(len(ev)) + ' 値' if ev else 'evidence 無し（省略して続行）'}")
     print(f"  システムプロンプト: 推定 {prepared['systemTokens']} tok")
     print(f"  推定トークン: 合計 {sum(tokens)} / 1回あたり最大 {max(tokens)}")
-    split = sum(1 for b in plans if b.get("split"))
-    if split:
-        print(f"  ※ 入力上限に収まらず割ったバッチ: {split} 個（{len(plans)} リクエストの内数）")
+    sizes = [len(b["clusters"]) for b in plans] or [0]
+    print(f"  1回あたりのクラスタ数: {min(sizes)}〜{max(sizes)}")
     over = [i for i, b in enumerate(plans, start=1) if b["tokens"] > llm.INPUT_TOKEN_LIMIT]
     if over:
         print(f"  ⚠ 1クラスタでも上限を超えるバッチ: {over}（プロンプトを削るしかありません）")

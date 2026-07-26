@@ -1109,28 +1109,39 @@ class AskTest(unittest.TestCase):
 
     # -- バッチ化とキャッシュ -----------------------------------------------
 
-    def test_batches_are_twelve_clusters_each(self) -> None:
-        # 無料枠（8k in / 4k out・50 req/日）に収めるための数。153 ÷ 12 = 13 回。
-        items = list(range(30))
-        self.assertEqual(
-            [len(b) for b in llm.batches(items, llm.BATCH_SIZE)], [12, 12, 6]
-        )
-        self.assertEqual(llm.BATCH_SIZE, 12)
+    def test_batches_keep_the_order_of_the_clusters(self) -> None:
         # 中身の順は変えない（同じ入力なら同じキャッシュキーになるため）
+        items = list(range(30))
         self.assertEqual([x for b in llm.batches(items) for x in b], items)
 
-    def test_an_oversized_batch_is_split_before_sending(self) -> None:
-        """上限に収まらないバッチは投げる前に割る。
+    def test_batches_are_filled_up_to_the_input_limit(self) -> None:
+        """入る限り詰めること。
 
-        12 件は「クラスタ ≒ 350〜500tok」の前提で決めた数で、行数の多いクラスタと
-        evidence が重なると超えることがある。超えたリクエストは 400 で返ってきて
-        バッチまるごと落ちるので、割っておく。
+        以前は「一定数ずつ切ってから、収まらないバッチを半分に割る」やり方で、
+        割った片方が枠の半分しか使わず実データで 37 リクエストになっていた。
+        無料枠は 50 req/日しかないので、枠を使い切れないと一度の直しで枯渇する。
         """
         with self.fixture():
-            with mock.patch.object(llm, "INPUT_TOKEN_LIMIT", 1):
+            prepared = llm.plan("work")
+        self.assertTrue(prepared["batches"])
+        for batch in prepared["batches"]:
+            with self.subTest(batch=batch["clusters"][0].get("id")):
+                self.assertLessEqual(batch["tokens"], llm.SAFE_INPUT_TOKENS)
+                self.assertLessEqual(batch["tokens"], llm.INPUT_TOKEN_LIMIT)
+                self.assertLessEqual(len(batch["clusters"]), llm.MAX_CLUSTERS_PER_CALL)
+
+    def test_a_tight_limit_forces_one_cluster_per_call(self) -> None:
+        # 上限を極端に下げても、1クラスタずつには必ず割れて落ちないこと
+        with self.fixture():
+            with mock.patch.object(llm, "SAFE_INPUT_TOKENS", 1):
                 prepared = llm.plan("work")
-        self.assertEqual(len(prepared["batches"]), 2)
-        self.assertTrue(all(b["split"] for b in prepared["batches"]))
+        self.assertTrue(all(len(b["clusters"]) == 1 for b in prepared["batches"]))
+
+    def test_the_input_limit_matches_what_the_api_actually_allows(self) -> None:
+        # 実測値。事前の調べで 8000 としていたのは誤りで、GitHub Actions 上で
+        # 413 tokens_limit_reached が返って判明した。
+        self.assertEqual(llm.INPUT_TOKEN_LIMIT, 4000)
+        self.assertLess(llm.SAFE_INPUT_TOKENS, llm.INPUT_TOKEN_LIMIT)
 
     def test_the_same_input_hits_the_cache_instead_of_the_network(self) -> None:
         # プロンプト全文の SHA256 が鍵。無料枠が 50 req/日しかないので、
@@ -1167,19 +1178,40 @@ class AskTest(unittest.TestCase):
 
     # -- プロンプト ---------------------------------------------------------
 
-    def test_keep_apart_is_expanded_into_the_system_prompt(self) -> None:
-        """keep_apart.toml を要約せず全部並べること。
+    def test_keep_apart_pairs_are_never_summarised(self) -> None:
+        """keep_apart.toml は要約せず、組のまま渡すこと。
 
         要約すると必ず「アイマス系は分ける」のような一般則に化けて、逆に
         「アイドルマスターシンデレラガールズ」と「デレマス」（同じもの）まで
         分けられてしまう。組で持てば効き目が正確になる。
+
+        載せる場所はシステムプロンプトではなく各バッチの入力側。全 26 組で
+        664tok あり、入力上限 4000 に対して固定費として重すぎるため。
         """
         pairs = store.load_keep_apart_pairs()  # 本物の data/aliases/keep_apart.toml
         self.assertGreater(len(pairs), 20)
-        text = llm.system_prompt("work")
+        lines = llm.keep_apart_lines()
         for pair in pairs:
             with self.subTest(pair=(pair["a"], pair["b"])):
-                self.assertIn(f"「{pair['a']}」 ≠ 「{pair['b']}」", text)
+                self.assertIn(f"- 「{pair['a']}」 ≠ 「{pair['b']}」", lines)
+
+    def test_keep_apart_is_narrowed_to_the_values_in_the_batch(self) -> None:
+        """バッチに関係する組だけを載せること。
+
+        絞っても防止力は落ちない。プロンプトに出さなかった組も、返ってきた提案は
+        block.load_keep_apart() で必ず再検査する。
+        """
+        lines = llm.keep_apart_lines({"アイカツ!", "アイカツ"})
+        self.assertIn("- 「アイカツ!」 ≠ 「アイカツスターズ」", lines)
+        # 無関係な組は載らない
+        self.assertNotIn("- 「けいおん!」 ≠ 「けいおん!!」", lines)
+        self.assertLess(len(lines), len(llm.keep_apart_lines()))
+
+    def test_the_detour_through_an_annotated_variant_still_gets_the_pair(self) -> None:
+        # 「アイカツ! 楽曲」しか無いバッチでも「アイカツ! ≠ アイカツスターズ」が
+        # 要る。生の文字列だけで突き合わせると取りこぼす組。
+        lines = llm.keep_apart_lines({"アイカツ! 楽曲"})
+        self.assertIn("- 「アイカツ!」 ≠ 「アイカツスターズ」", lines)
 
     def test_the_system_prompt_carries_the_absolute_rules(self) -> None:
         text = llm.system_prompt("work")

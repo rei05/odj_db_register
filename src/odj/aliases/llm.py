@@ -23,11 +23,11 @@ bigram でも編集距離でも部分一致でも一度も同じクラスタに�
   - `approved` を JSON スキーマに入れない。LLM が承認済みを書くことが構造的に不可能
   - canonical は candidates か api_results にある文字列だけ（創作禁止）。
     書き出す前に Python 側でも検証し、違反した group は捨てる
-  - keep_apart.toml を全部プロンプトに展開したうえで、返ってきたものも
+  - keep_apart.toml の組をプロンプトに載せたうえで、返ってきたものも
     block.load_keep_apart() で再検査する（プロンプトは守られない前提で書く）
 
-GitHub Models の無料枠（High tier: 50 req/日・8k in / 4k out）に収めるため、
-12 クラスタを1リクエストにまとめる。work の 153 クラスタで 13 リクエスト。
+GitHub Models の無料枠（High tier: 50 req/日・**入力 4000tok**）に収めるため、
+入力上限まで詰めてバッチにする。work の 153 クラスタで 27 リクエスト。
 プロンプト全文の SHA256 で data/raw/llm/ にキャッシュするので、**入力が同じなら
 再実行はネットワークに出ず、バイト単位で同じ結果**になる。
 """
@@ -60,14 +60,24 @@ ENDPOINT = "https://models.github.ai/inference/chat/completions"
 # 使えるのは openai/* と meta/*、mistral-ai/* など。
 DEFAULT_MODEL = "openai/gpt-5"
 
-# 無料枠 High tier の上限。超えると 400 が返る。
-INPUT_TOKEN_LIMIT = 8000
+# 入力の上限。**実測値**で、事前の調べで 8000 としていたのは誤りだった。
+# GitHub Actions 上で 413 が返って判明した:
+#   {"code":"tokens_limit_reached",
+#    "message":"Request body too large for gpt-5 model. Max size: 4000 tokens."}
+INPUT_TOKEN_LIMIT = 4000
+
+# 実際に詰めてよい量。上限ちょうどを狙うと、推定の誤差ぶんだけリクエストが
+# まるごと無駄になる。1割の余裕を持たせるほうが、413 で落ちるより安い。
+SAFE_INPUT_TOKENS = 3600
+
 MAX_OUTPUT_TOKENS = 4000
 
-# 1リクエストに詰めるクラスタ数。1クラスタ ≒ 入力 350〜500tok・出力 200tok、
-# システムプロンプト ≒ 2000tok なので 2000 + 500*12 = 8000 が上限ぎりぎり。
-# 実データ（work 153 クラスタ）の最大バッチで推定 5300tok に収まっている。
-BATCH_SIZE = 12
+# 1リクエストに詰めるクラスタ数の上限。入力に収まっても、1クラスタ ≒ 出力 200tok
+# なので、これを超えると出力側の 4000tok を超えて答えが途中で切れる。
+MAX_CLUSTERS_PER_CALL = 18
+
+# pack_batches が入る限り詰めるので、この値は --batch-size の既定でしかない。
+BATCH_SIZE = 6
 
 # ---------------------------------------------------------------------------
 # プロンプトに載せる量の上限
@@ -257,14 +267,19 @@ def pack_cluster(cluster: dict, evidence: dict[str, list[dict]]) -> dict:
             if title in seen:
                 continue
             seen.add(title)
-            hits.append(
-                {
-                    "source": hit.get("source", ""),
-                    "title": title,
-                    "kind": hit.get("kind", ""),
-                    "note": str(hit.get("note", ""))[:NOTE_MAX],
-                }
-            )
+            item = {
+                "source": hit.get("source", ""),
+                "title": title,
+                "kind": hit.get("kind", ""),
+            }
+            # リダイレクトの note は「「ナナシス」は Tokyo 7th シスターズ への
+            # リダイレクト」で、raw と title と kind から完全に導ける。
+            # 検索ヒットの説明は残す — 「ユーフォ」に対する「未確認飛行物体」
+            # 「トウダイグサ属」のように、引きが外れていることの手掛かりになる。
+            note = str(hit.get("note", ""))
+            if hit.get("kind") != "redirect" and note:
+                item["note"] = note.removeprefix("Wikidata 検索: ")[:NOTE_MAX]
+            hits.append(item)
             if len(hits) >= EVIDENCE_MAX:
                 break
         api[raw] = hits
@@ -289,20 +304,54 @@ def evidence_titles(cluster: dict, evidence: dict[str, list[dict]]) -> set[str]:
     return out
 
 
-def keep_apart_lines() -> list[str]:
+def keep_apart_lines(values: set[str] | None = None) -> list[str]:
     """keep_apart.toml を「A ≠ B」の行に展開する。
 
     store.load_keep_apart_pairs() を使う（block.load_keep_apart() のほうは
     注記を剥がした内部キーまで膨らませるので、そのまま見せると
     「あいどるますたーしんでれらがーるず」のような読めない文字列が並ぶ）。
     検証には block 側の膨らませた集合を使い、見せるのは生の組だけ、と分けている。
+
+    values を渡すと、**その値に関係する組だけ**に絞る。26 組を全部載せると
+    それだけで 1400tok 使い、入力上限 4000 に対して固定費が重すぎるため。
+    絞っても防止力は落ちない。プロンプトに出さなかった組も、返ってきた提案は
+    block.load_keep_apart() で必ず再検査する（プロンプトは守られない前提で書き、
+    守られなかったときに落ちる場所を Python 側に置く、という方針は変えない）。
+
+    関係するかどうかは注記を剥がしたキーでも見る。「アイカツ! 楽曲」と
+    「アイカツスターズ」のような迂回路が実データにあり、生の文字列だけを
+    突き合わせると取りこぼす。
     """
     lines = []
+    keys = None
+    if values is not None:
+        keys = {rules.agg_key(rules.strip_notes(v)) for v in values} | {
+            rules.agg_key(v) for v in values
+        }
+        keys.discard("")
     for pair in store.load_keep_apart_pairs():
         a, b = (pair.get("a") or "").strip(), (pair.get("b") or "").strip()
-        if a and b:
-            lines.append(f"- 「{a}」 ≠ 「{b}」")
+        if not (a and b):
+            continue
+        if keys is not None and not _touches(a, keys) and not _touches(b, keys):
+            continue
+        lines.append(f"- 「{a}」 ≠ 「{b}」")
     return lines
+
+
+def _touches(name: str, keys: set[str]) -> bool:
+    """その表記が、バッチに出てくる値のどれかと同じものを指しているか。"""
+    return rules.agg_key(rules.strip_notes(name)) in keys or rules.agg_key(name) in keys
+
+
+def cluster_values(clusters: list[dict]) -> set[str]:
+    """バッチに出てくる生表記を全部集める。keep_apart の絞り込みに使う。"""
+    return {
+        v.get("raw", "")
+        for c in clusters
+        for v in c.get("values", [])
+        if v.get("raw")
+    }
 
 
 _FIELD_LABEL = {
@@ -312,24 +361,21 @@ _FIELD_LABEL = {
 
 
 def system_prompt(field: str) -> str:
-    """システムプロンプト。keep_apart.toml を**全展開して埋め込む**。
+    """システムプロンプト。全バッチで共通の部分だけ。
 
-    26 組を要約せずそのまま並べているのは、要約すると必ず「アイマス系は分ける」の
-    ような一般則に化けて、逆に「アイドルマスターシンデレラガールズ」と
-    「デレマス」（同じもの）まで分けられてしまうため。組で持てば効き目が正確になる。
+    以前は keep_apart.toml の 26 組をここに全展開していたが、それだけで 1400tok
+    使い、入力上限 4000 に対して固定費が重すぎた。組は各バッチの入力側へ移し、
+    そのバッチに関係するものだけを載せる（keep_apart_lines の説明を参照）。
+    要約して一般則にはしない。「アイマス系は分ける」に化けると、逆に
+    「アイドルマスターシンデレラガールズ」と「デレマス」（同じもの）まで分かれる。
     """
     label, thing = _FIELD_LABEL[field]
-    pairs = keep_apart_lines()
-    pairs_text = "\n".join(f"   {line}" for line in pairs) if pairs else "   （まだ登録が無い）"
     return f"""\
 あなたはオタクDJ大会のプレイログDBの表記ゆれを整理する助手です。対象は{label}。
-目的は**検索で確実に曲を見つけられるようにすること**であって、{thing}を分類する
-ことではありません。
+目的は**検索で確実に曲を見つけられるようにすること**で、{thing}の分類ではありません。
 
-入力は「文字列が似ているので同じものかもしれない」と機械が集めた候補クラスタです。
-機械は文字列しか見ていないので、**別の{thing}が同じクラスタに入っていることが普通に
-あります**。あなたの仕事は、各クラスタの中で本当に同じものを指す表記だけを1つの
-グループにまとめることです。
+入力は機械が文字列の類似だけで集めた候補です。**別の{thing}が同じクラスタに
+入っているのが普通**なので、本当に同じものを指す表記だけをグループにしてください。
 
 ## 絶対規則
 
@@ -338,13 +384,10 @@ def system_prompt(field: str) -> str:
    入れなくてよい。まとめられるものが1つも無いクラスタからは、グループを1つも
    出さないこと（groups は空配列でもよい）。全クラスタに答えを出す必要はありません。
 
-2. 以下の組は実データを突き合わせて別物と確認済みです。**絶対に同じグループへ
-   入れないこと。**
-
-{pairs_text}
-
-   ここに挙がっていなくても、シリーズの別{thing}（1期と2期、無印と続編、
-   ブランドが同じだけの別タイトル）は別物として扱ってください。
+2. 入力の keepApart に挙げた組は、実データを突き合わせて別物と確認済みです。
+   **絶対に同じグループへ入れないこと。** そこに挙がっていなくても、シリーズの
+   別{thing}（1期と2期、無印と続編、ブランドが同じだけの別タイトル）は
+   別物として扱ってください。
 
 3. canonical は、そのクラスタの candidates[].raw か api_results[].title に
    **実際にある文字列**からのみ選ぶこと。**創作は禁止**で、「正式名称はこうあるべき」
@@ -363,46 +406,45 @@ def system_prompt(field: str) -> str:
 
 ## 入力の読み方
 
-- candidates[].raw … plays.json にそのまま入っている生の表記。variants にはこの
-  文字列を**そのまま**書くこと（整えたり直したりしない）
-- rows … その表記が何行あるか
-- djs / coTitles / coArtists / coWorks … 同じ行に入っていた DJ 名・曲名・
-  アーティスト名（先頭 {SAMPLE} 件だけ）。**曲名が1つも重ならず、アーティストの系統も
-  違うなら別{thing}を疑う**こと。逆に同じ DJ が両方の表記を使っていれば表記ゆれの証拠
-- alsoAnArtistName … 同じ文字列がアーティスト列にも現れる値
-- edges … 機械が2つを結んだ根拠。[A, B, 種別] で、種別は
-  caseonly=大小と空白だけの差 / agg=注記(OP・ED・楽曲・TVアニメ「」)を剥がすと一致 /
-  cooccur=同じ曲でアーティスト表記だけ違う / edit=綴りが近い(タイポ) /
-  bigram=文字の重なりが多い / substr=片方が片方に含まれるだけ。
-  **substr しか無い組は最も弱い根拠なので疑ってかかること**
-- hints
-  - series-risk … 部分一致だけで繋がった。シリーズの別{thing}が混ざっている恐れ
-  - series-mark-mismatch … 「2期」「劇場版」のような続編の印が食い違う値が混ざる
-  - split-from-large … 元は繋がりすぎた大きな塊の破片。中身を疑ってかかること
-  - artist-as-work … アーティスト名が元ネタ列に入っている値を含む
-- api_results … 外部 API（Wikipedia ja のリダイレクト等）の裏取り結果。
-  **空配列は「引いたが記事が無かった」**でタイポか通称のシグナル。
-  キーごと無い値は「そもそも引いていない」（出現1回の値は引かない）ので、
-  無いことを根拠にしないこと
+- candidates[].raw … 生の表記。variants には**そのまま**書く（整えない）
+- rows … 行数。djs / coTitles / coArtists / coWorks … 同じ行の DJ・曲名・
+  アーティスト（先頭 {SAMPLE} 件）。**曲名が1つも重ならずアーティストの系統も違うなら
+  別{thing}を疑う**。同じ DJ が両方の表記を使っていれば表記ゆれの証拠
+- edges … 2つを結んだ根拠 [A, B, 種別]。caseonly=大小と空白だけ / agg=注記
+  (OP・ED・楽曲・TVアニメ「」)を剥がすと一致 / cooccur=同じ曲でアーティストだけ違う /
+  edit=綴りが近い(タイポ) / bigram=文字の重なり / substr=片方が片方に含まれるだけ。
+  **substr しか無い組は最も弱いので疑う**
+- hints … series-risk=部分一致だけで繋がった(別{thing}の恐れ) /
+  series-mark-mismatch=「2期」等の印が食い違う / split-from-large=繋がりすぎた塊の
+  破片(中身を疑う) / artist-as-work=元ネタ欄にアーティスト名
+- api_results … 外部 API の裏取り。**空配列は「引いたが記事が無かった」**で
+  タイポか通称のシグナル。キーごと無い値は引いていないだけなので根拠にしない
 
 ## 出力
 
-groups は配列です。1つのクラスタから 0 個・1 個・複数個のグループを出せます。
-cluster_id には元のクラスタの id をそのまま書いてください。
+groups は配列。1つのクラスタから 0 個・1 個・複数個を出せます。cluster_id は
+元のクラスタの id をそのまま。
 
-- variants … 同じものだと判断した生表記。**必ず candidates[].raw のどれか**
+- variants … 同じと判断した生表記。**必ず candidates[].raw のどれか**
 - canonical … variants か api_results[].title にある文字列
-- series … 属するシリーズ名。分からなければ空文字
-- kind … work=アニメ・ゲーム等の作品 / vocaloid=ボカロ曲 / vtuber=VTuber /
-  odj-self=オタクDJ大会そのもののネタ / artist-as-work=元ネタ欄にアーティスト名 /
-  unknown=判断できない
+- series … シリーズ名。分からなければ空文字
+- kind … work=作品 / vocaloid=ボカロ曲 / vtuber=VTuber / odj-self=大会自体のネタ /
+  artist-as-work=元ネタ欄にアーティスト名 / unknown=判断できない
 - confidence … high / medium / low
 - reason … 規則4の通り、実データの引用を含めた日本語
 """
 
 
-def user_prompt(packed: list[dict]) -> str:
-    return json.dumps({"clusters": packed}, ensure_ascii=False, indent=1)
+def user_prompt(packed: list[dict], keep_apart: list[str] | None = None) -> str:
+    """1バッチぶんの入力。
+
+    keepApart はこのバッチに出てくる値に関係する組だけ。システムプロンプトに
+    全部載せると固定費が重すぎるので、ここへ移してある。
+    """
+    payload: dict[str, Any] = {"clusters": packed}
+    if keep_apart:
+        payload["keepApart"] = keep_apart
+    return json.dumps(payload, ensure_ascii=False, indent=1)
 
 
 def batches(items: list[Any], size: int = BATCH_SIZE) -> Iterator[list[Any]]:
@@ -644,27 +686,45 @@ def to_entry(group: dict, model: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def _fit(chunk: list[dict], system_tokens: int, evidence: dict) -> list[dict]:
-    """入力の上限に収まらないバッチを半分に割る安全弁。
-
-    既定の 12 件は「クラスタ ≒ 350〜500tok」を前提にした数だが、行数の多い
-    クラスタは 12 種の値と 66 本の辺を持つことがあり、しかも fetch が
-    evidence を埋めると更に膨らむ。上限を超えたリクエストは 400 で返ってきて
-    バッチまるごと落ちるので、投げる前に割っておく。
-    **通常は割れないので「12件ごと」は保たれる**（work 153 クラスタの最大バッチで
-    推定 7920tok）。
-    """
-    user = user_prompt([pack_cluster(c, evidence) for c in chunk])
-    tokens = system_tokens + estimate_tokens(user)
-    if tokens <= INPUT_TOKEN_LIMIT or len(chunk) <= 1:
-        return [{"clusters": chunk, "user": user, "tokens": tokens, "split": False}]
-    half = len(chunk) // 2
-    parts = _fit(chunk[:half], system_tokens, evidence) + _fit(
-        chunk[half:], system_tokens, evidence
+def _build(chunk: list[dict], evidence: dict) -> tuple[str, int]:
+    """バッチ1つぶんの入力文字列と、その推定トークン数。"""
+    user = user_prompt(
+        [pack_cluster(c, evidence) for c in chunk],
+        keep_apart_lines(cluster_values(chunk)),
     )
-    for part in parts:
-        part["split"] = True
-    return parts
+    return user, estimate_tokens(user)
+
+
+def pack_batches(clusters: list[dict], system_tokens: int, evidence: dict) -> list[dict]:
+    """入る限り詰めてバッチにする。
+
+    以前は「一定数ずつに切ってから、収まらないバッチを半分に割る」やり方だった。
+    これだと割った片方が枠の半分しか使わず、実データで 37 リクエストになった
+    （無料枠は 50 req/日なので、プロンプトを一度直したら枯渇する）。
+    1つずつ足しては上限を確かめるほうが、枠を使い切れてリクエスト数が減る。
+
+    クラスタ数の上限も要る。入力に収まっても、1クラスタ ≒ 出力 200tok なので
+    20 を超えると今度は出力の 4000tok を超えて途中で切れる。
+    """
+    out: list[dict] = []
+    current: list[dict] = []
+    for cluster in clusters:
+        trial = [*current, cluster]
+        user, tokens = _build(trial, evidence)
+        if current and (
+            system_tokens + tokens > SAFE_INPUT_TOKENS or len(trial) > MAX_CLUSTERS_PER_CALL
+        ):
+            done_user, done_tokens = _build(current, evidence)
+            out.append(
+                {"clusters": current, "user": done_user, "tokens": system_tokens + done_tokens}
+            )
+            current = [cluster]
+        else:
+            current = trial
+    if current:
+        user, tokens = _build(current, evidence)
+        out.append({"clusters": current, "user": user, "tokens": system_tokens + tokens})
+    return out
 
 
 def plan(field: str, *, limit: int | None = None, size: int = BATCH_SIZE) -> dict:
@@ -675,9 +735,7 @@ def plan(field: str, *, limit: int | None = None, size: int = BATCH_SIZE) -> dic
     evidence = load_evidence(field)
     system = system_prompt(field)
     system_tokens = estimate_tokens(system)
-    plans: list[dict] = []
-    for batch in batches(clusters, size):
-        plans += _fit(batch, system_tokens, evidence)
+    plans = pack_batches(clusters, system_tokens, evidence)
     return {
         "field": field,
         "system": system,
