@@ -912,7 +912,7 @@ class AskTest(unittest.TestCase):
         self.assertEqual(result["proposed"], 1)
         self.assertEqual(entries[0]["canonical"], "アイカツ!")
         self.assertEqual(entries[0]["variants"], ["アイカツ!", "アイカツ"])
-        self.assertEqual(entries[0]["source"], "llm:openai/gpt-5")
+        self.assertEqual(entries[0]["source"], f"llm:{llm.DEFAULT_MODEL}")
 
     def test_approved_is_never_written(self) -> None:
         """**最重要。** LLM が approved を返しても提案には出ない。
@@ -1288,13 +1288,23 @@ class AskTest(unittest.TestCase):
         self.assertEqual((opened.call_count, slept.call_count), (3, 2))
 
     def test_the_request_body_matches_what_github_models_accepts(self) -> None:
-        # gpt-5 系は temperature の指定を受け付けず、max_tokens ではなく
+        # temperature を受け付けないモデルがあり、max_tokens ではなく
         # max_completion_tokens を見る。どちらも間違えると 400 で全滅する。
         body = llm.request_body(llm.DEFAULT_MODEL, "sys", "user")
         self.assertNotIn("temperature", body)
         self.assertEqual(body["max_completion_tokens"], llm.MAX_OUTPUT_TOKENS)
-        self.assertEqual(body["model"], "openai/gpt-5")
+        self.assertEqual(body["model"], llm.DEFAULT_MODEL)
         self.assertEqual([m["role"] for m in body["messages"]], ["system", "user"])
+
+    def test_the_default_model_is_in_the_free_tier(self) -> None:
+        """既定のモデルは無料枠で使えるものであること。
+
+        カタログに載っていることと使えることは別だった。gpt-5 は
+        rate_limit_tier が "custom" で、Actions から投げると 400 が返る:
+          {"code":"unavailable_model","message":"Unavailable model: gpt-5"}
+        カタログを引くテストにはしない（ネットワークに出るため）。
+        """
+        self.assertNotIn("gpt-5", llm.DEFAULT_MODEL)
 
 
 class SandboxTest(unittest.TestCase):
