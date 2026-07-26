@@ -23,6 +23,7 @@ import sys
 import tomllib
 import unittest
 import urllib.error
+import urllib.parse
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
@@ -1551,6 +1552,53 @@ class FetchTest(unittest.TestCase):
             )
         self.assertIn("謎の略語", data["evidence"])
         self.assertEqual(data["evidence"]["謎の略語"], [])
+
+    def test_one_failure_does_not_stop_the_rest(self) -> None:
+        """1件の取得失敗で残り全部を止めない。
+
+        GitHub Actions 上で「[ahi:]」（元ネタ列にそう書かれた行が実データに3件
+        ある）の取得が落ちただけで、279 件の実行がまるごと死んだ。裏取りは
+        補助情報でしかないので、落ちた値は空として記録して先へ進む。
+        """
+        plays = [
+            _play(w="[ahi:]"), _play(w="[ahi:]"),
+            _play(w="ナナシス"), _play(w="ナナシス"),
+        ]
+        redirect = {"query": {"redirects": [{"to": "Tokyo 7th シスターズ"}]}}
+
+        def opener(req, timeout=None):  # noqa: ARG001
+            if "ahi" in urllib.parse.unquote(req.full_url):
+                raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, None)
+            return _FakeResponse(json.dumps(redirect).encode("utf-8"))
+
+        with sandbox() as root:
+            _write_plays(root, plays)
+            with mock.patch("urllib.request.urlopen", opener), mock.patch("time.sleep"):
+                result = sources.fetch("work")
+            data = json.loads(
+                (root / "out" / "aliases" / "evidence.work.json").read_text(encoding="utf-8")
+            )
+        # 落ちた値も空として残り、後続の値はちゃんと引けている
+        self.assertEqual(data["evidence"]["[ahi:]"], [])
+        self.assertEqual(data["evidence"]["ナナシス"][0]["title"], "Tokyo 7th シスターズ")
+        self.assertEqual(result["failed"], ["[ahi:]"])
+        self.assertEqual(result["hits"], 1)
+
+    def test_everything_failing_stops_early(self) -> None:
+        # 相手に絞られている場合に叩き続けても得るものが無い。
+        plays = []
+        for i in range(_MANY := sources._MAX_CONSECUTIVE_FAILURES + 5):
+            plays += [_play(w=f"値{i}"), _play(w=f"値{i}")]
+
+        def opener(req, timeout=None):  # noqa: ARG001
+            raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", {}, None)
+
+        with sandbox() as root:
+            _write_plays(root, plays)
+            with mock.patch("urllib.request.urlopen", opener), mock.patch("time.sleep"):
+                result = sources.fetch("work")
+        self.assertEqual(result["fetched"], sources._MAX_CONSECUTIVE_FAILURES)
+        self.assertLess(result["fetched"], _MANY)
 
     def test_falls_back_to_wikidata_when_wikipedia_has_no_redirect(self) -> None:
         plays = [_play(w="謎の略語"), _play(w="謎の略語")]

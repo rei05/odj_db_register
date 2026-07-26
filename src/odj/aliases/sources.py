@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -70,6 +71,10 @@ _MUSICBRAINZ_API = "https://musicbrainz.org/ws/2"
 # Wikidata 検索の候補は上位いくつまで拾うか。多すぎると LLM への入力が膨らむ。
 _WIKIDATA_LIMIT = 3
 
+# これだけ続けて失敗したら打ち切る。1件ずつの失敗は握り潰して続けるが、
+# 相手に絞られている・ネットワークが死んでいる場合は叩き続けても意味がない。
+_MAX_CONSECUTIVE_FAILURES = 10
+
 
 # ---------------------------------------------------------------------------
 # HTTP（drive.py の _get() と同じ雛形: UA + リトライ + バックオフ）
@@ -83,7 +88,14 @@ def _get(url: str, *, retries: int = 3) -> bytes:
             req = urllib.request.Request(url, headers={"User-Agent": _UA})
             with urllib.request.urlopen(req, timeout=30) as resp:
                 return resp.read()
-        except (urllib.error.URLError, TimeoutError) as exc:  # noqa: PERF203
+        except urllib.error.HTTPError as exc:  # noqa: PERF203
+            last = exc
+            # 429（レート制限）と 403 は待てば通ることがある。GitHub Actions の
+            # 共有 IP は Wikipedia から絞られやすく、手元では通る値が CI だけで
+            # 落ちることがあった。長めに待ってから諦める。
+            slow = exc.code in (403, 429, 503)
+            time.sleep((5.0 if slow else 1.5) * (attempt + 1))
+        except (urllib.error.URLError, TimeoutError) as exc:
             last = exc
             time.sleep(1.5 * (attempt + 1))
     raise SourceError(f"取得に失敗: {url}") from last
@@ -387,9 +399,32 @@ def fetch(field: str, *, only_new: bool = False, limit: int | None = None) -> di
     limiter = _RateLimiter()
     evidence = dict(existing)
     hits = 0
+    failed: list[str] = []
+    consecutive = 0
+    done = 0
     for value in targets:
-        result = _evidence_for(field, value.raw, limiter)
+        try:
+            result = _evidence_for(field, value.raw, limiter)
+            consecutive = 0
+        except SourceError as exc:
+            # 裏取りは補助情報でしかないので、1件の失敗で残り全部を止めない。
+            # 実際 GitHub Actions 上で「[ahi:]」（元ネタ列にそう書かれた行が3件
+            # ある）の1件が落ちただけで 279 件の実行ごと死んだ。空として記録して
+            # おけば、後段の LLM は「ヒット無し」として扱える。
+            failed.append(value.raw)
+            consecutive += 1
+            result = []
+            if consecutive >= _MAX_CONSECUTIVE_FAILURES:
+                # 全部落ちているのに叩き続けても得るものが無いし、相手にも迷惑。
+                print(
+                    f"  連続 {consecutive} 件失敗したので打ち切ります: {exc}",
+                    file=sys.stderr,
+                )
+                evidence[value.raw] = result
+                done += 1
+                break
         evidence[value.raw] = result  # ヒット無しでも [] を必ず記録する
+        done += 1
         if result:
             hits += 1
 
@@ -404,8 +439,9 @@ def fetch(field: str, *, only_new: bool = False, limit: int | None = None) -> di
         "path": out_path,
         "candidateTotal": len(all_targets),
         "skipped": skipped,
-        "fetched": len(targets),
+        "fetched": done,
         "hits": hits,
-        "misses": len(targets) - hits,
+        "misses": done - hits,
+        "failed": failed,
         "totalEvidence": len(evidence),
     }
