@@ -350,6 +350,42 @@ class BuildEdgesTest(unittest.TestCase):
         edges = build_edges(self._values("BT", "BTS"), set())
         self.assertEqual([e for e in edges if e.kind == "substr"], [])
 
+    def test_redirect_evidence_links_an_abbreviation_to_its_full_name(self) -> None:
+        """外部 API のリダイレクトを辺として使う。
+
+        **文字列の類似では原理的に届かない層がここで埋まる。** 「ナナシス」の
+        agg_key は「ななしす」、「Tokyo 7th シスターズ」は「tokyo7thしすたーず」で、
+        bigram も編集距離も部分一致も一度も繋がらない。実データで9組あり、
+        この辺が無いと単独値のまま後段の LLM にも人間にも届かなかった。
+        """
+        values = self._values("ナナシス", "Tokyo 7th シスターズ")
+        # 文字列だけでは繋がらないことを先に確かめる
+        self.assertEqual(build_edges(values, set()), [])
+        evidence = {"ナナシス": [{"kind": "redirect", "title": "Tokyo 7th シスターズ"}]}
+        edges = block.redirect_edges(values, evidence, set())
+        self.assertEqual(len(edges), 1)
+        self.assertEqual(edges[0].kind, "redirect")
+        self.assertEqual({edges[0].a, edges[0].b}, {"ナナシス", "Tokyo 7th シスターズ"})
+
+    def test_redirect_to_a_value_not_in_the_data_is_ignored(self) -> None:
+        # 統合相手がいない正式名称に辺を張っても候補にならない
+        values = self._values("ブルアカ")
+        evidence = {"ブルアカ": [{"kind": "redirect", "title": "ブルーアーカイブ"}]}
+        self.assertEqual(block.redirect_edges(values, evidence, set()), [])
+
+    def test_redirect_respects_keep_apart(self) -> None:
+        values = self._values("A", "B")
+        evidence = {"A": [{"kind": "redirect", "title": "B"}]}
+        keep = {frozenset(("A", "B"))}
+        self.assertEqual(block.redirect_edges(values, evidence, keep), [])
+
+    def test_search_hits_do_not_make_edges(self) -> None:
+        # 検索は当てにならない。「ユーフォ」に Wikidata が「未確認飛行物体」を
+        # 返した実例がある。辺にしてよいのはリダイレクトだけ。
+        values = self._values("ユーフォ", "未確認飛行物体")
+        evidence = {"ユーフォ": [{"kind": "search", "title": "未確認飛行物体"}]}
+        self.assertEqual(block.redirect_edges(values, evidence, set()), [])
+
     def test_keep_apart_blocks_the_detour_through_annotated_variants(self) -> None:
         """注記違いの表記を経由した迂回路も塞がれること。
 

@@ -264,6 +264,60 @@ def build_edges(values: dict[str, Value], keep_apart: set[frozenset[str]]) -> li
     return edges
 
 
+def load_evidence(field_name: str) -> dict[str, list[dict]]:
+    """fetch が書いた外部 API の裏取り結果。**無ければ空**で、その場合は
+    リダイレクトの辺が張られないだけで他は変わらない。"""
+    path = paths.OUT_ALIASES_DIR / f"evidence.{field_name}.json"
+    if not path.exists():
+        return {}
+    try:
+        with path.open(encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    raw = data.get("evidence")
+    if not isinstance(raw, dict):
+        return {}
+    return {k: list(v) for k, v in raw.items() if isinstance(v, list)}
+
+
+def redirect_edges(
+    values: dict[str, Value],
+    evidence: dict[str, list[dict]],
+    keep_apart: set[frozenset[str]],
+) -> list[Edge]:
+    """辺8: 外部 API のリダイレクトが「同じもの」と言っている組。
+
+    **文字列の類似では原理的に届かない層がここで埋まる。** 「ナナシス」と
+    「Tokyo 7th シスターズ」は agg_key が「ななしす」と「tokyo7thしすたーず」で、
+    bigram も編集距離も部分一致も一度も繋がらない。閾値をいくら緩めても届かず、
+    緩めた分だけ別作品が混ざる。Wikipedia のリダイレクトはこれを直接教えてくれる。
+
+    実データで9組（ナナシス / デレマス / 学マス / シャニマス / まどマギ /
+    よりもい / ガルパン / 俺妹 / ボーカロイド）。いずれも単独値で、この辺が無いと
+    クラスタにならず後段の LLM にも人間にも届かない。
+
+    リダイレクト先が実データに存在する値のときだけ張る。存在しない正式名称
+    （「ブルアカ」→「ブルーアーカイブ」だが後者がデータに無い）は、統合相手が
+    いないので候補にする意味が無い。
+    """
+    edges: list[Edge] = []
+    for raw, hits in evidence.items():
+        if raw not in values:
+            continue
+        for hit in hits:
+            if hit.get("kind") != "redirect":
+                continue
+            target = str(hit.get("title", "")).strip()
+            if not target or target == raw or target not in values:
+                continue
+            if frozenset((raw, target)) in keep_apart:
+                continue
+            edges.append(Edge(raw, target, "redirect"))
+            break  # 最初のリダイレクトだけ見る。2つ目以降は候補が増えるだけ
+    return edges
+
+
 def cooccurrence_edges(
     plays: list[dict], values: dict[str, Value], keep_apart: set[frozenset[str]]
 ) -> list[Edge]:
@@ -334,11 +388,12 @@ def components(edges: list[Edge]) -> list[list[str]]:
 # 辺の信頼度。小さいほど強い。割れないクラスタを弱い順に緩めていくのに使う。
 KIND_STRENGTH = {
     "caseonly": 0,  # 大小・空白だけの差。ほぼ確実に同じもの
-    "agg": 1,  # 注記を剥がしたら一致
-    "cooccur": 2,  # 同じ曲・同じ元ネタでアーティストだけ割れている
-    "edit": 3,  # 綴りが近い（タイポ）
-    "bigram": 4,  # 文字の重なりが多い
-    "substr": 5,  # 片方が片方に含まれる。最も弱い
+    "redirect": 1,  # 外部 API が「同じものへの別名」と言っている
+    "agg": 2,  # 注記を剥がしたら一致
+    "cooccur": 3,  # 同じ曲・同じ元ネタでアーティストだけ割れている
+    "edit": 4,  # 綴りが近い（タイポ）
+    "bigram": 5,  # 文字の重なりが多い
+    "substr": 6,  # 片方が片方に含まれる。最も弱い
 }
 
 
@@ -459,6 +514,7 @@ def build(field_name: str, plays: list[dict]) -> dict:
 
     values = collect(plays, field_key)
     edges = build_edges(values, keep_apart)
+    edges += redirect_edges(values, load_evidence(field_name), keep_apart)
     if field_name == "artist":
         edges += cooccurrence_edges(plays, values, keep_apart)
 
