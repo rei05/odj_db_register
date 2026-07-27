@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Play } from '../lib/types.ts'
 import SearchPreview from './SearchPreview.tsx'
+import { draftReason } from './draft.ts'
 import type { Cluster, DecidePayload, ProposalKind } from './types.ts'
 
 const KIND_OPTIONS: { value: ProposalKind; label: string }[] = [
@@ -54,7 +55,11 @@ export default function ClusterCard({
   const [canonical, setCanonical] = useState(() => initialCanonical(cluster))
   const [series, setSeries] = useState(() => cluster.proposal?.series ?? '')
   const [kind, setKind] = useState<ProposalKind>(() => initialKind(cluster))
-  const [reason, setReason] = useState(() => cluster.proposal?.reason ?? '')
+  // 提案が無いクラスタほど判断が難しい（series-risk で LLM が答えを出さなかった
+  // ものが多い）ので、空欄で放り出さずに事実の下書きを入れておく。
+  const [reason, setReason] = useState(
+    () => cluster.proposal?.reason ?? draftReason(cluster),
+  )
   const [reasonWarn, setReasonWarn] = useState(false)
   const [keepApartMode, setKeepApartMode] = useState(false)
   const [keepApartSelected, setKeepApartSelected] = useState<Set<string>>(new Set())

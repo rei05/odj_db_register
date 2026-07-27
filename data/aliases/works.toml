@@ -1,0 +1,23 @@
+# 元ネタ名の同値クラス。表記ゆれを1つの正準表記に寄せた結果。
+#
+# odj.aliases decide が末尾に追記する（人間が GUI で1件ずつ判断した結果）。
+# 追記しかしないので、手で直した整形やコメントは残る。
+#
+# canonical  … 検索と表示に使う正準表記。variants か提案の中にある文字列しか
+#              置かない（実データのどこにも無い名前を創作しないため）
+# variants   … この正準表記に寄せる生表記。plays.json にそのまま現れる文字列
+# approved   … 人間が確認したか。**true を書くのは人間の判断だけ**
+# confidence … high / medium / low。export に出るのは high と medium だけ
+# reason     … なぜ同じと判断したか。実データの根拠を書く
+
+[[work]]
+id = "work-78068760"
+canonical = "VOCALOID"
+kind = "vocaloid"
+variants = ["VOCALOID", "ボカロ", "ボカロ?", "ボーカロイド"]
+approved = true
+confidence = "high"
+source = "human"
+where = "第1回〜第15回 tri ほか"
+decided_at = "2026-07-27T10:48:11+09:00"
+reason = "「VOCALOID」「ボカロ」「ボーカロイド」は『wikipedia-ja』と『wikidata』両方で「VOCALOID」タイトルにリダイレクト、rowsも「ボカロ」141件「VOCALOID」4件「ボーカロイド」2件と同じジャンルを指すと判断。「ボカロ?」は疑問符がついているが使用例coTitles/coArtistsに目立つ違いがなく実質同類が使っている。全てでアーティスト傾向も一致。"

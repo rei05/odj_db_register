@@ -4,6 +4,7 @@
  */
 import { readFileSync } from 'node:fs'
 import { toPlays } from '../src/lib/data.ts'
+import { draftReason } from '../src/review/draft.ts'
 import { baseKey, matchesQuery, normKey } from '../src/lib/normalize.ts'
 import { checkPlayed, perEvent, topTitles, topWorks } from '../src/lib/stats.ts'
 import type { Aliases, Dataset } from '../src/lib/types.ts'
@@ -261,6 +262,47 @@ console.log(
     .map((w) => `${w.label}(${w.count})`)
     .join(', '),
 )
+
+// 13. レビュー GUI: 理由の下書き
+// LLM の提案が付くのは 152 クラスタ中 92 件で、残り 60 件のうち 41 件は
+// series-risk（LLM が「迷ったら分ける」に従って答えを出さなかったもの）。
+// **一番判断が難しいクラスタほど手掛かりが無い**状態にしないための下書き。
+const draftFixture = {
+  id: 'work-test',
+  field: 'work' as const,
+  rows: 9,
+  hints: ['series-risk'],
+  edgeKinds: ['agg', 'substr'],
+  edges: [{ a: 'CLANNAD', b: 'CLANNAD~AFTER STORY', kinds: ['agg'] }],
+  values: [
+    {
+      raw: 'CLANNAD',
+      rows: 7,
+      events: [1],
+      djs: ['おかりん'],
+      coArtists: ['Lia'],
+      coTitles: ['メグメル'],
+    },
+    {
+      raw: 'CLANNAD~AFTER STORY',
+      rows: 1,
+      events: [3],
+      djs: ['おかりん'],
+      coArtists: ['Lia'],
+      coTitles: ['時を刻む唄'],
+    },
+  ],
+}
+const draft = draftReason(draftFixture)
+check('提案が無いクラスタでも理由の下書きが空にならない', draft.trim().length > 0)
+check('下書きが各表記の行数を挙げる', draft.includes('「CLANNAD」7行'))
+check('下書きが繋いだ根拠を日本語で説明する', draft.includes('注記'))
+check(
+  '下書きが「同じ DJ が両方を使っている」ことを拾う',
+  draft.includes('おかりん'),
+  draft.split('\n')[2] ?? '',
+)
+check('下書きが series-risk の警告を書く', draft.includes('シリーズの別作品'))
 
 console.log(failed === 0 ? '\nすべて通過' : `\n${failed} 件失敗`)
 process.exit(failed === 0 ? 0 : 1)
