@@ -147,8 +147,24 @@ function parseArrayOfTables(text: string): Record<string, string | string[]>[] {
   return tables
 }
 
-/** decisions.jsonl から「もう出さなくていい id」を拾う。defer は次回も出す契約なので除く。 */
-async function readDecidedIds(field: ReviewField): Promise<Set<string>> {
+/**
+ * decisions.jsonl から「もう出さなくていい**生表記**」を拾う。
+ *
+ * 以前はクラスタ id 単位で見ていたが、それだと1枚のカードで一度判断した時点で
+ * **チェックを外した値ごとカードが消えて二度と出てこなかった**。実データで
+ * 「とある」系8個がこれで失われた（keep-apart を押しただけなのに、
+ * 「とある科学の超電磁砲」と「とある科学の超電磁砲S」の統合機会まで消えた）。
+ *
+ * artist 側はもっと深刻で、1枚から複数のグループを作るのが常態になる
+ * （Aiobahn 系 / Mitsukiyo・ミツキヨ / わか・ふうり・すなお が同じカードに来る）。
+ *
+ * 値で持てば、採用しなかった値は次の周でまたカードに出せる。
+ *   accept      … variants に挙げた値だけ判断済み
+ *   reject      … そのクラスタの値すべて（統合しないと決めた）
+ *   defer       … 何も判断していない
+ *   keep-apart  … 組を登録しただけ。値そのものは未判断のまま残す
+ */
+async function readDecidedValues(field: ReviewField): Promise<Set<string>> {
   const p = path.join(repoRoot, 'data', 'aliases', 'decisions.jsonl')
   let text: string
   try {
@@ -156,19 +172,25 @@ async function readDecidedIds(field: ReviewField): Promise<Set<string>> {
   } catch {
     return new Set() // まだ1件も判断していない
   }
-  const ids = new Set<string>()
+  const done = new Set<string>()
   for (const line of text.split('\n')) {
     const trimmed = line.trim()
     if (!trimmed) continue
     try {
-      const d = JSON.parse(trimmed) as { id?: string; field?: string; action?: string }
-      if (d.field === field && d.action !== 'defer' && d.id) ids.add(d.id)
+      const d = JSON.parse(trimmed) as {
+        field?: string
+        action?: string
+        variants?: string[]
+      }
+      if (d.field !== field) continue
+      if (d.action !== 'accept' && d.action !== 'reject') continue
+      for (const v of d.variants ?? []) done.add(v)
     } catch {
       // decisions.jsonl は追記専用ログ。書き込みの最中に読んで末尾の行が
       // 壊れて見えることがあり得るので、その1行だけ無視して読み進める。
     }
   }
-  return ids
+  return done
 }
 
 /**
@@ -256,20 +278,44 @@ async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
     return
   }
 
-  const [decidedIds, proposals] = await Promise.all([
-    readDecidedIds(field),
+  const [decidedValues, proposals] = await Promise.all([
+    readDecidedValues(field),
     readProposals(field),
   ])
-  const remaining = parsed.clusters.filter((c) => !decidedIds.has(c.id))
-  const clusters = remaining.map((c) => {
+
+  // 判断済みの値をカードから外し、まだ2つ以上残っているクラスタだけを出す。
+  // 1つしか残らないものは統合相手がいないので、見せても判断のしようがない。
+  const clusters = []
+  for (const c of parsed.clusters) {
+    const values = c.values.filter((v) => !decidedValues.has(v.raw))
+    if (values.length < 2) continue
+    const alive = new Set(values.map((v) => v.raw))
+    const trimmed: RawCluster & { proposal?: Proposal } = {
+      ...c,
+      values,
+      // 消えた値が絡む辺は根拠として意味を失うので落とす
+      edges: c.edges.filter((e) => alive.has(e.a) && alive.has(e.b)),
+    }
     const proposal = proposals.get(c.id)
-    return proposal ? { ...c, proposal } : c
-  })
+    // 提案も、残っている値だけに絞ってから渡す（既に判断した値を
+    // 「まだ統合できます」と勧めてしまわないように）。
+    if (proposal) {
+      const variants = proposal.variants.filter((v) => alive.has(v))
+      if (variants.length >= 2) {
+        trimmed.proposal = {
+          ...proposal,
+          variants,
+          canonical: alive.has(proposal.canonical) ? proposal.canonical : variants[0],
+        }
+      }
+    }
+    clusters.push(trimmed)
+  }
 
   sendJson(res, 200, {
     field,
     total: parsed.clusters.length,
-    decided: parsed.clusters.length - remaining.length,
+    decided: parsed.clusters.length - clusters.length,
     clusters,
   })
 }

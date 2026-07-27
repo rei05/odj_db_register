@@ -63,6 +63,7 @@ export default function ClusterCard({
   const [reasonWarn, setReasonWarn] = useState(false)
   const [keepApartMode, setKeepApartMode] = useState(false)
   const [keepApartSelected, setKeepApartSelected] = useState<Set<string>>(new Set())
+  const [keepApartError, setKeepApartError] = useState<string | null>(null)
   const reasonRef = useRef<HTMLTextAreaElement>(null)
 
   const canonicalOptions = useMemo(() => {
@@ -94,6 +95,7 @@ export default function ClusterCard({
   }
 
   function toggleKeepApartPick(raw: string) {
+    setKeepApartError(null) // 選び直したら案内は消す
     setKeepApartSelected((prev) => {
       const next = new Set(prev)
       if (next.has(raw)) next.delete(raw)
@@ -132,7 +134,16 @@ export default function ClusterCard({
       },
       reject: () => {
         if (!requireReason()) return
-        onSubmit({ id: cluster.id, field: cluster.field, action: 'reject', reason })
+        // 却下は「このカードの値はどれも統合しない」という判断なので、
+        // 対象を variants として明示する。これが無いとキューが
+        // 「まだ判断していない値」として次の周でまた出してしまう。
+        onSubmit({
+          id: cluster.id,
+          field: cluster.field,
+          action: 'reject',
+          reason,
+          variants: cluster.values.map((v) => v.raw),
+        })
       },
       defer: () => {
         if (!requireReason()) return
@@ -144,32 +155,38 @@ export default function ClusterCard({
           setKeepApartSelected(new Set())
           return
         }
-        if (keepApartSelected.size >= 2) {
+        // ちょうど2つだけ受ける。以前は選んだ全組み合わせを登録していたため、
+        // 「とある」系で5つ選んだら 10 組が入り、「超電磁砲」と
+        // 「とある科学の超電磁砲」（略称なので同じ作品）や
+        // 「とある科学の超電磁砲S」と「TVアニメ「…S」ED」（注記違い）まで
+        // 別物として固定されてしまった。3つ以上を分けたいときは k を繰り返す。
+        if (keepApartSelected.size === 2) {
           if (!requireReason()) return
-          const members = [...keepApartSelected]
-          const pairs = []
-          for (let i = 0; i < members.length; i++) {
-            for (let j = i + 1; j < members.length; j++) {
-              pairs.push({ a: members[i], b: members[j] })
-            }
-          }
+          const [a, b] = [...keepApartSelected]
           onSubmit({
             id: cluster.id,
             field: cluster.field,
             action: 'keep-apart',
             reason,
-            pairs,
+            pairs: [{ a, b }],
           })
           setKeepApartMode(false)
           setKeepApartSelected(new Set())
           return
         }
-        // 2つ未満のまま k をもう一度押したら取消として扱う
+        if (keepApartSelected.size > 2) {
+          // 黙って取り消すと「なぜ登録されないのか」が分からない
+          setKeepApartError('別物として固定するのはちょうど2つです（3つ以上は k を繰り返す）')
+          return
+        }
+        // 1つも選ばないまま k をもう一度押したら取消として扱う
+        setKeepApartError(null)
         setKeepApartMode(false)
       },
       cancelKeepApart: () => {
         setKeepApartMode(false)
         setKeepApartSelected(new Set())
+        setKeepApartError(null)
       },
       focusReason: () => reasonRef.current?.focus(),
     }
@@ -243,11 +260,14 @@ export default function ClusterCard({
         </p>
       )}
       {keepApartMode && (
-        <p className="review-hint">
-          分けたい表記を2つ以上クリックしてください。選択中:{' '}
-          {keepApartSelected.size > 0 ? [...keepApartSelected].join('・') : 'なし'}
-          　もう一度 <kbd>k</kbd> で確定 / <kbd>Esc</kbd> で取消
-        </p>
+        <>
+          <p className="review-hint">
+            別物として固定する表記を<strong>2つ</strong>クリックしてください。選択中:{' '}
+            {keepApartSelected.size > 0 ? [...keepApartSelected].join('・') : 'なし'}
+            　もう一度 <kbd>k</kbd> で確定 / <kbd>Esc</kbd> で取消
+          </p>
+          {keepApartError && <p className="notice notice-error">{keepApartError}</p>}
+        </>
       )}
 
       {!keepApartMode && (

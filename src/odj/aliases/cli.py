@@ -227,16 +227,30 @@ def _auto_where(field: str, cluster_id: str) -> str:
     return " ".join(x for x in (head, name) if x)
 
 
-def _check_already_decided(cluster_id: str) -> None:
-    """同じクラスタを二度判断させない。
+def _check_already_decided(field: str, values: list[str]) -> None:
+    """同じ値を二度判断させない。
 
-    defer だけは例外。「まだ決めない」を記録しただけなので、後から本判断できないと
-    defer の意味が無い（キューにも再び出る約束になっている）。
+    見るのはクラスタ id ではなく**個々の生表記**。id で弾くと、1枚のカードで
+    一度判断した時点で残りの値を扱えなくなる。実データの「とある」系のように
+    1枚に複数の作品が混じるカードや、artist 側のように1枚から複数のグループを
+    作るのが常態のカードでは、部分採用を繰り返せる必要がある。
+
+    defer と keep-apart は値を判断していないので、記録があっても素通しする
+    （defer は「まだ決めない」、keep-apart は「この2つは別物」と決めただけ）。
     """
+    if not values:
+        return
+    done: dict[str, dict] = {}
     for rec in store.load_decisions():
-        if rec.get("id") == cluster_id and rec.get("action") != "defer":
+        if rec.get("field") != field or rec.get("action") not in ("accept", "reject"):
+            continue
+        for raw in rec.get("variants") or []:
+            done.setdefault(raw, rec)
+    for raw in values:
+        rec = done.get(raw)
+        if rec is not None:
             raise AliasError(
-                f"この id は既に判断済みです: {cluster_id}"
+                f"「{raw}」は既に判断済みです"
                 f"（{rec.get('action')} / {rec.get('at', '時刻不明')}）",
                 code="already-decided",
             )
@@ -347,7 +361,10 @@ def decide(payload: dict) -> dict[str, Any]:
     if not reason:
         raise AliasError("理由は必須です")
 
-    _check_already_decided(cluster_id)
+    # 値を判断する action だけ、その値が既に決着していないかを見る。
+    # keep-apart は「この2つは別物」と決めるだけ、defer は「まだ決めない」なので素通し。
+    if action in ("accept", "reject"):
+        _check_already_decided(field, _string_list(payload, "variants"))
     where = _text(payload, "where") or _auto_where(field, cluster_id)
 
     record: dict[str, Any] = {"id": cluster_id, "field": field, "action": action}
