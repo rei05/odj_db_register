@@ -132,7 +132,16 @@ export default function ClusterCard({
       },
       reject: () => {
         if (!requireReason()) return
-        onSubmit({ id: cluster.id, field: cluster.field, action: 'reject', reason })
+        // 却下は「このカードの値はどれも統合しない」という判断なので、
+        // 対象を variants として明示する。これが無いとキューが
+        // 「まだ判断していない値」として次の周でまた出してしまう。
+        onSubmit({
+          id: cluster.id,
+          field: cluster.field,
+          action: 'reject',
+          reason,
+          variants: cluster.values.map((v) => v.raw),
+        })
       },
       defer: () => {
         if (!requireReason()) return

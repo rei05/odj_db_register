@@ -566,7 +566,7 @@ class DecideTest(unittest.TestCase):
         self.assertEqual((code, res["ok"]), (0, True))
         self.assertEqual(entries[0]["canonical"], "Tokyo 7th シスターズ")
 
-    def test_deciding_the_same_cluster_twice_is_refused(self) -> None:
+    def test_deciding_the_same_value_twice_is_refused(self) -> None:
         # レビュー中にリロードしても壊れないこと。UI ではなくサーバが弾く。
         with sandbox():
             first, _ = run_cli("decide", "--json", decide_payload())
@@ -575,6 +575,63 @@ class DecideTest(unittest.TestCase):
         self.assertEqual((first, second), (0, 1))
         self.assertIn("既に判断済み", res["error"])
         self.assertEqual(len(entries), 1)
+
+    def test_the_rest_of_a_card_can_be_decided_afterwards(self) -> None:
+        """1枚のカードを何回かに分けて判断できること。
+
+        以前はクラスタ id で「判断済み」を見ていたため、一度判断した時点で
+        **チェックを外した値ごとカードが消えて二度と出てこなかった**。実データで
+        「とある」系8個がこれで失われている。artist 側はもっと深刻で、
+        1枚から複数のグループを作るのが常態になる（Aiobahn 系 /
+        Mitsukiyo・ミツキヨ / わか・ふうり・すなお が同じカードに来る）。
+        """
+        with sandbox():
+            first, _ = run_cli(
+                "decide",
+                "--json",
+                decide_payload(canonical="アイカツ!", variants=["アイカツ!", "アイカツ"]),
+            )
+            # 同じ id の残りを、あとから別のグループとして採用する
+            second, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(
+                    canonical="アイカツスターズ", variants=["アイカツスターズ"]
+                ),
+            )
+            entries = store.load_entries("work")
+        self.assertEqual((first, second), (0, 0), res)
+        self.assertEqual(
+            [e["canonical"] for e in entries], ["アイカツ!", "アイカツスターズ"]
+        )
+
+    def test_keep_apart_does_not_settle_the_values(self) -> None:
+        # 「この2つは別物」と決めただけで、それぞれが他の表記と統合できるかは未判断。
+        # ここを判断済みにすると、keep-apart を押しただけでカードごと消える。
+        with sandbox():
+            run_cli(
+                "decide",
+                "--json",
+                json.dumps(
+                    {
+                        "id": "work-0001",
+                        "field": "work",
+                        "action": "keep-apart",
+                        "pairs": [{"a": "とある科学の超電磁砲", "b": "とある魔術の禁書目録"}],
+                        "reason": "別作品",
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+            code, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(
+                    canonical="とある科学の超電磁砲",
+                    variants=["とある科学の超電磁砲", "超電磁砲"],
+                ),
+            )
+        self.assertEqual(code, 0, res)
 
     def test_a_deferred_cluster_can_still_be_decided(self) -> None:
         # defer は「まだ決めない」の記録。後から本判断できないと意味が無い。

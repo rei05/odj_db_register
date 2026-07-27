@@ -21,3 +21,85 @@ source = "human"
 where = "第1回〜第15回 tri ほか"
 decided_at = "2026-07-27T10:48:11+09:00"
 reason = "「VOCALOID」「ボカロ」「ボーカロイド」は『wikipedia-ja』と『wikidata』両方で「VOCALOID」タイトルにリダイレクト、rowsも「ボカロ」141件「VOCALOID」4件「ボーカロイド」2件と同じジャンルを指すと判断。「ボカロ?」は疑問符がついているが使用例coTitles/coArtistsに目立つ違いがなく実質同類が使っている。全てでアーティスト傾向も一致。"
+
+[[work]]
+id = "work-0d529e77"
+canonical = "アイカツ!"
+kind = "unknown"
+variants = [
+    "TVアニメ「アイカツ!」 2年目2OP",
+    "TVアニメ「アイカツ!」 挿入歌",
+    "アイカツ",
+    "アイカツ!",
+    "アイカツ! ED",
+    "アイカツ! 劇中曲",
+    "アイカツ! 楽曲",
+    "アイカツ!/Soleil",
+    "アイカツ!/Tristar",
+    "アイカツ?",
+]
+approved = true
+confidence = "high"
+source = "human"
+where = "第2回〜第13回 ha ほか"
+decided_at = "2026-07-27T13:00:40+09:00"
+reason = """「アイカツ!」43行 / 「アイカツ」14行 / 「TVアニメ「アイカツ!」 2年目2OP」1行 / 「TVアニメ「アイカツ!」 挿入歌」1行 / 「アイカツ! ED」1行 / 「アイカツ! 劇中曲」1行 / 「アイカツ! 楽曲」1行 / 「アイカツ!/Soleil」1行 / 「アイカツ!/Tristar」1行 / 「アイカツ?」1行。
+機械が繋いだ根拠: 注記（OP・ED・楽曲など）を剥がすと一致、文字の重なりが多い、外部 API が同じものへの別名だと言っている、片方が片方に含まれるだけ（最も弱い）。
+※ 部分一致だけで繋がった組を含む。シリーズの別作品が混ざっている恐れ。
+※ 「2期」「劇場版」のような続編の印が食い違う値が混ざる。"""
+
+[[work]]
+id = "work-deaa9d6b"
+canonical = "初音ミク"
+kind = "artist-as-work"
+variants = ["初音ミク", "初音ミク 楽曲"]
+approved = true
+confidence = "high"
+source = "human"
+where = "第3回〜第15回 ha ほか"
+decided_at = "2026-07-27T13:00:43+09:00"
+reason = "rowsも「初音ミク」54件「初音ミク 楽曲」1件、「初音ミク 楽曲」もアーティスト名が「初音ミク produced by くちばしP」で本質的に初音ミクを指す。artist-as-workヒントもあり明確に一致。"
+
+[[work]]
+id = "work-5a13c932"
+canonical = "学園アイドルマスター"
+series = "アイドルマスター"
+kind = "work"
+variants = ["学マス", "学園アイドルマスター"]
+approved = true
+confidence = "high"
+source = "human"
+where = "第10回〜第15回 tri ほか"
+decided_at = "2026-07-27T13:00:44+09:00"
+reason = "「学マス」は14行、「学園アイドルマスター」は29行あり、両者で同じDJ（tri、あぴす）が使っていることに加え、Feel Jewel Dream など同じ曲が共起しており、wikipedia-ja のリダイレクト先・wikidata の検索結果でも「学マス」→「学園アイドルマスター」で統一されている。api_results の title も「学園アイドルマスター」が本体で間違いないため。"
+
+[[work]]
+id = "work-a89faf03"
+canonical = "アイドルマスター シンデレラガールズ"
+series = "アイドルマスター"
+kind = "work"
+variants = [
+    "THE IDOL M@STER CINDERELLA M@STER",
+    "THE IDOLM@STER CINDERELLA GIRLS",
+    "アイドルマスター シンデレラガールズ",
+    "アイドルマスターシンデレラガールズ",
+    "デレマス",
+]
+approved = true
+confidence = "high"
+source = "human"
+where = "第2回〜第15回 あちょ ほか"
+decided_at = "2026-07-27T13:00:45+09:00"
+reason = "「アイドルマスター シンデレラガールズ」（6行）・「アイドルマスターシンデレラガールズ」（15行）・「デレマス」（15行）は同じDJやCINDERELLA PROJECTなど同一アーティスト・同曲名が多く共起しており、wikipedia/wikidata の title もすべて「アイドルマスター シンデレラガールズ」へ統一。THE IDOLM@STER CINDERELLA GIRLS も英語表記の揺れとして同一。"
+
+[[work]]
+id = "work-42998b0b"
+canonical = "電音部"
+kind = "work"
+variants = ["Hylen feat. 神宮前参道學園 (from電音部)", "電音部", "電音部,"]
+approved = true
+confidence = "high"
+source = "human"
+where = "第3回〜第15回 tri ほか"
+decided_at = "2026-07-27T13:04:04+09:00"
+reason = "「電音部」「電音部,」はrows・djs（tri, あちょ, あぴす）・coTitles・coArtists が重なっており、api_results でも「電音部」(バンダイナムコプロジェクト)として確定。Hylen feat. 神宮前参道學園 (from電音部)は他作品だがsubtitle要素なので除外。"
