@@ -29,11 +29,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Block duplicate clusters
-        run: PYTHONPATH=src python -m odj.aliases block --field ${{ inputs.field }}
-
+      # fetch を先に回す。block が evidence のリダイレクトを辺として使うため
+      # （「ナナシス」と「Tokyo 7th シスターズ」は文字列類似では繋がらない）。
+      # fetch 自体はクラスタを見ないので、この順で問題ない。
       - name: Fetch evidence from external APIs
         run: PYTHONPATH=src python -m odj.aliases fetch --field ${{ inputs.field }}
+
+      - name: Block duplicate clusters
+        run: PYTHONPATH=src python -m odj.aliases block --field ${{ inputs.field }}
 
       - name: Ask GitHub Models to generate candidates
         run: PYTHONPATH=src python -m odj.aliases ask --field ${{ inputs.field }} --model ${{ inputs.model }}
