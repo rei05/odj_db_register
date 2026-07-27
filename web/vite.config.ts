@@ -234,8 +234,13 @@ async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
     sendJson(res, 500, {
       ok: false,
       error:
+        // out/ は gitignore なので、clone しただけでは無い。fetch を先に回すのは
+        // block が外部 API のリダイレクトを辺として使うため（「ナナシス」と
+        // 「Tokyo 7th シスターズ」は文字列類似では繋がらない）。
         `${path.relative(repoRoot, clustersPath)} が見つかりません。` +
-        `先に \`uv run python -m odj.aliases block --field ${field}\` を実行してください。`,
+        `リポジトリのルートで次を順に実行してください:\n` +
+        `  PYTHONPATH=src python3 -m odj.aliases fetch --field ${field}\n` +
+        `  PYTHONPATH=src python3 -m odj.aliases block --field ${field}`,
     })
     return
   }
@@ -361,14 +366,45 @@ function reviewApiPlugin(): Plugin {
   }
 }
 
+const BASE = '/odj_db_register/'
+
+/**
+ * review モードでルートを開いたら、閲覧用ではなくレビュー画面を出す。
+ *
+ * review.html は index.html とは別のエントリなので、何もしないと
+ * http://localhost:5174/odj_db_register/ が閲覧 GUI を返す。
+ * /review.html を手で打たせるのは、5173 と 5174 のどちらを見ているのか
+ * 分からなくなるもとなので、ルートごと差し替える。
+ */
+function reviewIndexPlugin(): Plugin {
+  return {
+    name: 'odj-review-index',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const [path = '/', query] = (req.url ?? '/').split('?')
+        if (path === BASE || path === BASE.slice(0, -1) || path === '/') {
+          req.url = `${BASE}review.html${query ? `?${query}` : ''}`
+        }
+        next()
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isReview = mode === 'review'
   return {
-    base: '/odj_db_register/',
-    plugins: [react(), ...(isReview ? [reviewApiPlugin()] : [])],
+    base: BASE,
+    plugins: [
+      react(),
+      ...(isReview ? [reviewApiPlugin(), reviewIndexPlugin()] : []),
+    ],
     // レビュー画面は既存の閲覧 GUI（npm run dev、5173 固定）とポートが
     // 衝突しないよう別ポートに固定する。
-    server: isReview ? { port: 5174, strictPort: true } : undefined,
+    server: isReview
+      ? { port: 5174, strictPort: true, open: BASE }
+      : undefined,
   }
 })
