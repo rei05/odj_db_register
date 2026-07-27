@@ -29,7 +29,23 @@ from odj import paths
 
 
 class AliasError(Exception):
-    """人間に見せて直してもらう種類の失敗。CLI が JSON のエラーに変換する。"""
+    """人間に見せて直してもらう種類の失敗。CLI が JSON のエラーに変換する。
+
+    code は呼び出し側（レビュー GUI）が**文面ではなく種別で**分岐するためのもの。
+    以前は文面から 400/409 を振り分けていて、「既に判断済み」と
+    「keep_apart で別物と決めた組が含まれる」がどちらも 409 になり、
+    GUI が後者まで「二重送信」と解釈してキューを取り直していた。
+    その結果、キー操作しても同じカードが出続けて何も起きないように見えた。
+
+      already-decided … 同じ id を二度判断した。キューを取り直せばよい
+      keep-apart      … 人間が別物と決めた組を統合しようとした。中身を直す必要がある
+      conflict        … 同じ表記が別の正準名にも寄っている。既存の項目を先に直す
+      invalid         … 入力そのものが不正（理由が空、canonical の創作など）
+    """
+
+    def __init__(self, message: str, code: str = "invalid") -> None:
+        super().__init__(message)
+        self.code = code
 
 
 # フィールド名 → (ファイル名, TOML の配列テーブル名)

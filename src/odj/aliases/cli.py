@@ -237,7 +237,8 @@ def _check_already_decided(cluster_id: str) -> None:
         if rec.get("id") == cluster_id and rec.get("action") != "defer":
             raise AliasError(
                 f"この id は既に判断済みです: {cluster_id}"
-                f"（{rec.get('action')} / {rec.get('at', '時刻不明')}）"
+                f"（{rec.get('action')} / {rec.get('at', '時刻不明')}）",
+                code="already-decided",
             )
 
 
@@ -279,7 +280,8 @@ def _accept(payload: dict, field: str, cluster_id: str, reason: str, where: str)
             if _blocked_pair(values[i], values[j], keep_apart):
                 raise AliasError(
                     "keep_apart.toml で別物と決めた組が含まれています: "
-                    f"「{values[i]}」と「{values[j]}」"
+                    f"「{values[i]}」と「{values[j]}」",
+                    code="keep-apart",
                 )
 
     # 同じ表記を別の正準名にも寄せていないか。両方が生きると検索が割れる。
@@ -288,7 +290,8 @@ def _accept(payload: dict, field: str, cluster_id: str, reason: str, where: str)
         if raw in index and index[raw] != canonical:
             raise AliasError(
                 f"「{raw}」は既に「{index[raw]}」に寄せられています"
-                f"（今回は「{canonical}」）。先に既存の項目を直してください"
+                f"（今回は「{canonical}」）。先に既存の項目を直してください",
+                code="conflict",
             )
 
     entry: dict[str, Any] = {
@@ -401,7 +404,9 @@ def _cmd_decide(args: argparse.Namespace) -> int:
     try:
         result = decide(_read_payload(args.json))
     except AliasError as exc:
-        _emit({"ok": False, "error": str(exc)})
+        # code は GUI が種別で分岐するため（文面で判定すると、種類の違う失敗が
+        # 同じ扱いになる。store.AliasError の説明を参照）。
+        _emit({"ok": False, "code": exc.code, "error": str(exc)})
         return 1
     _emit({"ok": True, **result})
     return 0
@@ -411,7 +416,7 @@ def _cmd_export(args: argparse.Namespace) -> int:
     try:
         result = store.export_json()
     except AliasError as exc:
-        _emit({"ok": False, "error": str(exc)})
+        _emit({"ok": False, "code": exc.code, "error": str(exc)})
         return 1
     _emit(result)
     return 0

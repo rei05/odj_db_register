@@ -504,8 +504,34 @@ class DecideTest(unittest.TestCase):
             code, res = run_cli("decide", "--json", decide_payload(reason="  "))
             entries = store.load_entries("work")
         self.assertEqual(code, 1)
-        self.assertEqual(res, {"ok": False, "error": "理由は必須です"})
+        self.assertEqual(res, {"ok": False, "code": "invalid", "error": "理由は必須です"})
         self.assertEqual(entries, [])
+
+    def test_failures_carry_a_machine_readable_code(self) -> None:
+        """失敗の種別を code で返すこと。
+
+        GUI はこれで分岐する。以前は文面から 400/409 を振り分けていて、
+        「既に判断済み」と「keep_apart で別物と決めた組が含まれる」がどちらも
+        409 になり、GUI が後者まで「二重送信」と解釈してキューを取り直していた。
+        結果、キーを押しても同じカードが出続けて何も起きないように見えた。
+        """
+        with sandbox() as root:
+            (root / "data" / "aliases" / "keep_apart.toml").write_text(
+                '[[pair]]\na = "アイカツ!"\nb = "アイカツスターズ"\nreason = "別作品"\n',
+                encoding="utf-8",
+            )
+            # keep_apart の組を統合しようとした
+            _, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(variants=["アイカツ!", "アイカツスターズ"]),
+            )
+            self.assertEqual(res["code"], "keep-apart")
+
+            # 同じ id を二度
+            run_cli("decide", "--json", decide_payload())
+            _, again = run_cli("decide", "--json", decide_payload())
+            self.assertEqual(again["code"], "already-decided")
 
     def test_invented_canonical_is_refused(self) -> None:
         # 正準名は variants か提案の中から選ぶ。実データのどこにも無い表記を
