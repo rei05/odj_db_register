@@ -105,8 +105,20 @@ export interface ExportOk {
   artists: number
 }
 
+/**
+ * 失敗の種別。**文面ではなくこれで分岐する。**
+ *
+ *   already-decided … 同じ id を二度判断した。キューを取り直せばよい
+ *   keep-apart      … 人間が別物と決めた組を統合しようとした。中身を直す必要がある
+ *   conflict        … 同じ表記が別の正準名にも寄っている。既存の項目を先に直す
+ *   invalid         … 入力そのものが不正（理由が空、canonical の創作など）
+ */
+export type ApiErrorCode = 'already-decided' | 'keep-apart' | 'conflict' | 'invalid'
+
 export interface ApiError {
   ok: false
+  /** 古い応答には無いことがあるので任意にしてある */
+  code?: ApiErrorCode
   error: string
 }
 

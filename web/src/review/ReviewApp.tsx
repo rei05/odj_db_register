@@ -59,7 +59,8 @@ export default function ReviewApp() {
       setNotice(null)
       setError(null)
       postDecide(payload)
-        .then(({ status, body }) => {
+        // 分岐は HTTP ステータスではなく body.code で行う（種別のほうが確か）。
+        .then(({ body }) => {
           if (body.ok) {
             setNotice(`保存しました（${payload.action}）: ${body.wrote.join(', ')}`)
             // 判断済みの1件をキューから外す。件数の帳尻も合わせる。
@@ -74,11 +75,21 @@ export default function ReviewApp() {
             )
             return
           }
-          if (status === 409) {
-            // 既に判断済み（二重送信、あるいは他のセッションで先に判断された）。
-            // サーバが弾く契約なので、こちらはキューを取り直して整合させるだけでよい。
+          // 種別で分ける。以前は status 409 をすべて「二重送信」と見なして
+          // キューを取り直していたが、keep_apart 違反も 409 だったため、
+          // キーを押しても同じカードが出続けて何も起きないように見えていた。
+          if (body.code === 'already-decided') {
+            // 他のセッションで先に判断された等。取り直せば整合する。
             setError(`${body.error}（キューを最新化します）`)
             refresh(field)
+            return
+          }
+          if (body.code === 'keep-apart') {
+            // 統合してはいけない組が入っている。このカードで直せるので、
+            // 何をすればよいかまで書く。
+            setError(
+              `${body.error} — チェックを外して分けるか、[k] で別物として固定してください`,
+            )
             return
           }
           setError(body.error)

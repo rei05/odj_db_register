@@ -279,15 +279,17 @@ async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
  * 失敗）は src/odj/aliases/cli.py の _cmd_decide/_cmd_export が
  * `{"ok":false,"error":…}` を標準出力に出し、終了コード 1 で終わる決め事になって
  * いる（stderr には出ない。stderr は本当に想定外の例外だけ）。
- * ステータスコードまではその JSON に含まれないので、契約書に載っている
- * エラー文言のパターンから 400/409 を振り分ける。判定できない・想定外の文言は
- * 400 側に倒す（409 は「衝突」を意味するので、確信が持てるときだけ使う）。
+ * 種別は JSON の code で返ってくる（already-decided / keep-apart / conflict /
+ * invalid）。以前は文面のパターンで振り分けていたが、「既に判断済み」と
+ * 「keep_apart で別物と決めた組が含まれる」がどちらも 409 になり、GUI が後者まで
+ * 「二重送信」と解釈してキューを取り直していた。結果、キーを押しても同じカードが
+ * 出続けて何も起きないように見えた。code をそのまま通し、判定は GUI に任せる。
  */
-function guessErrorStatus(message: string | undefined): number {
-  const msg = message ?? ''
-  // 「この id は既に判断済みです」「〈raw〉は既に〈canonical〉に寄せられています」
-  // 「keep_apart.toml で別物と決めた組が含まれています」→ いずれも二重送信・衝突
-  if (msg.includes('既に') || msg.includes('含まれています')) return 409
+function errorStatus(code: string | undefined): number {
+  // 409 は「衝突」の意味なので、二重判断のときだけに絞る。keep-apart や
+  // conflict は入力を直せば通るので 422（内容が不正）に倒す。
+  if (code === 'already-decided') return 409
+  if (code === 'keep-apart' || code === 'conflict') return 422
   return 400
 }
 
@@ -315,9 +317,13 @@ async function proxyToPython(
       const out = stdout.trim()
       if (out) {
         try {
-          const parsed = JSON.parse(out) as { ok?: boolean; error?: string }
+          const parsed = JSON.parse(out) as {
+            ok?: boolean
+            code?: string
+            error?: string
+          }
           if (parsed && typeof parsed === 'object' && 'ok' in parsed) {
-            sendJson(res, parsed.ok ? 200 : guessErrorStatus(parsed.error), parsed)
+            sendJson(res, parsed.ok ? 200 : errorStatus(parsed.code), parsed)
             return
           }
         } catch {
