@@ -247,11 +247,11 @@ def _check_already_decided(field: str, values: list[str]) -> None:
         for raw in rec.get("variants") or []:
             done.setdefault(raw, rec)
     for raw in values:
-        rec = done.get(raw)
-        if rec is not None:
+        hit = done.get(raw)
+        if hit is not None:
             raise AliasError(
                 f"「{raw}」は既に判断済みです"
-                f"（{rec.get('action')} / {rec.get('at', '時刻不明')}）",
+                f"（{hit.get('action')} / {hit.get('at', '時刻不明')}）",
                 code="already-decided",
             )
 
@@ -274,16 +274,24 @@ def _accept(payload: dict, field: str, cluster_id: str, reason: str, where: str)
     if confidence not in _CONFIDENCE:
         raise AliasError(f"confidence が不正です: {confidence}（{' / '.join(_CONFIDENCE)}）")
 
-    # 正準名の創作を許さない。variants か LLM の提案にある文字列だけを認める。
+    # 正準名の創作を許さない。ただし**既に辞書にある正準名は創作ではない**ので許す。
+    # 新しい開催回で「ラブライブ！」（全角）が現れたとき、判断済みの
+    # 「ラブライブ!」に足せないと、その表記は永久に検索から漏れる。
+    # variants だけに限っていた頃はこれができず、追加された表記が
+    # レビュー対象外のまま溜まっていく状態だった。
     proposal = store.load_proposals(field).get(cluster_id, {})
+    existing = store.load_entries(field)
     allowed = set(variants)
+    allowed.update(
+        (e.get("canonical") or "").strip() for e in existing if e.get("canonical")
+    )
     if proposal:
         allowed.add((proposal.get("canonical") or "").strip())
         allowed.update(v.strip() for v in proposal.get("variants", []) if isinstance(v, str))
     if canonical not in allowed:
         raise AliasError(
-            f"canonical は variants か提案の中から選んでください: 「{canonical}」は"
-            "どちらにもありません（実データに無い表記は作れません）"
+            f"canonical は variants・提案・既存の辞書から選んでください: 「{canonical}」は"
+            "どれにもありません（実データに無い表記は作れません）"
         )
 
     # 人間が「別物」と決めた組を含んでいないか。keep_apart のほうが常に強い。

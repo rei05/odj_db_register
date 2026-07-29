@@ -19,6 +19,12 @@ export interface ClusterValue {
   coTitles: string[]
   /** 曲名欄など、work/artist 以外の列にも同じ文字列が出ている（要注意フラグ） */
   crossField?: boolean
+  /**
+   * 既に判断済みの値。どの正準名に登録されたかが入る。
+   * 新しい開催回で増えた表記を既存の正準名へ足すとき、相手が見えないと
+   * 何に寄せればよいか分からないので、カードには出すが選択はさせない。
+   */
+  decidedAs?: string
 }
 
 export interface ClusterEdge {

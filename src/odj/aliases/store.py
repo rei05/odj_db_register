@@ -418,7 +418,14 @@ def _class_map(field: str, warn: list[str]) -> tuple[dict[str, dict], int]:
     normKey() を Python に移植すると必ず片方だけが直されて乖離するので、
     正規化は読み込んだ web 側が一手にやる。
     """
-    out: dict[str, dict] = {}
+    # 同じ正準名のエントリは1つの同値クラスにまとめる。
+    # 新しい開催回で「ラブライブ！」（全角）が現れたとき、既に判断済みの
+    # 「ラブライブ!」に足す形で追記される。エントリごとに v を作ると
+    # 「ラブライブ！」の同値クラスが ["ラブライブ！","ラブライブ!"] だけになり、
+    # 「ラブライブ! 楽曲」と検索で繋がらなくなる。**追記のたびに検索が
+    # 分断されては、定期的にデータが増える運用で使い物にならない。**
+    classes: dict[str, dict[str, Any]] = {}
+    order: list[str] = []
     used = 0
     for entry in load_entries(field):
         if entry.get("approved") is not True:
@@ -429,20 +436,31 @@ def _class_map(field: str, warn: list[str]) -> tuple[dict[str, dict], int]:
         values = class_values(entry)
         if not canonical or not values:
             continue
-        item: dict[str, Any] = {"c": canonical}
-        if entry.get("series"):
-            item["s"] = entry["series"]
-        if entry.get("kind"):
-            item["k"] = entry["kind"]
-        item["v"] = values
         used += 1
+        cls = classes.get(canonical)
+        if cls is None:
+            cls = classes[canonical] = {"c": canonical, "v": []}
+            order.append(canonical)
+        # series と kind は先に書かれたほうを採る（後から足す行は
+        # 表記を1つ増やすだけのことが多く、省略されがちなため）
+        if entry.get("series") and "s" not in cls:
+            cls["s"] = entry["series"]
+        if entry.get("kind") and "k" not in cls:
+            cls["k"] = entry["kind"]
         for raw in values:
+            if raw not in cls["v"]:
+                cls["v"].append(raw)
+
+    out: dict[str, dict] = {}
+    for canonical in order:
+        cls = classes[canonical]
+        for raw in cls["v"]:
             if raw in out:
                 if out[raw]["c"] != canonical:
                     warn.append(f"{field}: 「{raw}」が {out[raw]['c']} と {canonical} の"
                                 "両方に登録されています。先に書かれたほうを採ります")
                 continue
-            out[raw] = item
+            out[raw] = cls
     # 同じ入力なら同じバイト列にするためキーを並べ替える
     return {k: out[k] for k in sorted(out)}, used
 

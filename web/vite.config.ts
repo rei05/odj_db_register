@@ -33,6 +33,8 @@ interface RawClusterValue {
   coArtists: string[]
   coTitles: string[]
   crossField?: boolean
+  /** 既に判断済みの値。どの正準名に登録されたか（カードでは編集させない） */
+  decidedAs?: string
 }
 interface RawClusterEdge {
   a: string
@@ -194,6 +196,32 @@ async function readDecidedValues(field: ReviewField): Promise<Set<string>> {
 }
 
 /**
+ * 既に辞書に入っている生表記 → その正準名。
+ *
+ * カードに判断済みの兄弟を出すとき「どれに登録済みか」を添えるために使う。
+ * 新しい表記を既存の正準名へ足すのが、データが増える運用での主な操作になる。
+ */
+async function readAssignedCanonicals(field: ReviewField): Promise<Map<string, string>> {
+  const p = path.join(repoRoot, 'data', 'aliases', `${field}s.toml`)
+  let text: string
+  try {
+    text = await readFile(p, 'utf8')
+  } catch {
+    return new Map() // まだ1件も承認していない
+  }
+  const map = new Map<string, string>()
+  for (const row of parseArrayOfTables(text)) {
+    const canonical = row.canonical
+    if (typeof canonical !== 'string') continue
+    const variants = Array.isArray(row.variants) ? row.variants : []
+    for (const raw of [...variants, canonical]) {
+      if (!map.has(raw)) map.set(raw, canonical)
+    }
+  }
+  return map
+}
+
+/**
  * data/aliases/_proposed/ の提案ファイルを読む。無ければ空 Map
  * （「無ければ proposal 無しで返す」契約どおり）。
  * ファイル名は最終辞書と同じ works.toml / artists.toml（_proposed/works.toml が実例）。
@@ -283,30 +311,34 @@ async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
     readProposals(field),
   ])
 
-  // 判断済みの値をカードから外し、まだ2つ以上残っているクラスタだけを出す。
-  // 1つしか残らないものは統合相手がいないので、見せても判断のしようがない。
+  // 未判断の値が1つでもあればカードを出す。判断済みの兄弟は捨てずに
+  // 「どの正準名に登録済みか」を添えて残す。
+  //
+  // 以前は「未判断が2つ以上」を条件にしていたが、それだと**新しい開催回で
+  // 追加された表記が永久にレビューされなかった**。「ラブライブ！」（全角）が
+  // 現れても、同じクラスタの他の値が判断済みなら未判断は1つだけになり、
+  // カードごと出てこない。定期的にデータが増える運用では、回を重ねるほど
+  // 漏れが溜まる。既存の正準名に足せるよう、相手を見せる必要がある。
+  const assigned = await readAssignedCanonicals(field)
   const clusters = []
   for (const c of parsed.clusters) {
-    const values = c.values.filter((v) => !decidedValues.has(v.raw))
-    if (values.length < 2) continue
-    const alive = new Set(values.map((v) => v.raw))
-    const trimmed: RawCluster & { proposal?: Proposal } = {
-      ...c,
-      values,
-      // 消えた値が絡む辺は根拠として意味を失うので落とす
-      edges: c.edges.filter((e) => alive.has(e.a) && alive.has(e.b)),
-    }
+    const fresh = c.values.filter((v) => !decidedValues.has(v.raw))
+    if (fresh.length === 0) continue
+    const values = c.values.map((v) =>
+      decidedValues.has(v.raw) ? { ...v, decidedAs: assigned.get(v.raw) ?? '判断済み' } : v,
+    )
+    const alive = new Set(fresh.map((v) => v.raw))
+    // 辺は落とさない。未判断の値と判断済みの値を結ぶ辺こそが
+    // 「この新しい表記はどれに足すべきか」の根拠になる。
+    const trimmed: RawCluster & { proposal?: Proposal } = { ...c, values }
     const proposal = proposals.get(c.id)
-    // 提案も、残っている値だけに絞ってから渡す（既に判断した値を
-    // 「まだ統合できます」と勧めてしまわないように）。
+    // 提案は未判断の値だけに絞る（既に判断した値を「まだ統合できます」と
+    // 勧めない）。1つしか残らない場合も、既存の正準名に足す提案として意味が
+    // あるので canonical はそのまま渡す。
     if (proposal) {
       const variants = proposal.variants.filter((v) => alive.has(v))
-      if (variants.length >= 2) {
-        trimmed.proposal = {
-          ...proposal,
-          variants,
-          canonical: alive.has(proposal.canonical) ? proposal.canonical : variants[0],
-        }
+      if (variants.length > 0) {
+        trimmed.proposal = { ...proposal, variants }
       }
     }
     clusters.push(trimmed)

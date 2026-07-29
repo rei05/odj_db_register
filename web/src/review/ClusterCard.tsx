@@ -49,8 +49,10 @@ export default function ClusterCard({
   // すべて cluster.id をキーに親から再マウントされる前提の初期値（ClusterCard 自体は
   // 親（ReviewApp）側で key={cluster.id} を付けて呼ばれるので、ここでの useState 初期化は
   // カードが替わるたびにやり直される。
+  // 判断済みの値はチェックしない。既存の正準名へ足す相手として見せるだけで、
+  // もう一度送るとサーバに already-decided で弾かれる。
   const [checked, setChecked] = useState<Set<string>>(
-    () => new Set(cluster.values.map((v) => v.raw)),
+    () => new Set(cluster.values.filter((v) => !v.decidedAs).map((v) => v.raw)),
   )
   const [canonical, setCanonical] = useState(() => initialCanonical(cluster))
   const [series, setSeries] = useState(() => cluster.proposal?.series ?? '')
@@ -73,6 +75,11 @@ export default function ClusterCard({
     }
     if (cluster.proposal?.canonical && !opts.includes(cluster.proposal.canonical)) {
       opts.push(cluster.proposal.canonical)
+    }
+    // 判断済みの兄弟が属する正準名も選べるようにする。新しい開催回で増えた
+    // 表記を既存のクラスへ足す操作が、これが無いとできない。
+    for (const v of cluster.values) {
+      if (v.decidedAs && !opts.includes(v.decidedAs)) opts.push(v.decidedAs)
     }
     return opts
   }, [cluster, checked])
@@ -142,7 +149,8 @@ export default function ClusterCard({
           field: cluster.field,
           action: 'reject',
           reason,
-          variants: cluster.values.map((v) => v.raw),
+          // 判断済みの値まで送ると already-decided で弾かれる
+          variants: cluster.values.filter((v) => !v.decidedAs).map((v) => v.raw),
         })
       },
       defer: () => {
@@ -235,6 +243,10 @@ export default function ClusterCard({
               >
                 {v.raw}
               </button>
+            ) : v.decidedAs ? (
+              <span className="review-value-label muted">
+                {v.raw} <span className="tag">→ {v.decidedAs} に登録済み</span>
+              </span>
             ) : (
               <label className="review-value-label">
                 <input
