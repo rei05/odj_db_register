@@ -605,6 +605,51 @@ class DecideTest(unittest.TestCase):
             [e["canonical"] for e in entries], ["アイカツ!", "アイカツスターズ"]
         )
 
+    def test_a_new_spelling_can_join_an_existing_canonical(self) -> None:
+        """既に辞書にある正準名へ、後から現れた表記を足せること。
+
+        データは定期的に増える。新しい開催回で「ラブライブ！」（全角）が
+        現れたとき、判断済みの「ラブライブ!」に足せないとその表記は永久に
+        検索から漏れる。canonical を variants の中だけに限っていた頃は
+        これができず、追加された表記がレビュー対象外のまま溜まっていた。
+
+        **辞書にある名前を選ぶのは「創作」ではない**、というのが線引き。
+        """
+        with sandbox():
+            run_cli(
+                "decide",
+                "--json",
+                decide_payload(
+                    canonical="ラブライブ!",
+                    variants=["ラブライブ", "ラブライブ!"],
+                    reason="表記ゆれ",
+                ),
+            )
+            code, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(
+                    id="work-later",
+                    canonical="ラブライブ!",  # variants に無いが辞書にはある
+                    variants=["ラブライブ！"],
+                    reason="次の回で現れた全角！",
+                ),
+            )
+            entries = store.load_entries("work")
+        self.assertEqual(code, 0, res)
+        self.assertEqual([e["canonical"] for e in entries], ["ラブライブ!", "ラブライブ!"])
+
+    def test_a_canonical_nobody_registered_is_still_refused(self) -> None:
+        # 緩めたのは「辞書にある名前」まで。実データにも辞書にも無い表記は作れない。
+        with sandbox():
+            code, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(canonical="ラブライブ!シリーズ総合", reason="創作"),
+            )
+        self.assertEqual(code, 1)
+        self.assertEqual(res["code"], "invalid")
+
     def test_keep_apart_does_not_settle_the_values(self) -> None:
         # 「この2つは別物」と決めただけで、それぞれが他の表記と統合できるかは未判断。
         # ここを判断済みにすると、keep-apart を押しただけでカードごと消える。
@@ -788,6 +833,34 @@ class ExportTest(unittest.TestCase):
         code, res = run_cli("export")
         assert code == 0, res
         return json.loads(paths.WEB_ALIASES_JSON.read_text(encoding="utf-8"))
+
+    def test_entries_sharing_a_canonical_become_one_class(self) -> None:
+        """同じ正準名の項目は1つの同値クラスにまとまること。
+
+        データは定期的に増える。新しい開催回で「ラブライブ！」（全角）が
+        現れたら、判断済みの「ラブライブ!」に**足す形で**追記される。
+        項目ごとに同値クラスを作ると「ラブライブ！」の v が
+        ["ラブライブ！","ラブライブ!"] だけになり、「ラブライブ! 楽曲」と
+        検索で繋がらない。**追記のたびに検索が分断されては運用にならない。**
+        """
+        with sandbox():
+            self._write(
+                "work",
+                {"canonical": "ラブライブ!", "kind": "work",
+                 "variants": ["ラブライブ", "ラブライブ!", "ラブライブ! 楽曲"],
+                 "approved": True, "confidence": "high", "reason": "初回"},
+                # 次の回で増えた表記。kind は省略されがち
+                {"canonical": "ラブライブ!", "variants": ["ラブライブ！"],
+                 "approved": True, "confidence": "high", "reason": "全角！"},
+            )
+            works = self._export()["works"]
+        expected = ["ラブライブ", "ラブライブ!", "ラブライブ! 楽曲", "ラブライブ！"]
+        for raw in expected:
+            with self.subTest(raw=raw):
+                self.assertEqual(works[raw]["v"], expected)
+                self.assertEqual(works[raw]["c"], "ラブライブ!")
+                # 先に書かれた項目の kind を引き継ぐ（後から足す行は省きがち）
+                self.assertEqual(works[raw]["k"], "work")
 
     def test_unapproved_entries_never_reach_the_public_data(self) -> None:
         # LLM も自動処理も approved を書かない。人間が見ていないものは出さない。
