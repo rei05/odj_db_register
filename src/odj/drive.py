@@ -9,15 +9,17 @@ API キーも要らない。
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-ROOT_FOLDER_ID = "1Ti5vLERqTNbK1WMLuTh1Xk_Y6o9ZL_Ud"
-MASTER_DB_ID = "1MEDuHQixRB9_2Kf3YLfK2QHmsT-PV1pTUnSGSgWkISU"
+ROOT_FOLDER_URL_ENV = "ODJ_ROOT_FOLDER_URL"
+MASTER_DB_URL_ENV = "ODJ_MASTER_DB_URL"
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
 GSHEET_MIME = "application/vnd.google-apps.spreadsheet"
@@ -26,6 +28,68 @@ GDOC_MIME = "application/vnd.google-apps.document"
 _UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
 _IVD_RE = re.compile(rb"window\['_DRIVE_ivd'\]\s*=\s*'(.*?)';", re.S)
 _HEX_ESCAPE_RE = re.compile(rb"\\x([0-9a-fA-F]{2})")
+_FOLDER_PATH_RE = re.compile(
+    r"^/drive(?:/u/\d+)?/folders/([A-Za-z0-9_-]{10,})/?$"
+)
+_SPREADSHEET_PATH_RE = re.compile(
+    r"^/spreadsheets(?:/u/\d+)?/d/([A-Za-z0-9_-]{10,})"
+    r"(?:/(?:edit|view|preview))?/?$"
+)
+
+
+def _configured_item_id(
+    env_name: str,
+    *,
+    expected_host: str,
+    path_re: re.Pattern[str],
+    description: str,
+) -> str:
+    value = os.environ.get(env_name, "").strip()
+    if not value:
+        raise RuntimeError(
+            f"{env_name} が未設定です。{description}の共有 URL を環境変数へ設定してください"
+        )
+
+    parsed_path = ""
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        if (
+            parsed.scheme == "https"
+            and parsed.hostname == expected_host
+            and parsed.username is None
+            and parsed.password is None
+            and parsed.port is None
+        ):
+            parsed_path = parsed.path
+    except ValueError:
+        pass
+
+    match = path_re.fullmatch(parsed_path)
+    if not match:
+        raise RuntimeError(
+            f"{env_name} の形式が不正です。{description}の Google URL を設定してください"
+        )
+    return match.group(1)
+
+
+def root_folder_id() -> str:
+    """Secrets から渡されたルートフォルダ URL を検証して ID を返す。"""
+    return _configured_item_id(
+        ROOT_FOLDER_URL_ENV,
+        expected_host="drive.google.com",
+        path_re=_FOLDER_PATH_RE,
+        description="ルートフォルダ",
+    )
+
+
+def master_db_id() -> str:
+    """Secrets から渡されたマスターDB URL を検証して ID を返す。"""
+    return _configured_item_id(
+        MASTER_DB_URL_ENV,
+        expected_host="docs.google.com",
+        path_re=_SPREADSHEET_PATH_RE,
+        description="マスターDB",
+    )
 
 
 @dataclass(frozen=True)
@@ -49,7 +113,10 @@ def _get(url: str, *, retries: int = 3) -> bytes:
         except (urllib.error.URLError, TimeoutError) as exc:  # noqa: PERF203
             last = exc
             time.sleep(1.5 * (attempt + 1))
-    raise RuntimeError(f"取得に失敗: {url}") from last
+    # URL には Secrets から取り出した Drive ID が入るため、例外や Actions の
+    # ログへ値を含めない。元例外も URL を保持しうるので例外チェーンへ載せない。
+    error_type = type(last).__name__ if last is not None else "unknown"
+    raise RuntimeError(f"Google Drive からの取得に失敗 ({error_type})") from None
 
 
 def list_folder(folder_id: str) -> list[DriveItem]:
@@ -57,9 +124,7 @@ def list_folder(folder_id: str) -> list[DriveItem]:
     raw = _get(f"https://drive.google.com/drive/folders/{folder_id}")
     m = _IVD_RE.search(raw)
     if not m:
-        raise RuntimeError(
-            f"_DRIVE_ivd が見つからない（非公開 or 形式変更）: {folder_id}"
-        )
+        raise RuntimeError("_DRIVE_ivd が見つからない（非公開 or 形式変更）")
 
     # JS 文字列リテラル。日本語は生の UTF-8 バイトのまま入っていることも、
     # \xNN エスケープになっていることもあるので、バイト列のまま復元してから
@@ -105,5 +170,6 @@ def fetch(item: DriveItem, cache_dir: Path) -> Path:
 def fetch_master_db(cache_dir: Path) -> Path:
     """既存のマスターDB「オタクDJ大会DB」を xlsx で取得する。"""
     return fetch(
-        DriveItem(id=MASTER_DB_ID, name="オタクDJ大会DB", mime=GSHEET_MIME), cache_dir
+        DriveItem(id=master_db_id(), name="オタクDJ大会DB", mime=GSHEET_MIME),
+        cache_dir,
     )

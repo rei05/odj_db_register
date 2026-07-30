@@ -1,0 +1,44 @@
+name: Refresh data from Google Drive
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test
+        run: python -m unittest discover -s tests
+
+      - name: Refresh data
+        run: |
+          PYTHONPATH=src python -m odj.crawl
+          PYTHONPATH=src python -m odj.build
+        env:
+          ODJ_ROOT_FOLDER_URL: ${{ secrets.ODJ_ROOT_FOLDER_URL }}
+          ODJ_MASTER_DB_URL: ${{ secrets.ODJ_MASTER_DB_URL }}
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: data/refresh-drive
+          add-paths: |
+            data/manifest.json
+            web/public/data/plays.json
+          commit-message: Driveデータを更新
+          title: Driveデータを更新
+          body: |
+            GitHub Actions が Google Drive から生成したデータ更新です。
+          delete-branch: true

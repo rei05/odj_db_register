@@ -115,13 +115,12 @@ def _crawl_event(event: DriveItem) -> dict:
 
 
 def crawl() -> dict:
-    root = drive.list_folder(drive.ROOT_FOLDER_ID)
+    root = drive.list_folder(drive.root_folder_id())
     events = [i for i in root if i.is_folder and EVENT_FOLDER_RE.match(i.name)]
     with ThreadPoolExecutor(6) as pool:
         results = list(pool.map(_crawl_event, events))
     results.sort(key=lambda e: e["no"])
     return {
-        "root_folder_id": drive.ROOT_FOLDER_ID,
         "crawled_at": date.today().isoformat(),
         "events": results,
     }

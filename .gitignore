@@ -2,6 +2,9 @@ __pycache__/
 *.py[cod]
 .venv/
 *.egg-info/
+.env
+.env.*
+!.env.example
 
 # ダウンロードキャッシュ（Drive から再取得できる）
 data/raw/

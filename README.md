@@ -3,11 +3,51 @@
 オタクDJ大会の Google Drive フォルダに散らばったセットリストファイルから、
 これまでにプレイされた曲のデータベースを作る。
 
-- 対象: [オタクDJ大会フォルダ](https://drive.google.com/drive/folders/1Ti5vLERqTNbK1WMLuTh1Xk_Y6o9ZL_Ud)（第1〜15回）
+- 対象: Secrets で指定したオタクDJ大会フォルダ（第1〜15回）
 - 形式: Google スプレッドシート / xlsx / PDF / .numbers / テキスト / Google ドキュメント
 - 出力: `out/plays.csv`、`out/odj.sqlite`、`out/paste.tsv`、`out/report.md`、`web/public/data/plays.json`
 
-フォルダは「リンクを知っている全員」で共有されているため、**Drive の認証情報は不要**。
+Drive URL はリポジトリへ保存せず、環境変数から読み込む。
+
+## Drive URL の設定
+
+GitHub のリポジトリで **Settings → Secrets and variables → Actions** を開き、
+次の Repository secrets を登録する。
+
+| Secret | 値 |
+|---|---|
+| `ODJ_ROOT_FOLDER_URL` | 対象フォルダの Google Drive URL |
+| `ODJ_MASTER_DB_URL` | 既存マスターDBの Google スプレッドシート URL |
+
+GitHub Secrets はコードから直接は読めないため、Drive 処理を実行する Actions の
+step で環境変数へ渡す。`.github/workflows/refresh-data.yml` が次の設定で
+Secrets を取得処理だけへ注入する。
+
+```yaml
+- name: Refresh Drive data
+  run: |
+    PYTHONPATH=src python -m odj.crawl
+    PYTHONPATH=src python -m odj.build
+  env:
+    ODJ_ROOT_FOLDER_URL: ${{ secrets.ODJ_ROOT_FOLDER_URL }}
+    ODJ_MASTER_DB_URL: ${{ secrets.ODJ_MASTER_DB_URL }}
+```
+
+登録後は GitHub の **Actions → Refresh data from Google Drive → Run workflow**
+からデータ更新を実行できる。更新された `data/manifest.json` と
+`web/public/data/plays.json` は `data/refresh-drive` ブランチのPRになる。
+`aliases.yml` と `deploy.yml` には Secrets を渡していない。
+
+ローカルで実行するときは、同名の環境変数をシェルへ設定する。
+
+```bash
+export ODJ_ROOT_FOLDER_URL='対象フォルダのURL'
+export ODJ_MASTER_DB_URL='マスターDBのURL'
+```
+
+フォルダの読み取り方式は従来どおり公開共有ページの取得であり、OAuth 認証ではない。
+Secrets への保存はリポジトリ上のURL露出を防ぐもので、Drive側のアクセス制御を
+変更するものではない。
 
 ## 使い方
 
@@ -35,7 +75,7 @@ GitHub Pages に上がる。
 `uv` を使わない場合は `PYTHONPATH=src python3 -m odj.build` でも動く。
 標準ライブラリのみで書いてあるので追加インストールは不要。
 
-xlsx リーダの回帰テストは `python3 -m unittest discover -s tests`。
+回帰テストは `python3 -m unittest discover -s tests`。
 
 ## 作り
 
@@ -51,10 +91,8 @@ src/odj/
 
 ### 既存マスターDBとの関係
 
-Drive のルートには手作業で育ててきた
-[オタクDJ大会DB](https://docs.google.com/spreadsheets/d/1MEDuHQixRB9_2Kf3YLfK2QHmsT-PV1pTUnSGSgWkISU)
-がある。これを捨てずに、**セトリファイルを正・マスターDBを穴埋め**として
-union マージする。
+Drive のルートには手作業で育ててきたオタクDJ大会DBがある。これを捨てずに、
+**セトリファイルを正・マスターDBを穴埋め**として union マージする。
 
 - ファイルがある DJ … ファイルの内容を採用し、空欄だけマスターDBで補う
   （手入力されたアーティスト・URL・play順を落とさないため）
