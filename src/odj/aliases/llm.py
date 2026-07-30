@@ -2,11 +2,12 @@
 
     PYTHONPATH=src python3 -m odj.aliases ask --field work --dry-run
     PYTHONPATH=src python3 -m odj.aliases ask --field work
+    PYTHONPATH=src python3 -m odj.aliases ask --field artist
 
 `block` が作った out/aliases/clusters.<field>.json と、`fetch` が作った
 out/aliases/evidence.<field>.json（無くてもよい）を読み、
 data/aliases/_proposed/<field>s.toml に提案を書く。**辞書は書かない。**
-人間が npm run review で1件ずつ判断して初めて works.toml に入る。
+人間が npm run review で1件ずつ判断して初めて works.toml / artists.toml に入る。
 
 ここに LLM を入れる理由は1つだけで、**文字列類似では原理的に繋がらない組**が
 実データにあるため。「デレマス」(agg_key: でれます) と
@@ -27,7 +28,15 @@ bigram でも編集距離でも部分一致でも一度も同じクラスタに�
     block.load_keep_apart() で再検査する（プロンプトは守られない前提で書く）
 
 GitHub Models の無料枠（High tier: 50 req/日・**入力 4000tok**）に収めるため、
-入力上限まで詰めてバッチにする。work の 153 クラスタで 27 リクエスト。
+入力上限まで詰めてバッチにする。実測（--dry-run）で work の 152 クラスタが
+28 リクエスト、artist の 105 クラスタが 34 リクエスト。**1回の dispatch で
+1 field ぶんしか投げない**（aliases.yml が field を入力に取る）ので1回なら収まるが、
+**同じ日に work と artist の両方を回すと 62 で枠を超える**。日を分けること。
+artist はクラスタが少ないのにリクエストが多い。1クラスタが大きい
+（`わか・ふうり・すなお from STAR☆ANIS` のような長い生表記が並ぶ）ことと、
+system_prompt が field 固有の規則ぶん長い（work 1479tok に対して artist 2168tok）
+ことの両方が効いている。プロンプトを足すときは system_prompt の説明を先に読む。
+
 プロンプト全文の SHA256 で data/raw/llm/ にキャッシュするので、**入力が同じなら
 再実行はネットワークに出ず、バイト単位で同じ結果**になる。
 """
@@ -109,60 +118,72 @@ NOTE_MAX = 100
 # 出力スキーマ
 # ---------------------------------------------------------------------------
 
-# **approved はここに無い。** LLM が承認済みを書く手段が存在しないことが、
-# 「未承認のものが公開データに出ない」の一番外側の担保になっている。
-RESPONSE_FORMAT: dict[str, Any] = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "alias_groups",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "additionalProperties": False,
-            "required": ["groups"],
-            "properties": {
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": False,
-                        "required": [
-                            "cluster_id",
-                            "canonical",
-                            "series",
-                            "kind",
-                            "variants",
-                            "confidence",
-                            "reason",
-                        ],
-                        "properties": {
-                            "cluster_id": {"type": "string"},
-                            "canonical": {"type": "string"},
-                            "series": {"type": "string"},
-                            "kind": {
-                                "type": "string",
-                                "enum": [
-                                    "work",
-                                    "vocaloid",
-                                    "vtuber",
-                                    "odj-self",
-                                    "artist-as-work",
-                                    "unknown",
-                                ],
-                            },
-                            "variants": {"type": "array", "items": {"type": "string"}},
-                            "confidence": {
-                                "type": "string",
-                                "enum": ["high", "medium", "low"],
-                            },
-                            "reason": {"type": "string"},
-                        },
-                    },
-                }
-            },
-        },
+# work だけが持つ2項目。**artist のスキーマからは落としてある。**
+#
+# strict な json_schema は properties を全部 required に入れる必要があり、置いたままに
+# すると LLM は artist でも必ず series と kind を埋めることになる。kind の enum は
+# work / vocaloid / vtuber / odj-self / artist-as-work / unknown で、アーティスト名を
+# どれかに分類させても意味が無いうえ、その値は to_entry → artists.toml → aliases.json の
+# `k` まで素通りする。**「どれでもないので unknown」を毎回書かせるより、訊かないほうが
+# 短くて嘘が混ざらない。**
+#
+# 他の2か所も既にそうなっている。store._ARTISTS_HEADER が説明している列は
+# canonical / variants / approved / confidence / reason だけで series と kind は
+# 無く、レビュー GUI（web/src/review/ClusterCard.tsx）も field === 'work' のときしか
+# kind を送らない。ここだけ訊いていると、LLM の提案には kind があるのに人間が
+# 承認した行には無い、という食い違いが artists.toml に残る。
+_WORK_ONLY_PROPERTIES: dict[str, Any] = {
+    "series": {"type": "string"},
+    "kind": {
+        "type": "string",
+        "enum": ["work", "vocaloid", "vtuber", "odj-self", "artist-as-work", "unknown"],
     },
 }
+
+
+def response_format(field: str) -> dict[str, Any]:
+    """LLM に強制する出力スキーマ。
+
+    **approved はここに無い。** LLM が承認済みを書く手段が存在しないことが、
+    「未承認のものが公開データに出ない」の一番外側の担保になっている。
+
+    field で分けているのは series / kind の2項目だけ（_WORK_ONLY_PROPERTIES の
+    説明を参照）。スキーマは cache_key に含まれるので、ここを変えると
+    data/raw/llm/ のキャッシュは無効になる。
+    """
+    properties: dict[str, Any] = {
+        "cluster_id": {"type": "string"},
+        "canonical": {"type": "string"},
+        **(_WORK_ONLY_PROPERTIES if field == "work" else {}),
+        "variants": {"type": "array", "items": {"type": "string"}},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+        "reason": {"type": "string"},
+    }
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "alias_groups",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["groups"],
+                "properties": {
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            # strict モードは properties と required が一致していないと
+                            # 400 を返す。並びも properties のまま揃えておく。
+                            "required": list(properties),
+                            "properties": properties,
+                        },
+                    }
+                },
+            },
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -365,7 +386,118 @@ def cluster_values(clusters: list[dict]) -> set[str]:
 
 _FIELD_LABEL = {
     "work": ("元ネタ名（アニメ・ゲーム等の作品名や、ボカロ・VTuber などのジャンル）", "作品"),
-    "artist": ("アーティスト名", "アーティスト"),
+    # artist は「アーティスト名の欄」ではなく**何でも入る欄**である。実データ 353 種の
+    # 内訳が、個人・グループ・キャラクター名義・声優名・合同名義・リミキサー名で、
+    # 「アーティスト名」とだけ言うと LLM が人間の音楽アーティストを前提にしてしまう
+    # （`大槻唯(CV:山下七海)` や `わか・ふうり・すなお from STAR☆ANIS` が普通に来る）。
+    "artist": (
+        "アーティスト名（個人・グループ・キャラクター名義・声優名・合同名義が混在する欄）",
+        "アーティスト",
+    ),
+}
+
+# field ごとに差し替える部分。共通の骨格（絶対規則の 1・4・5、入力の読み方の大枠、
+# 出力の形）は system_prompt の f-string 側に1つだけ持ち、**中身が field で本当に
+# 変わる箇所だけ**をここに出してある。work と artist で丸ごと2本の文面を持つと、
+# 「迷ったら分ける」のような一番効く規則が片方だけ直されて必ず乖離する。
+#
+# work 側の値は現行の文面をそのまま写したもので、**1文字も変えていない**
+# （変えるとリクエスト本文の SHA256 が変わり data/raw/llm/ のキャッシュが無効になる。
+# Actions 上は data/raw/ が gitignore で常にコールドなので実害は無いが、ローカルの
+# 再実行が 28 リクエストぶん無駄にネットワークへ出る）。例外は edges の説明に
+# redirect を足した1点だけで、あちらは work でも説明が抜けていたバグである。
+_FIELD_TEXT: dict[str, dict[str, str]] = {
+    "work": {
+        # 規則2の後半。「keepApart に挙がっていなくても」に続く。
+        "rule2": """シリーズの
+   別作品（1期と2期、無印と続編、ブランドが同じだけの別タイトル）は
+   別物として扱ってください。""",
+        # 規則3の後半。「創作は禁止…と考えて書いてはいけません。」に続く。
+        "rule3": """api_results に正式名称があればそちらを優先します
+   （「ナナシス」より「Tokyo 7th シスターズ」）。無ければ rows の多い表記を選びます。
+   ただし api_results は検索のヒットなので、一覧記事や関連商品（「〜の楽曲一覧」
+   「〜 Solo Collection」）が混ざります。**作品そのものを指す title だけ**を
+   canonical にしてください。""",
+        # field 固有の節。work には無い（もともと全体が work 向けに書かれている）。
+        "extra": "",
+        # edges の agg の説明。「agg=」と末尾の「 / 」まで入れてあるのは、
+        # work 側の改行位置を1文字も動かさないため（下の artist と説明の長さが違う）。
+        "agg": """agg=注記
+  (OP・ED・楽曲・TVアニメ「」)を剥がすと一致 / """,
+        "hints": """series-risk=部分一致だけで繋がった(別作品の恐れ) /
+  series-mark-mismatch=「2期」等の印が食い違う / split-from-large=繋がりすぎた塊の
+  破片(中身を疑う) / artist-as-work=元ネタ欄にアーティスト名""",
+        "api": """外部 API の裏取り。**空配列は「引いたが記事が無かった」**で
+  タイポか通称のシグナル。キーごと無い値は引いていないだけなので根拠にしない""",
+        # 出力の series / kind。artist では response_format() のスキーマから
+        # 落としてあるので、ここで説明すると書けない項目を求めることになる。
+        "output": """
+- series … シリーズ名。分からなければ空文字
+- kind … work=作品 / vocaloid=ボカロ曲 / vtuber=VTuber / odj-self=大会自体のネタ /
+  artist-as-work=元ネタ欄にアーティスト名 / unknown=判断できない""",
+    },
+    "artist": {
+        # 最も危険なのは「綴りが近いだけの別人」。規則2（絶対に統合しない）の側に
+        # 置いてあるのは、下の固有規則より上に読ませたいため。
+        "rule2": """綴りが1〜2文字
+   違うだけの別アーティスト（LiSA と ELISA、HALCALI と halca、Ray と Ray Volpe、
+   スピカ と スピラ・スピカ）も別物です。**綴りが近いことは統合の根拠になりません。**""",
+        # work と違い「API の正式名称を優先」してはいけない。MusicBrainz の検索は
+        # 必ず何かを返すので、そのまま優先させると Ray → Ray Charles を正準に採る。
+        "rule3": """基本は rows の多い表記を選びます。
+   api_results[].title を canonical にしてよいのは、raw との差が大小・空白・記号
+   だけのとき（`Claris` より `ClariS`）に限ります。""",
+        # 4項目に畳んである。1項目ずつ節に分けたほうが読みやすいが、この節は全バッチに
+        # 乗る固定費で、長くするとリクエスト数が直に増える（system_prompt の説明を参照）。
+        # 挙げる実例も、実データで実際に踏んだ組を1〜2個までに絞ってある。
+        "extra": """
+## この欄に固有の規則（実データ 353 種を確認して決めた方針）
+
+A. **合同名義は第3の名義。分解しない。** `feat.` `×` `&` `with` `from` で複数の名前が
+   並ぶ表記は、含まれるどの単独名義とも別物です（`AKINO with bless4` ≠ `AKINO`、
+   `TAKU INOUE・DECO*27` はどちらでもない）。連名とその中の1人も別。**この欄では
+   構造を分解せず、表記の統一だけを行います。**
+
+B. **キャラクター名義と声優本人は別**（`長門有希(茅原実里)` ≠ `茅原実里`）。逆に
+   **同じキャラクター名**なら `CV:` や声優名の注記の有無・連名の区切り（`、` `・` `,`）
+   だけの違いは表記ゆれ（`大槻唯` / `大槻唯(CV:山下七海)`）。`(CV:声優名)` の書式が
+   揃っているだけでは根拠にならず、同じ声優が複数のキャラを演じるため
+   `千石撫子(花澤香菜)` と `小野寺小咲(花澤香菜)` も別物です。
+
+C. **大小・空白・記号・不可視文字の差だけなら同一で confidence="high"**
+   （`ClariS`/`Claris`、`sasakure.UK`/`sasakure.‌UK`=ゼロ幅文字の混入）。タイポも
+   統合してよい（`BUMP OF CHIKEN`、`黄緑色社会`=緑と黄が逆）。api_results の**空配列**は
+   タイポのシグナルですが、MusicBrainz 未登録の同人アーティストや VTuber でも空になる
+   ので単独の根拠にはしないこと。
+
+D. **cooccur はこの欄では弱い。** リミックスやカバーは原曲と同じ曲名でアーティスト欄が
+   リミキサー名になり、ボカロ曲は行によって作者名（`kz(livetune)`）と歌唱ボカロ
+   （`初音ミク`）のどちらが入るかが違います。cooccur だけの組は、文字列がほぼ同じで
+   タイポか大小差と言える場合を除いて統合しないこと。混ざるリミックス表記
+   （`YUPPUN Remix`）は、同じ人かを判断せず confidence="low" で人間に回してください。
+""",
+        # agg 辺は artist では注記剥がしではなく agg_key の一致で張られる
+        # （`じん`/`ジン`、`μ's`/`μ′s`）。work 向けの「OP・ED を剥がすと一致」を
+        # そのまま見せると、**この欄で一番当たる辺**を LLM が読み違える。
+        "agg": """agg=記号・全角半角・カタカナとひらがなを
+  均すと一致(`じん`と`ジン`、`μ's`と`μ′s`) / """,
+        # series-mark-mismatch と artist-as-work は work 向けの説明が意味を成さない。
+        # 実データでは `AKINO with bless4` の 4 や `96猫` の数字で series-mark-mismatch
+        # が付き、ボカロP・VTuber が元ネタ欄にも出ることで artist-as-work が付く。
+        # どちらも危険信号ではないと言わないと、LLM が過剰に分ける側へ倒れる。
+        "hints": """series-risk=部分一致だけで繋がった(合同名義と
+  単独名義の恐れ) / split-from-large=繋がりすぎた塊の破片(中身を疑う) /
+  series-mark-mismatch と artist-as-work はこの欄では意味が薄い（`bless4` の数字や、
+  ボカロP が元ネタ欄にも出ることで付く。危険信号ではない）""",
+        # 「それ以上違うとき」の内訳（合同名義の親名義・キャラ名から片方だけ・誤ヒット）は
+        # 固有規則 A / B と重なるので、ここでは例を1つずつに絞ってある。
+        "api": """MusicBrainz。kind=alias は「別名として登録」の明示で最も
+  強い根拠。kind=search は**曖昧検索で必ず何かが返る**のでヒット自体は根拠にならず、
+  title と raw の差が大小・空白・記号だけのときだけ正式表記です（それ以上違うのは
+  合同名義の親名義 `… from STAR☆ANIS`→`STAR☆ANIS` か、無関係な誤ヒット
+  `Ray`→`Ray Charles`）。キーごと無い値は引いていないだけ""",
+        "output": "",
+    },
 }
 
 
@@ -377,8 +509,21 @@ def system_prompt(field: str) -> str:
     そのバッチに関係するものだけを載せる（keep_apart_lines の説明を参照）。
     要約して一般則にはしない。「アイマス系は分ける」に化けると、逆に
     「アイドルマスターシンデレラガールズ」と「デレマス」（同じもの）まで分かれる。
+
+    **ここが長くなるとリクエスト数が増える。** 全バッチに乗る固定費なので、
+    1バッチに詰められる量は SAFE_INPUT_TOKENS からこの長さを引いた残りになる。
+    artist で実測すると、work と同じ文面（1447tok）のままなら 22 リクエスト、
+    固有規則を書きたいだけ書いた 2577tok では **50 リクエスト（無料枠ちょうど）**で、
+    削って 2168tok / 34 リクエストに落としてある。100tok につき 2 リクエストほど
+    増える勘定。規則を1つ足すときは、実データで実際に踏んだ組を1〜2個挙げるだけに
+    して、一般論や他の規則と重なる説明は書かないこと。
+
+    2168tok は「どのバッチも SAFE_INPUT_TOKENS に収まる」上限でもある
+    （artist で一番大きいクラスタが単独で 1363tok あり、これ以上固定費が増えると
+    そのクラスタだけ 1件で枠を超える。pack_batches は1件だけのバッチを割れない）。
     """
     label, thing = _FIELD_LABEL[field]
+    text = _FIELD_TEXT[field]
     return f"""\
 あなたはオタクDJ大会のプレイログDBの表記ゆれを整理する助手です。対象は{label}。
 目的は**検索で確実に曲を見つけられるようにすること**で、{thing}の分類ではありません。
@@ -394,17 +539,11 @@ def system_prompt(field: str) -> str:
    出さないこと（groups は空配列でもよい）。全クラスタに答えを出す必要はありません。
 
 2. 入力の keepApart に挙げた組は、実データを突き合わせて別物と確認済みです。
-   **絶対に同じグループへ入れないこと。** そこに挙がっていなくても、シリーズの
-   別{thing}（1期と2期、無印と続編、ブランドが同じだけの別タイトル）は
-   別物として扱ってください。
+   **絶対に同じグループへ入れないこと。** そこに挙がっていなくても、{text["rule2"]}
 
 3. canonical は、そのクラスタの candidates[].raw か api_results[].title に
    **実際にある文字列**からのみ選ぶこと。**創作は禁止**で、「正式名称はこうあるべき」
-   と考えて書いてはいけません。api_results に正式名称があればそちらを優先します
-   （「ナナシス」より「Tokyo 7th シスターズ」）。無ければ rows の多い表記を選びます。
-   ただし api_results は検索のヒットなので、一覧記事や関連商品（「〜の楽曲一覧」
-   「〜 Solo Collection」）が混ざります。**{thing}そのものを指す title だけ**を
-   canonical にしてください。
+   と考えて書いてはいけません。{text["rule3"]}
 
 4. reason には**与えられた材料を引用**すること。rows（行数）、djs、coTitles、
    coArtists、api_results の title か note のいずれかを必ず含めてください。
@@ -412,22 +551,20 @@ def system_prompt(field: str) -> str:
 
 5. **確信が持てなければ confidence="low"。** low の提案は公開データには出ませんが、
    人間のレビューには残るので、捨てずに low で出すほうが有益です。
-
+{text["extra"]}
 ## 入力の読み方
 
 - candidates[].raw … 生の表記。variants には**そのまま**書く（整えない）
 - rows … 行数。djs / coTitles / coArtists / coWorks … 同じ行の DJ・曲名・
   アーティスト（先頭 {SAMPLE} 件）。**曲名が1つも重ならずアーティストの系統も違うなら
   別{thing}を疑う**。同じ DJ が両方の表記を使っていれば表記ゆれの証拠
-- edges … 2つを結んだ根拠 [A, B, 種別]。caseonly=大小と空白だけ / agg=注記
-  (OP・ED・楽曲・TVアニメ「」)を剥がすと一致 / cooccur=同じ曲でアーティストだけ違う /
+- edges … 2つを結んだ根拠 [A, B, 種別]。redirect=外部 API が「同じものの別名だ」と
+  明示している(**最も強い**) / caseonly=大小と空白だけ / {text["agg"]}cooccur=同じ曲で\
+アーティストだけ違う /
   edit=綴りが近い(タイポ) / bigram=文字の重なり / substr=片方が片方に含まれるだけ。
   **substr しか無い組は最も弱いので疑う**
-- hints … series-risk=部分一致だけで繋がった(別{thing}の恐れ) /
-  series-mark-mismatch=「2期」等の印が食い違う / split-from-large=繋がりすぎた塊の
-  破片(中身を疑う) / artist-as-work=元ネタ欄にアーティスト名
-- api_results … 外部 API の裏取り。**空配列は「引いたが記事が無かった」**で
-  タイポか通称のシグナル。キーごと無い値は引いていないだけなので根拠にしない
+- hints … {text["hints"]}
+- api_results … {text["api"]}
 
 ## 出力
 
@@ -435,10 +572,7 @@ groups は配列。1つのクラスタから 0 個・1 個・複数個を出せ�
 元のクラスタの id をそのまま。
 
 - variants … 同じと判断した生表記。**必ず candidates[].raw のどれか**
-- canonical … variants か api_results[].title にある文字列
-- series … シリーズ名。分からなければ空文字
-- kind … work=作品 / vocaloid=ボカロ曲 / vtuber=VTuber / odj-self=大会自体のネタ /
-  artist-as-work=元ネタ欄にアーティスト名 / unknown=判断できない
+- canonical … variants か api_results[].title にある文字列{text["output"]}
 - confidence … high / medium / low
 - reason … 規則4の通り、実データの引用を含めた日本語
 """
@@ -480,13 +614,16 @@ def estimate_tokens(text: str) -> int:
 # ---------------------------------------------------------------------------
 
 
-def request_body(model: str, system: str, user: str) -> dict[str, Any]:
+def request_body(model: str, system: str, user: str, *, field: str) -> dict[str, Any]:
     """OpenAI 互換のリクエスト本文。
 
     temperature は送らない。既定値以外を受け付けないモデル（gpt-5 系）があり、
     --model で差し替えられる以上、どれでも通る形にしておきたい。再現性は
     プロンプトの SHA256 キャッシュで担保しているので実害は無い。
     max_tokens ではなく max_completion_tokens なのも同じ理由。
+
+    field は response_format のためだけに要る（既定値を置いていないのは、
+    呼ぶ側が work を暗黙に選んでしまうのを防ぐため）。
     """
     return {
         "model": model,
@@ -494,7 +631,7 @@ def request_body(model: str, system: str, user: str) -> dict[str, Any]:
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        "response_format": RESPONSE_FORMAT,
+        "response_format": response_format(field),
         "max_completion_tokens": MAX_OUTPUT_TOKENS,
     }
 
@@ -568,8 +705,11 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
                 # カタログに載っていても、rate_limit_tier が "custom" のモデルは
                 # 標準の無料枠では使えない（gpt-5 がこれで、Actions から 400 が
                 # 返る）。tier は下のコマンドで確認できる。
+                # モデル名は body から取る。post() の引数には無いので、
+                # ここで model を直に参照すると NameError になって本来の
+                # エラー本文まで消える（この分岐は gpt-5 で実際に通った）。
                 hint = (
-                    f"\n  モデル {model!r} はこのトークンでは使えません。"
+                    f"\n  モデル {body.get('model')!r} はこのトークンでは使えません。"
                     "\n  無料枠で使えるのは rate_limit_tier が low / high のものです:"
                     "\n    curl -s https://models.github.ai/catalog/models |"
                     " python3 -c \"import sys,json;"
@@ -800,7 +940,7 @@ def ask(
 
     for i, batch in enumerate(prepared["batches"], start=1):
         by_id = {c.get("id"): c for c in batch["clusters"]}
-        body = request_body(model, prepared["system"], batch["user"])
+        body = request_body(model, prepared["system"], batch["user"], field=field)
         response = cached_response(body)
         if response is None:
             if not token:

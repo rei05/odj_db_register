@@ -367,10 +367,35 @@ class BuildEdgesTest(unittest.TestCase):
         self.assertEqual(edges[0].kind, "redirect")
         self.assertEqual({edges[0].a, edges[0].b}, {"ナナシス", "Tokyo 7th シスターズ"})
 
+    def test_musicbrainz_alias_also_makes_an_edge(self) -> None:
+        """MusicBrainz の alias も同じ辺として扱う（artist で効く）。
+
+        artist の裏取りは MusicBrainz なので `redirect` 種別が一度も出ない。
+        別名として登録されていることを教えてくれるのは `alias` のほうで、
+        実データでは「40メートルP」→「40mP」がこれに当たる。agg_key は
+        「40めーとるp」と「40mp」で bigram も編集距離も届かず、この辺が無いと
+        単独値のまま候補にならなかった（この辺だけで 104 → 105 クラスタになる）。
+        """
+        values = self._values("40メートルP", "40mP")
+        self.assertEqual(build_edges(values, set()), [])
+        evidence = {"40メートルP": [{"kind": "alias", "title": "40mP"}]}
+        edges = block.redirect_edges(values, evidence, set())
+        self.assertEqual(len(edges), 1)
+        # 種別名は redirect に揃えてある。「出典が同一への別名だと言っている」
+        # という意味が同じなので、KIND_STRENGTH に強度の等しい別名を2つ
+        # 持たせるより読みやすい。
+        self.assertEqual(edges[0].kind, "redirect")
+        self.assertEqual({edges[0].a, edges[0].b}, {"40メートルP", "40mP"})
+
     def test_redirect_to_a_value_not_in_the_data_is_ignored(self) -> None:
         # 統合相手がいない正式名称に辺を張っても候補にならない
         values = self._values("ブルアカ")
         evidence = {"ブルアカ": [{"kind": "redirect", "title": "ブルーアーカイブ"}]}
+        self.assertEqual(block.redirect_edges(values, evidence, set()), [])
+        # artist でも同じことが起きる。MusicBrainz は「May'n」に対して
+        # アポストロフィ違いの「May’n」を別名として返すが、後者は実データに無い。
+        values = self._values("May'n")
+        evidence = {"May'n": [{"kind": "alias", "title": "May’n"}]}
         self.assertEqual(block.redirect_edges(values, evidence, set()), [])
 
     def test_redirect_respects_keep_apart(self) -> None:
@@ -380,10 +405,23 @@ class BuildEdgesTest(unittest.TestCase):
         self.assertEqual(block.redirect_edges(values, evidence, keep), [])
 
     def test_search_hits_do_not_make_edges(self) -> None:
-        # 検索は当てにならない。「ユーフォ」に Wikidata が「未確認飛行物体」を
-        # 返した実例がある。辺にしてよいのはリダイレクトだけ。
+        """検索ヒットは辺にしない。redirect と alias だけ。
+
+        work では「ユーフォ」に Wikidata が「未確認飛行物体」を返した実例がある。
+        artist ではもっと厄介で、MusicBrainz はスコア 100 のまま**合同名義を
+        分解した親名義**を返す。266 値の裏取りで raw と title が食い違った 23 組
+        のうち 12 組がこれで、いずれもユーザーが明示的に禁じた統合になる。
+        """
         values = self._values("ユーフォ", "未確認飛行物体")
         evidence = {"ユーフォ": [{"kind": "search", "title": "未確認飛行物体"}]}
+        self.assertEqual(block.redirect_edges(values, evidence, set()), [])
+        # 「ふうり from STAR☆ANIS」→「STAR☆ANIS」。from の分解はしない方針。
+        values = self._values("ふうり from STAR☆ANIS", "STAR☆ANIS")
+        evidence = {"ふうり from STAR☆ANIS": [{"kind": "search", "title": "STAR☆ANIS"}]}
+        self.assertEqual(block.redirect_edges(values, evidence, set()), [])
+        # 「長門有希(茅原実里)」→「茅原実里」。キャラ名義と声優本人名義は別。
+        values = self._values("長門有希(茅原実里)", "茅原実里")
+        evidence = {"長門有希(茅原実里)": [{"kind": "search", "title": "茅原実里"}]}
         self.assertEqual(block.redirect_edges(values, evidence, set()), [])
 
     def test_keep_apart_blocks_the_detour_through_annotated_variants(self) -> None:
@@ -1021,6 +1059,65 @@ class AskTest(unittest.TestCase):
         ],
     }
 
+    # artist の候補クラスタ。実データ（clusters.artist.json）に出ている危険を
+    # 1つずつ写してある。`ClariS` と `Claris` は大小差だけなので同じもの、
+    # `AKINO` と `AKINO with bless4` は合同名義なので別物（artist-839e4533）、
+    # `長門有希(茅原実里)` と `茅原実里` はキャラ名義と声優本人で別（artist-98f72f1d）。
+    ARTIST_CLUSTERS: dict = {
+        "field": "artist",
+        "clusters": [
+            {
+                "id": "artist-aaa",
+                "field": "artist",
+                "rows": 12,
+                "hints": [],
+                "edgeKinds": ["agg", "caseonly"],
+                "values": [
+                    {"raw": "ClariS", "rows": 8, "events": [3], "djs": ["ha"],
+                     "coTitles": ["コネクト"], "coWorks": ["魔法少女まどか☆マギカ"]},
+                    {"raw": "Claris", "rows": 4, "events": [5], "djs": ["ha"],
+                     "coTitles": ["コネクト"], "coWorks": ["まどマギ"]},
+                ],
+                "edges": [
+                    {"a": "ClariS", "b": "Claris", "kinds": ["agg", "caseonly"]},
+                ],
+            },
+            {
+                "id": "artist-bbb",
+                "field": "artist",
+                "rows": 4,
+                "hints": ["series-risk", "series-mark-mismatch"],
+                "edgeKinds": ["cooccur", "substr"],
+                "values": [
+                    {"raw": "AKINO", "rows": 3, "events": [2], "djs": ["tri"],
+                     "coTitles": ["蒼穹"], "coWorks": ["創聖のアクエリオン"]},
+                    {"raw": "AKINO with bless4", "rows": 1, "events": [9],
+                     "djs": ["tri"], "coTitles": ["宿命"], "coWorks": ["アクエリオンEVOL"]},
+                ],
+                "edges": [
+                    {"a": "AKINO", "b": "AKINO with bless4",
+                     "kinds": ["cooccur", "substr"]},
+                ],
+            },
+            {
+                "id": "artist-ccc",
+                "field": "artist",
+                "rows": 3,
+                "hints": ["series-risk"],
+                "edgeKinds": ["substr"],
+                "values": [
+                    {"raw": "長門有希(茅原実里)", "rows": 1, "events": [4],
+                     "djs": ["せーや"], "coTitles": ["雪、無音、窓辺にて。"]},
+                    {"raw": "茅原実里", "rows": 2, "events": [7], "djs": ["ましゅー"],
+                     "coTitles": ["境界の彼方"]},
+                ],
+                "edges": [
+                    {"a": "長門有希(茅原実里)", "b": "茅原実里", "kinds": ["substr"]},
+                ],
+            },
+        ],
+    }
+
     EVIDENCE: dict = {
         "field": "work",
         "evidence": {
@@ -1056,6 +1153,22 @@ class AskTest(unittest.TestCase):
                 store.append_keep_apart(
                     [{"a": "アイカツ!", "b": "アイカツスターズ"}], "歌唱ユニットが別"
                 )
+            yield root
+
+    @contextlib.contextmanager
+    def artist_fixture(self):
+        """sandbox に artist の候補クラスタを置く。
+
+        work 用の fixture と分けてあるのは、置くクラスタの中身が別物だから
+        （合同名義・キャラ名義といった、この欄にしか出ない危険を写している）。
+        evidence は置かない — artist の裏取りは MusicBrainz の曖昧検索で、
+        あるほうが例外的な状態ではないため、無い側も通ることを見ておきたい。
+        """
+        with sandbox() as root, mock.patch.object(paths, "RAW_DIR", root / "data" / "raw"):
+            paths.OUT_ALIASES_DIR.mkdir(parents=True)
+            (paths.OUT_ALIASES_DIR / "clusters.artist.json").write_text(
+                json.dumps(self.ARTIST_CLUSTERS, ensure_ascii=False), encoding="utf-8"
+            )
             yield root
 
     @staticmethod
@@ -1424,13 +1537,147 @@ class AskTest(unittest.TestCase):
             prepared = llm.plan("work")
         self.assertIn("series-risk", prepared["batches"][0]["user"])
 
+    def test_the_work_prompt_explains_the_redirect_edge(self) -> None:
+        """edges の種別は全部、意味を添えて渡すこと。
+
+        redirect（外部 API が別名だと明示している）は**一番強い辺**なのに、
+        以前は種別名だけが渡って説明が抜けていた。「ナナシス」と
+        「Tokyo 7th シスターズ」を繋いでいるのはこの辺だけなので、意味が分からない
+        と一番効く候補が「文字が全然違う」で捨てられる。
+        """
+        for field in ("work", "artist"):
+            with self.subTest(field=field):
+                text = llm.system_prompt(field)
+                self.assertIn("redirect=", text)
+                # 説明が本当に付いていること（種別名の羅列に戻っていないこと）
+                self.assertIn("最も強い", text)
+
+    def test_the_artist_prompt_is_not_the_work_prompt(self) -> None:
+        """artist には artist の規則を読ませること。
+
+        以前は _FIELD_LABEL で2語を入れ替えるだけで、中身は作品名前提の文面だった。
+        この欄に本当に入っているのは個人・グループ・キャラクター名義・声優名・
+        合同名義で、「シリーズの1期と2期」のような指示は的外れになる。
+        """
+        work = llm.system_prompt("work")
+        artist = llm.system_prompt("artist")
+        self.assertNotEqual(work, artist)
+        for phrase in ("合同名義", "声優", "キャラクター名義", "MusicBrainz"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, artist)
+                self.assertNotIn(phrase, work)
+        # 共通の骨格は両方に残っていること（片方だけ直されて乖離しないため）
+        for phrase in ("迷ったら「分ける」", "創作は禁止", "空配列でもよい"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, artist)
+                self.assertIn(phrase, work)
+        # work 側に artist の出力項目が無いのと対称に、artist では series / kind を
+        # 訊かない（response_format と食い違うと LLM が書けない項目を求めることになる）
+        self.assertIn("- kind …", work)
+        self.assertNotIn("- kind …", artist)
+
+    def test_the_artist_prompt_forbids_splitting_joint_credits(self) -> None:
+        """合同名義を単独名義に寄せない、が artist で一番効く規則。
+
+        実データの `TAKU INOUE・DECO*27` は `TAKU INOUE` でも `DECO*27` でもない
+        第3の名義で、`artist-839e4533` の `AKINO` と `AKINO with bless4` も別のまま
+        にする。この欄は表記ゆれの統一だけを行い、構造の分解はしない。
+        """
+        text = llm.system_prompt("artist")
+        self.assertIn("分解しない", text)
+        self.assertIn("AKINO", text)
+        # キャラ名義と声優本人の区別、書式の一致は根拠にならないこと
+        self.assertIn("長門有希(茅原実里)", text)
+        self.assertIn("(CV:声優名)", text)
+
+    def test_the_artist_batches_fit_the_free_tier(self) -> None:
+        """artist もバッチに割れて、1回あたりが枠に収まること。
+
+        artist はクラスタ数が work の 7 割なのにリクエストは多い（実データで
+        105 クラスタ / 34 リクエスト）。1つの生表記が長く
+        （`わか・ふうり・すなお from STAR☆ANIS`）、system_prompt も field 固有の
+        規則ぶん長いため。**固定費が増えると 1件だけのバッチが枠を超える**ので、
+        ここで上限を見ておく（pack_batches は1件のバッチを割れない）。
+        """
+        with self.artist_fixture():
+            prepared = llm.plan("artist")
+        self.assertTrue(prepared["batches"])
+        self.assertEqual(prepared["total"], len(self.ARTIST_CLUSTERS["clusters"]))
+        for batch in prepared["batches"]:
+            with self.subTest(batch=batch["clusters"][0].get("id")):
+                self.assertLessEqual(batch["tokens"], llm.SAFE_INPUT_TOKENS)
+                self.assertLessEqual(len(batch["clusters"]), llm.MAX_CLUSTERS_PER_CALL)
+        # システムプロンプトだけで枠を食い潰していないこと。実データで一番大きい
+        # artist のクラスタは単独で 1363tok あり、固定費と足して SAFE_INPUT_TOKENS を
+        # 超えると、そのクラスタだけ1件のバッチで枠を超える。ここは意図的に余裕が
+        # 小さい（現状 2168 + 1363 = 3531）ので、プロンプトを足すと落ちる。
+        # 落ちたら文面を削るか、無料枠が何リクエストまで許すかを測り直すこと。
+        self.assertLessEqual(prepared["systemTokens"] + 1363, llm.SAFE_INPUT_TOKENS)
+
+    def test_the_artist_proposal_carries_no_kind(self) -> None:
+        # スキーマから落としたので to_entry でも空になり、_fmt_block が行を書かない。
+        # artists.toml に意味の無い kind = "unknown" が並ばないこと。
+        with self.artist_fixture():
+            logs: list[str] = []
+            reply = self.reply({
+                "cluster_id": "artist-aaa",
+                "canonical": "ClariS",
+                "variants": ["ClariS", "Claris"],
+                "confidence": "high",
+                "reason": "大小差だけ。rows は 8 と 4 で、どちらも coTitles に「コネクト」。",
+            })
+            with mock.patch.object(llm, "post", return_value=reply):
+                result = llm.ask("artist", token="dummy", log=logs.append)
+            text = store.proposals_path("artist").read_text(encoding="utf-8")
+            entries = tomllib.loads(text)["artist"]
+        self.assertEqual(result["proposed"], 1)
+        self.assertNotIn("kind =", text)
+        self.assertNotIn("series =", text)
+        self.assertEqual(entries[0]["canonical"], "ClariS")
+
     def test_the_response_schema_has_no_approved(self) -> None:
-        # LLM が承認済みを書くことが構造的に不可能であること
-        schema = llm.RESPONSE_FORMAT["json_schema"]["schema"]
-        props = schema["properties"]["groups"]["items"]["properties"]
-        self.assertNotIn("approved", props)
-        self.assertIs(schema["properties"]["groups"]["items"]["additionalProperties"], False)
-        self.assertIs(llm.RESPONSE_FORMAT["json_schema"]["strict"], True)
+        # LLM が承認済みを書くことが構造的に不可能であること。field で分けたので
+        # 両方見る（片方だけ直して approved を足せてしまう、が一番困る壊れ方）。
+        for field in ("work", "artist"):
+            with self.subTest(field=field):
+                fmt = llm.response_format(field)
+                items = fmt["json_schema"]["schema"]["properties"]["groups"]["items"]
+                self.assertNotIn("approved", items["properties"])
+                self.assertIs(items["additionalProperties"], False)
+                self.assertIs(fmt["json_schema"]["strict"], True)
+                # strict モードは properties と required が一致していないと 400 を返す
+                self.assertEqual(items["required"], list(items["properties"]))
+
+    def test_the_response_schema_drops_series_and_kind_for_artists(self) -> None:
+        """artist には series / kind を訊かないこと。
+
+        kind の enum は work / vocaloid / vtuber / odj-self / artist-as-work /
+        unknown で、アーティスト名をどれかに分類させても意味が無い。strict な
+        json_schema は全項目を required にするので、置いたままにすると毎回
+        「どれでもないので unknown」を書かせることになり、その値が
+        to_entry → artists.toml → aliases.json の `k` まで素通りする。
+        レビュー GUI（ClusterCard.tsx）も field === 'work' のときしか kind を
+        送らないので、訊かないほうが人間の判断と食い違わない。
+        """
+        work = llm.response_format("work")["json_schema"]["schema"]
+        artist = llm.response_format("artist")["json_schema"]["schema"]
+        work_props = work["properties"]["groups"]["items"]["properties"]
+        artist_props = artist["properties"]["groups"]["items"]["properties"]
+        self.assertIn("series", work_props)
+        self.assertIn("kind", work_props)
+        self.assertNotIn("series", artist_props)
+        self.assertNotIn("kind", artist_props)
+        # 判断そのものに要る項目は両方にある
+        for key in ("cluster_id", "canonical", "variants", "confidence", "reason"):
+            with self.subTest(key=key):
+                self.assertIn(key, artist_props)
+
+    def test_the_schema_is_part_of_the_cache_key(self) -> None:
+        # スキーマを field で分けた以上、鍵にも入っていないと artist の応答が
+        # work のキャッシュに当たる。原因の分からない検証エラーになる種類の事故。
+        work = llm.request_body("m", "sys", "user", field="work")
+        artist = llm.request_body("m", "sys", "user", field="artist")
+        self.assertNotEqual(llm.cache_key(work), llm.cache_key(artist))
 
     def test_dry_run_never_touches_the_network(self) -> None:
         # --dry-run は GITHUB_TOKEN が無くても通ること（CI 前の確認に使う）
@@ -1479,10 +1726,33 @@ class AskTest(unittest.TestCase):
                     llm.post({"model": "m"}, "tok", retries=3)
         self.assertEqual((opened.call_count, slept.call_count), (3, 2))
 
+    def test_an_unavailable_model_is_named_in_the_message(self) -> None:
+        """使えないモデルのヒットにモデル名が入ること。
+
+        post() の引数に model は無いので body から取る必要がある。直に
+        model と書くと NameError になり、**本来の API エラー本文まで消える**。
+        この分岐は gpt-5（rate_limit_tier が custom で無料枠外）で実際に通った。
+        """
+        opened = mock.Mock(
+            side_effect=urllib.error.HTTPError(
+                llm.ENDPOINT,
+                400,
+                "boom",
+                {},  # type: ignore[arg-type]
+                io.BytesIO(b'{"code":"unavailable_model","message":"..."}'),
+            )
+        )
+        with mock.patch("urllib.request.urlopen", opened):
+            with self.assertRaises(store.AliasError) as caught:
+                llm.post({"model": "openai/gpt-5"}, "tok")
+        message = str(caught.exception)
+        self.assertIn("openai/gpt-5", message)
+        self.assertIn("unavailable_model", message)  # API の本文が消えていない
+
     def test_the_request_body_matches_what_github_models_accepts(self) -> None:
         # temperature を受け付けないモデルがあり、max_tokens ではなく
         # max_completion_tokens を見る。どちらも間違えると 400 で全滅する。
-        body = llm.request_body(llm.DEFAULT_MODEL, "sys", "user")
+        body = llm.request_body(llm.DEFAULT_MODEL, "sys", "user", field="work")
         self.assertNotIn("temperature", body)
         self.assertEqual(body["max_completion_tokens"], llm.MAX_OUTPUT_TOKENS)
         self.assertEqual(body["model"], llm.DEFAULT_MODEL)

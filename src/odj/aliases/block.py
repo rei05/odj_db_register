@@ -286,27 +286,49 @@ def redirect_edges(
     evidence: dict[str, list[dict]],
     keep_apart: set[frozenset[str]],
 ) -> list[Edge]:
-    """辺8: 外部 API のリダイレクトが「同じもの」と言っている組。
+    """辺8: 外部 API が「これは別名だ」と明示している組。
 
     **文字列の類似では原理的に届かない層がここで埋まる。** 「ナナシス」と
     「Tokyo 7th シスターズ」は agg_key が「ななしす」と「tokyo7thしすたーず」で、
     bigram も編集距離も部分一致も一度も繋がらない。閾値をいくら緩めても届かず、
     緩めた分だけ別作品が混ざる。Wikipedia のリダイレクトはこれを直接教えてくれる。
 
-    実データで9組（ナナシス / デレマス / 学マス / シャニマス / まどマギ /
+    work では実データで9組（ナナシス / デレマス / 学マス / シャニマス / まどマギ /
     よりもい / ガルパン / 俺妹 / ボーカロイド）。いずれも単独値で、この辺が無いと
     クラスタにならず後段の LLM にも人間にも届かない。
 
-    リダイレクト先が実データに存在する値のときだけ張る。存在しない正式名称
-    （「ブルアカ」→「ブルーアーカイブ」だが後者がデータに無い）は、統合相手が
-    いないので候補にする意味が無い。
+    採るのは Wikipedia の `redirect` と MusicBrainz の `alias` の2種別だけ。
+    どちらも「出典が同一のものへの別名として登録している」という同じ意味なので、
+    辺の種別名も `redirect` に揃えてある（KIND_STRENGTH に別名を2つ持たせて
+    強度が同じ、という状態のほうが読みにくい）。artist では
+    「40メートルP」→「40mP」の1組がこれで拾える。
+
+    **MusicBrainz の `search` は採らない。** 表記が完全一致しなかったときの
+    「検索でスコア100だったが実際の表記はこちら」というヒットで、artist 266値の
+    裏取り結果では raw と title が食い違う23組のうち12組が、ユーザーが明示的に
+    禁じた統合になる:
+
+        ふうり from STAR☆ANIS          → STAR☆ANIS      （from の分解）
+        わか・ふうり・すなお from …     → STAR☆ANIS      （同上・6組）
+        May'n・中島愛                  → 中島愛          （合同名義の分解）
+        supercell/やなぎなぎ           → やなぎなぎ      （同上）
+        長門有希(茅原実里)             → 茅原実里        （キャラ名義→声優本人名義）
+
+    これで新しく拾えるのは「cametek」→「かめりあ」など4組しかなく、害のある側の
+    ほうが行数も多い（STAR☆ANIS 系だけで8行以上）。`search` の結果は evidence
+    として api_results に載り LLM とレビュー GUI の両方に届くので、辺にしなくても
+    判断材料としては失われない。
+
+    別名の先が実データに存在する値のときだけ張る。存在しない正式名称
+    （「ブルアカ」→「ブルーアーカイブ」だが後者がデータに無い。artist なら
+    「May'n」→「May’n」）は、統合相手がいないので候補にする意味が無い。
     """
     edges: list[Edge] = []
     for raw, hits in evidence.items():
         if raw not in values:
             continue
         for hit in hits:
-            if hit.get("kind") != "redirect":
+            if hit.get("kind") not in ("redirect", "alias"):
                 continue
             target = str(hit.get("title", "")).strip()
             if not target or target == raw or target not in values:
@@ -314,7 +336,7 @@ def redirect_edges(
             if frozenset((raw, target)) in keep_apart:
                 continue
             edges.append(Edge(raw, target, "redirect"))
-            break  # 最初のリダイレクトだけ見る。2つ目以降は候補が増えるだけ
+            break  # 最初の別名だけ見る。2つ目以降は候補が増えるだけ
     return edges
 
 
