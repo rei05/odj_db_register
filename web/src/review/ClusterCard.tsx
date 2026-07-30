@@ -24,6 +24,44 @@ export interface ClusterActions {
   focusReason: () => void
 }
 
+/**
+ * 初期チェック。**提案があるときは提案の variants だけ**をチェックする。
+ *
+ * LLM は1つのクラスタから「まとめる根拠があるものだけ」を返す契約で（llm.py の
+ * 絶対規則1「迷ったら分ける」）、variants に入らなかった値は**別物と判断された値**
+ * である。全部チェックした状態で出していた頃は、その分を人間が毎回手で外していた
+ * （実データで work 21 件・artist 22 件の提案がクラスタの一部を除外している）。
+ *
+ * 判断済みの値（decidedAs）はどちらの経路でもチェックしない。既存の正準名へ足す
+ * 相手として見せるだけで、もう一度送るとサーバに already-decided で弾かれる。
+ *
+ * 提案の variants が1つも残らなかったときは全部チェックへ戻す。queue 側が未判断の
+ * 値だけに絞る（vite.config.ts）ため起こり得るが、0件のカードは採用ボタンが
+ * disabled で判断できなくなるため。
+ */
+function initialChecked(cluster: Cluster): Set<string> {
+  const alive = cluster.values.filter((v) => !v.decidedAs).map((v) => v.raw)
+  const proposed = cluster.proposal?.variants ?? []
+  const picked = alive.filter((raw) => proposed.includes(raw))
+  return new Set(picked.length > 0 ? picked : alive)
+}
+
+/**
+ * 提案が「別グループ」と判断した値。カードで印を付けるためだけに使う。
+ *
+ * チェックが外れている理由が見えないと、人間には「提案の判断」と「単に忘れている」
+ * の区別が付かない。トグルしても印は消さない（現在の状態ではなく、提案が何と
+ * 言ったかを示すラベルなので）。
+ */
+function proposalExcluded(cluster: Cluster, initial: Set<string>): Set<string> {
+  if (!cluster.proposal?.variants.length) return new Set()
+  return new Set(
+    cluster.values
+      .filter((v) => !v.decidedAs && !initial.has(v.raw))
+      .map((v) => v.raw),
+  )
+}
+
 function initialCanonical(cluster: Cluster): string {
   if (cluster.proposal?.canonical) return cluster.proposal.canonical
   const byRows = [...cluster.values].sort((a, b) => b.rows - a.rows)
@@ -49,10 +87,12 @@ export default function ClusterCard({
   // すべて cluster.id をキーに親から再マウントされる前提の初期値（ClusterCard 自体は
   // 親（ReviewApp）側で key={cluster.id} を付けて呼ばれるので、ここでの useState 初期化は
   // カードが替わるたびにやり直される。
-  // 判断済みの値はチェックしない。既存の正準名へ足す相手として見せるだけで、
-  // もう一度送るとサーバに already-decided で弾かれる。
-  const [checked, setChecked] = useState<Set<string>>(
-    () => new Set(cluster.values.filter((v) => !v.decidedAs).map((v) => v.raw)),
+  const [checked, setChecked] = useState<Set<string>>(() => initialChecked(cluster))
+  // 印の基準は初期状態のほう。checked を見ると、人間がチェックを外した値まで
+  // 「提案が別グループと言った」ことになる。
+  const excluded = useMemo(
+    () => proposalExcluded(cluster, initialChecked(cluster)),
+    [cluster],
   )
   const [canonical, setCanonical] = useState(() => initialCanonical(cluster))
   const [series, setSeries] = useState(() => cluster.proposal?.series ?? '')
@@ -255,6 +295,7 @@ export default function ClusterCard({
                   onChange={() => toggleChecked(v.raw)}
                 />
                 <span>{v.raw}</span>
+                {excluded.has(v.raw) && <span className="tag">提案では別グループ</span>}
               </label>
             )}
             <span className="review-value-rows">{v.rows}行</span>
@@ -269,6 +310,8 @@ export default function ClusterCard({
       {!keepApartMode && (
         <p className="review-hint muted">
           ↑ チェックを外すと、その値だけ採用から除ける（次回のキューに単独で出てくる）
+          {excluded.size > 0 &&
+            '。提案が別グループと判断した値は最初から外してある — 同じものだと思うなら足し直してよい'}
         </p>
       )}
       {keepApartMode && (
