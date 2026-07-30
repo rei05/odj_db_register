@@ -1,0 +1,544 @@
+# LLM が生成した統合候補（未承認）。
+# このディレクトリのファイルは提案であって辞書ではない。
+# 人間が npm run review で1件ずつ判断し、承認したものだけが
+# data/aliases/ 直下の辞書に移る。approved は LLM も自動処理も書かない。
+
+[[artist]]
+id = "artist-6ed8c801"
+canonical = "BUMP OF CHICKEN"
+variants = [
+    "BUMP OF CHICKEN",
+    "BUMP OF CHIKEN",
+    "Bump of Chicken",
+    "Bump of Chikin",
+    "bump of chikin",
+]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "variants（BUMP OF CHICKEN, BUMP OF CHIKEN, Bump of Chicken, Bump of Chikin, bump of chikin）は、大文字小文字、CHICKEN→CHIKEN のタイポ、不可視文字や全角半角等の違いだけ。行数は各表記1行だが、coTitles の『ray』『天体観測』が一致、同じDJ（tri）が複数表記を使っているため、同一アーティストの表記ゆれと判断。"
+
+[[artist]]
+id = "artist-6ed8c801"
+canonical = "kz(livetune)"
+variants = ["kz(livetune)", "kz/livetune"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "variants（kz(livetune), kz/livetune）は括弧とスラッシュの記号の違いのみで、両方とも同じ楽曲ジャンル（ボカロ曲）とDJ（tri）によって使われている。7行のkz(livetune)が主要表記。複数DJが使用し、coTitlesやcoWorksも一致。"
+
+[[artist]]
+id = "artist-e6643fb7"
+canonical = "DECO*27"
+variants = ["DECO*27", "Deco*27"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "DECO*27 と Deco*27 は rows(12 vs 1)、djs(共通してtriが使用)、coTitles(ボカロ曲名義で共通)、edges(caseonly,agg,bigram)により大小・表記差のみ。同一人物の表記ゆれと判断できる。MusicBrainzの api_results でも \"DECO*27\" は検索一致。"
+
+[[artist]]
+id = "artist-e6643fb7"
+canonical = "sasakure.UK"
+variants = ["sasakure.UK", "sasakure.‌UK"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "sasakure.UK と sasakure.‌UK は rows(2 vs 1)、djs(同一triも利用)、coTitles(ボカロ曲名義で共通)、edges(agg,bigram)で表記差は不可視文字(ゼロ幅)のみと判断できる。同一人物の表記ゆれ。MusicBrainzの api_results でも \"sasakure.UK\" が検索一致。"
+
+[[artist]]
+id = "artist-c26e5fbb"
+canonical = "supercell"
+variants = ["Supercell", "supercell"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「Supercell」と「supercell」は、rows=3と5でどちらも「My Dearest」や「ギルティクラウン」などの重なるcoTitles, coWorksを持つ。両方の表記が同じアーティストを指していると推定でき、api_resultsでも両方MusicBrainzで「supercell」にスコア100で一致。edgesもagg, bigram, caseonly, cooccurで強く繋がっている。"
+
+[[artist]]
+id = "artist-7a185e66"
+canonical = "fripSide"
+variants = ["flipSide", "fripSide"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "候補に含まれる表記は『flipSide』（1行、DJ tri）と『fripSide』（15行、DJ あちょ・おかりん・せーや）で、『flipSide』は『sister’s noise』『fripSide』は『Future Gazer』『LEVEL5-judgelight-』など楽曲・作品が共通しており、「cooccur」「edit」エッジで繋がっている。タイポ（f→r）と判定でき、主要な表記の『fripSide』がapi_resultsでMusicBrainzスコア100でヒットしているため、canonicalは『fripSide』。"
+
+[[artist]]
+id = "artist-a0d26413"
+canonical = "Aiobahn"
+variants = ["Aiobahn", "Aiobarn", "aiobahn"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "候補『Aiobahn』（4行、DJ あぴす等）、『Aiobarn』（1行、DJ あちょ）、『aiobahn』（1行、DJ あぴす）はいずれも同じDJ・似た曲タイトルで表記差がタイポ（n→h、大小）と判定できる。『Aiobahn』はapi_resultsでMusicBrainzスコア100一致あり、canonicalにできる。"
+
+[[artist]]
+id = "artist-a0d26413"
+canonical = "わか,ふうり,すなお from STAR☆ANIS"
+variants = ["わか,ふうり,すなお from STAR☆ANIS", "わか・ふうり・すなお from STAR☆ANIS"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "候補『わか,ふうり,すなお from STAR☆ANIS』（2行、DJ マスオ）と『わか・ふうり・すなお from STAR☆ANIS』（2行、DJ あちょ・あぴす）は、楽曲（『カレンダーガール』『ダイヤモンドハッピー』『KIRA☆Power』『オリジナルスター☆彡』）がアイカツ系で共通、エッジ『agg』『bigram』で全角記号の差のみ。どちらもMusicBrainz『STAR☆ANIS』でスコア100にヒットだが、合同名義としてこの形式を維持し、頻度の高い表記『わか,ふうり,すなお from STAR☆ANIS』をcanonicalへ。"
+
+[[artist]]
+id = "artist-b30ebde5"
+canonical = "LiSA"
+variants = ["LiSA", "Lisa"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「LiSA」と「Lisa」は大小・全角半角の違いのみで、edges でも agg, bigram, caseonly の根拠あり。両者とも api_results で「LiSA」に一致し、rows も11/2と同じ曲(『SAO』など)で使われているため表記ゆれと判断できる。他の候補と同じ曲名やアーティスト系統の重複もないため分離。"
+
+[[artist]]
+id = "artist-c6c6bdba"
+canonical = "μ's"
+variants = ["μ's", "μ′s"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「μ's」と「μ′s」は不可視文字・全角半角の差のみで、edges でもagg, bigram, cooccurの根拠あり。両者とも api_results で「μ's」に一致し、rows も10/3と同じ曲・同じDJで使われているため表記ゆれと判断できる。「b-UMB」はタイトル・アーティストの系統が異なり、同一アーティストの根拠はないので除外。"
+
+[[artist]]
+id = "artist-c821b95d"
+canonical = "ClariS"
+variants = ["ClariS", "Claris"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "候補の「ClariS」と「Claris」は、edges でagg,bigram,caseonly（大小・記号だけの違い）とあり、api_resultsでも両方の検索結果が「ClariS」で一致しています。rows数もそれぞれ9と3で両方多く同じDJによる選択も確認できるため、表記ゆれで「ClariS」に統一可能です。"
+
+[[artist]]
+id = "artist-2f393486"
+canonical = "Exit trance"
+variants = ["Exit Trance", "Exit trance"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「Exit Trance」と「Exit trance」はcaseonly・agg・bigramで繋がっており、綴りの大小だけの差です。曲名・DJも同じ「ふっちー」「tri」など共通しており、表記ゆれと判断できます。行数は合計4件で、他に表記の違いはありません。"
+
+[[artist]]
+id = "artist-2f393486"
+canonical = "種島ぽぷら(CV:阿澄佳奈)、伊波まひる(CV:藤田咲)、轟八千代(CV:喜多村英梨)"
+variants = ["種島ぽぷら(CV:阿澄佳奈)、伊波まひる(CV:藤田咲)、轟八千代(CV:喜多村英梨)", "種島ぽぷら(阿澄佳奈)、伊波まひる(藤田咲)、轟八千代(喜多村英梨)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「種島ぽぷら(CV:阿澄佳奈)、伊波まひる(CV:藤田咲)、轟八千代(CV:喜多村英梨)」と「種島ぽぷら(阿澄佳奈)、伊波まひる(藤田咲)、轟八千代(喜多村英梨)」の違いはCV:表記だけでbigramでつながっています。作品・曲名とも「WORKING」関連で同じキャラクター名義であり、表記ゆれと判断します。"
+
+[[artist]]
+id = "artist-9983b193"
+canonical = "双葉杏、前川みく、島村卯月、小日向美穂、安部菜々"
+variants = ["双葉杏、前川みく、島村卯月、小日向美穂、安部菜々", "双葉杏・前川みく・島村卯月・小日向美穂・安部菜々"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "2つのバリエーション「双葉杏、前川みく、島村卯月、小日向美穂、安部菜々」と「双葉杏・前川みく・島村卯月・小日向美穂・安部菜々」は区切り文字違い（句読点・中点）だけで曲名も同じ「アタシポンコツアンドロイド」と一致、両方ともcoWorksが『アイドルマスターシンデレラガールズ』。DJ（マスオ/レイクン）の違いはあるが同曲の表記ゆれと考えられる。"
+
+[[artist]]
+id = "artist-9983b193"
+canonical = "島村卯月"
+variants = ["島村卯月", "島村卯月(CV:大橋彩香)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「島村卯月」と「島村卯月(CV:大橋彩香)」は同キャラクターの注記違いのみだが、keepApartに『「島村卯月(CV:大橋彩香)」 ≠ 「大橋彩香」』と明示されており、同一キャラ名義とその声優注記の違いは同一グループ規則に基づく。曲名「S(mile)ing」「S(mile)ING!」で同一曲、coWorksも同じ。"
+
+[[artist]]
+id = "artist-83d00a81"
+canonical = "ChouCho"
+variants = ["ChouCho", "Choucho"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "『ChouCho』『Choucho』はともに『氷菓』や『ガルパン』などの同一系統の coWorks で使われており、『Choucho』の api_results（MusicBrainz）でも『ChouCho』表記が返されていることから、大小やタイポによる表記ゆれと思われる。『ChouCho』が rows=5 で最も多く、canonical とする。『ChouChou』は substr のみで、行数・DJs・coTitles・coWorksが大きく異なり、同一人物か確証がないため除外。variants: [\"ChouCho\",\"Choucho\"]"
+
+[[artist]]
+id = "artist-bb8b3eef"
+canonical = "ゆの(阿澄佳奈)、宮子(水橋かおり)、ヒロ(後藤邑子)、沙英(新谷良子)"
+variants = [
+    "ゆの (CV.阿澄佳奈)、宮子 (CV.水橋かおり)",
+    "ゆの(CV.阿澄佳奈)、宮子(CV.水橋かおり)、ヒロ(CV.後藤邑子)、沙英(CV.新谷良子)、乃莉(CV.原田ひとみ)、なずな(CV.小見川千明)",
+    "ゆの(阿澄佳奈)、宮子(水橋かおり)、ヒロ(後藤邑子)、沙英(新谷良子)",
+    "ゆの(阿澄佳奈)、宮子(水橋かおり)、ヒロ(後藤邑子)、沙英(新谷良子)、乃莉(原田ひとみ)、なずな(小見川千明)",
+    "ゆの(阿澄佳奈)・宮子(水橋かおり)・ヒロ(後藤邑子)・沙英(新谷良子)",
+]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "全て『ひだまりスケッチ』関連曲でDJが同一（おかりん、あぴす、レイクン）、表記の違いはカンマ（、）と記号（・）、CVの書式やメンバーの増減のみ。曲名・作品は一致し、共同名義として一括検索が有益。variants: 「ゆの(阿澄佳奈)、宮子(水橋かおり)、ヒロ(後藤邑子)、沙英(新谷良子)」「ゆの(阿澄佳奈)、宮子(水橋かおり)、ヒロ(後藤邑子)、沙英(新谷良子)、乃莉(原田ひとみ)、なずな(小見川千明)」「ゆの(阿澄佳奈)・宮子(水橋かおり)・ヒロ(後藤邑子)・沙英(新谷良子)」「ゆの(CV.阿澄佳奈)、宮子(CV.水橋かおり)、ヒロ(CV.後藤邑子)、沙英(CV.新谷良子)、乃莉(CV.原田ひとみ)、なずな(CV.小見川千明)」「ゆの (CV.阿澄佳奈)、宮子 (CV.水橋かおり)」「ゆの(阿澄佳奈)、宮子(水橋かおり)、ヒロ(後藤邑子)、沙英(新谷良子)」"
+
+[[artist]]
+id = "artist-da2cc340"
+canonical = "Ado"
+variants = ["ADO", "Ado"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「Ado」が7行、「ADO」が1行で、両者とも「あちょ」DJが使用。同じ曲名「踊 ft. 鏡音リン・レン」が使われており、edges の caseonly,agg,bigram もあり大小違いのみ。api_results の title も「Ado」で一致したため、実データの根拠（rows/djs/coTitles/api_results/title）から表記ゆれと判断。"
+
+[[artist]]
+id = "artist-2266b531"
+canonical = "halca"
+variants = ["Halca", "halca"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「Halca」と「halca」は両方とも同じ曲「ウィークエンドロール」や作品「mono」、edges にcaseonly,aggで大小違いのみ。行数は1行ずつだが、djs/coTitles/coWorksが一致しているため表記ゆれと明確に判断。api_resultsには無いが、材料として十分。yoswuは「Don't say lazy (yoswu Remix)」などリミックス名義であり、cooccurのみで繋がるため分割。"
+
+[[artist]]
+id = "artist-3596e6d2"
+canonical = "Creepy Nuts"
+variants = ["Creepy Nuts", "CreepyNuts"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「Creepy Nuts」が6行、「CreepyNuts」が1行で、同じDJ（tri）が両方を使っており、coTitlesも「オトノケ」など重複。edges も caseonly,agg,bigram,cooccurで繋がり、api_results.titleも「Creepy Nuts」と一致。rows/djs/coTitles/api_results/titleから表記ゆれと判断。"
+
+[[artist]]
+id = "artist-60ebd18c"
+canonical = "Giga"
+variants = ["GIGA", "Giga", "giga"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「GIGA」「Giga」「giga」は、それぞれ合計4行で同じDJや類似曲名・作品（「劣等上等」「CHAMPION GIRL」など）を共通。edges の agg,bigram,caseonlyで大小差と判別でき、api_results.titleも「Giga」で一致。花海 咲季／花海咲季は別名義で cooccur だがアーティストが異なるため分割（規則B適用）。"
+
+[[artist]]
+id = "artist-60ebd18c"
+canonical = "花海咲季"
+variants = ["花海 咲季", "花海咲季"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「花海 咲季」と「花海咲季」は学園アイドルマスター関連の楽曲で共通し、edges の agg,bigram,caseonly で空白有無のみの違い。djs（マスオ/せーや）が共通曲名「Fighting My Way」を使用している点、api_results.titleも「花海咲季」表記あり。rows/djs/coTitles/api_results/titleより表記ゆれと判断。"
+
+[[artist]]
+id = "artist-67827c97"
+canonical = "紫雲清夏"
+variants = ["紫雲清夏", "紫雲 清夏"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「紫雲清夏」と「紫雲 清夏」は、rows=1ずつで違うDJが同じ曲（Tame-Lie-One-Step）で使っている。edgesにagg,bigram,caseonlyがあり、大小・空白・記号の差のみで、規則Cから同一。"
+
+[[artist]]
+id = "artist-c4760973"
+canonical = "月村手毬(小鹿なお)"
+variants = ["月村手毬", "月村手毬(小鹿なお)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「月村手毬」と「月村手毬(小鹿なお)」は同じ曲（アイヴイ）で出現し、substr接続。api_resultsのtitleが「月村手毬」なので、(小鹿なお)付表記はキャラクター名義と声優注記のみの差で規則Bより表記ゆれ。"
+
+[[artist]]
+id = "artist-d09cd897"
+canonical = "TeddyLoid"
+variants = ["Teddy Loid", "TeddyLoid"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "\"Teddy Loid\"と\"TeddyLoid\"は、edgesでagg/bigram/caseonlyで繋がっており、大小・空白・記号の差のみ。DJs(\"tri\"と\"ふっちー\")で両方の表記を利用している可能性もあり、加えてapi_resultsで\"TeddyLoid\"がMusicBrainzでスコア100の一致あり。よって表記ゆれとして扱える。"
+
+[[artist]]
+id = "artist-6c33356a"
+canonical = "カチューシャ&ノンナ"
+variants = ["カチューシャ&ノンナ", "カチューシャ (金元寿子) & ノンナ (上坂すみれ)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両者とも「Катюша」という曲名、ガールズ&パンツァー関連で、djsに共通点（おかりん）があり、cooccurエッジで直接繋がっている。表記差は声優名の注記有無と区切り表現だけで、合同キャラクター連名として実際に共通の曲を担当。rows: カチューシャ&ノンナ=2、カチューシャ (金元寿子) & ノンナ (上坂すみれ)=1。api_resultsは両者空でタイポ疑惑もない。"
+
+[[artist]]
+id = "artist-925d2db0"
+canonical = "緑黄色社会"
+variants = ["緑黄色社会", "黄緑色社会"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "rows: 緑黄色社会=5、黄緑色社会=1。曲名「party」やcoWorks「ダンジョン飯」が両方に存在、cooccurエッジあり。黄緑色社会は表記ミスと推定され、実際のアーティストは緑黄色社会。api_resultsも\"緑黄色社会\"で一致。"
+
+[[artist]]
+id = "artist-9c05c96d"
+canonical = "HoneyWorks"
+variants = ["HoneyWorks", "Honeyworks"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "HoneyWorks（rows:1, dj:ふっちー, coTitles:可愛くてごめん feat. ちゅーたん）とHoneyworks（rows:1, dj:あぴす, coTitles:世界は恋に落ちている）は文字列差が大小のみでagg,bigram,caseonlyで結びついており、両方の表記が同一アーティストとして用いられているため。"
+
+[[artist]]
+id = "artist-d682ec61"
+canonical = "nano.RIPE"
+variants = ["nano.RIPE", "Nano.RIPE"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "nano.RIPE（rows:5, djs:ha,おかりん,ふっちー, coTitles:なないろびより,ハナノイロなど）とNano.RIPE（rows:1, dj:あぴす, coTitles:ハナノイロ）は文字列差が大小のみでagg,bigram,caseonly,cooccurで結びついており、両方とも同曲で使われている。api_resultsでもnano.RIPEが正式表記とされている。"
+
+[[artist]]
+id = "artist-00c4d377"
+canonical = "40mP"
+variants = ["40mP", "40メートルP"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「40mP」（3行）と「40メートルP」（2行）は、MusicBrainzのapi_resultsで「40メートルP」は「40mP」の別名(alias)として登録されているため、記載の違いのみで同一と判断できる。coTitlesの「トリノコシティ」が両方に含まれており、複数のDJが両方の表記を用いている。"
+
+[[artist]]
+id = "artist-185f4fe4"
+canonical = "ICHIKO"
+variants = ["ICHICO"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方ともrawやapi_resultsに「ICHIKO」と記載があり、rows(1,4)で合計5行全て同じ表記、djsも複数（あぴす、おかりん、マスオ、ましゅー）が使っており、曲名や作品も一致。keepApartにも他アーティストとの混同は禁止だが、今回は候補がすべて「ICHIKO」なので同一と判断。"
+
+[[artist]]
+id = "artist-41fe5f82"
+canonical = "Orangestar"
+variants = ["OrangeStar", "Orangestar"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「OrangeStar」（1行）と「Orangestar」（4行）は、edgesで大小と全角半角の違い(caseonly, agg)のみ。api_resultsに「Orangestar」で登録あり、case差なので表記ゆれと判断。曲名・作品も両方ともボカロ関連で同系統。"
+
+[[artist]]
+id = "artist-5c1a9be2"
+canonical = "BiBi~絢瀬絵里(南條愛乃)、西木野真姫(Pile)、矢澤にこ(徳井青空)"
+variants = ["BiBi~絢瀬絵里(南條愛乃)、西木野真姫(Pile)、矢澤にこ(徳井青空)", "BiBi〜絢瀬絵里(南條愛乃)、西木野真姫(Pile)、矢澤にこ(徳井青空)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「BiBi~絢瀬絵里(南條愛乃)、西木野真姫(Pile)、矢澤にこ(徳井青空)」（1行）と「BiBi〜絢瀬絵里(南條愛乃)、西木野真姫(Pile)、矢澤にこ(徳井青空)」（1行）は、edgesでagg,bigram,cooccurとつながり、表記はチルダの種類のみ違い。coTitles・coWorksは同曲（Cutie Panther、ラブライブ!）で完全一致のため同一と扱う。"
+
+[[artist]]
+id = "artist-a00ebd48"
+canonical = "Omoi"
+variants = ["OMOI", "omoi"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "候補『OMOI』『omoi』はrows計5件（DJs複数、重複曲あり）。edges（caseonly,agg,cooccur,bigram）と、api_resultsの両方でMusicBrainzの表記「Omoi」を推奨。大小の違いのみで同一アーティストと判断できる。"
+
+[[artist]]
+id = "artist-58f607ec"
+canonical = "スペシャルウィーク(CV.和氣あず未)、サイレンススズカ(CV.高野麻里佳)、トウカイテイオー(CV.Machico)"
+variants = [
+    "スペシャルウィーク(CV.和氣あず未)、サイレンススズカ(CV.高野麻里佳)、トウカイテイオー(CV.Machico)",
+    "スペシャルウィーク(和氣あず未),サイレンススズカ(高野麻里佳),トウカイテイオー(Machico)",
+]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "スペシャルウィーク(CV.和氣あず未)、サイレンススズカ(CV.高野麻里佳)、トウカイテイオー(CV.Machico)（rows=1, DJ=マスオ）とスペシャルウィーク(和氣あず未),サイレンススズカ(高野麻里佳),トウカイテイオー(Machico)（rows=1, DJ=あぴす）は記号（区切り記号：、 と ,）以外内容が一致し、同じ曲「うまぴょい伝説」「ウマぴょい伝説」かつアーティスト連名の記述ゆれ。bigram,cooccur edgesで相互に接続されているため表記ゆれと判断。合同名義は分解不可規則Aに従い1グループで統合。"
+
+[[artist]]
+id = "artist-736a3b26"
+canonical = "石濱翔"
+variants = ["石濱翔", "石濱 翔"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "石濱翔（rows=2, DJ=tri）はMusicBrainz 検索でスコア100 title=石濱翔と完全一致。石濱 翔（rows=1, DJ=ふっちー）は全角空白のみの差でagg,bigram,caseonly接続あり。同じアーティストの表記ゆれと判断し統合。"
+
+[[artist]]
+id = "artist-75fd9f7b"
+canonical = "宮内れんげ(小岩井ことり)・一条蛍(村川梨衣)・越谷夏海(佐倉綾音)・越谷小鞠(阿澄佳奈)"
+variants = [
+    "宮内れんげ (CV.小岩井ことり)、一条 蛍 (CV.村川梨衣)、越谷夏海 (CV.佐倉綾音)、越谷小鞠 (CV.阿澄佳奈)",
+    "宮内れんげ(小岩井ことり)、一条 蛍(村川梨衣)、越谷夏海(佐倉綾音)、越谷小鞠(阿澄佳奈)",
+    "宮内れんげ(小岩井ことり)・一条蛍(村川梨衣)・越谷夏海(佐倉綾音)・越谷小鞠(阿澄佳奈)",
+]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = """候補の生表記は全て並び順・区切り記号（「、」「・」）と注記形式（CV/声優名）だけが違い、各アーティスト名・声優名の一致も確認できる。
+アーティスト欄として登場する表記は総計4行（djs: あぴす、レイクン、ましゅー、ha）、同じ曲タイトル「おもいで」「のんのん日和」「おかえり」のバリエーションで使われている。
+記号・表記差のみで内容は一致しているため、大小・記号・注記差のみの表記ゆれと判断。（規則C）
+variants: 宮内れんげ (CV.小岩井ことり)、一条 蛍 (CV.村川梨衣)、越谷夏海 (CV.佐倉綾音)、越谷小鞠 (CV.阿澄佳奈), 宮内れんげ(小岩井ことり)、一条 蛍(村川梨衣)、越谷夏海(佐倉綾音)、越谷小鞠(阿澄佳奈), 宮内れんげ(小岩井ことり)・一条蛍(村川梨衣)・越谷夏海(佐倉綾音)・越谷小鞠(阿澄佳奈)"""
+
+[[artist]]
+id = "artist-783ea246"
+canonical = "大槻唯"
+variants = ["大槻唯", "大槻唯(CV:山下七海)", "大槻唯(山下七海)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = """候補全てが『大槻唯』名義で、CV表記または声優名（山下七海）の括弧有無だけの違い。曲名（Radio Happy）は全候補で同じで、「サニードロップ」などシンデレラガールズ作品に共通して登場。
+「アイドルマスターシンデレラガールズ」「THE IDOLM@STER CINDERELLA GIRLS」など coWorks の系統も一致し、同じキャラ名義の表記ゆれ（規則B）と考えられる。
+api_results の title も「大槻唯」の完全一致である。
+variants: 大槻唯, 大槻唯(CV:山下七海), 大槻唯(山下七海)"""
+
+[[artist]]
+id = "artist-bfe53cde"
+canonical = "livetune"
+variants = ["Livetune", "livetune"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "生表記 'Livetune' (1行, DJ: がっきー, 曲: tell your world, coWorks: ボカロ) と 'livetune' (3行, DJ: あぴす, 曲: Last night, Good night/Packaged/ファインダー, coWorks: 初音ミク等) は種別 'agg,bigram,caseonly' で大小・記号の違いのみ。api_results でも 'livetune' がMusicBrainz検索でスコア100の一致。表記ゆれとして統合できる明確な根拠あり。"
+
+[[artist]]
+id = "artist-89a83380"
+canonical = "黛冬優子"
+variants = ["黛 冬優子", "黛冬優子"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "生表記 '黛 冬優子' (1行, DJ: マスオ, 曲: SOS, coWorks: アイドルマスター シャイニーカラーズ) と '黛冬優子' (2行, DJ: あぴす, 曲: SOS/SOS (ETIA. Remix), coWorks: アイドルマスターシャイニーカラーズ) は 'agg,bigram,caseonly,cooccur' で空白のみが違い、曲名・作品も一致。api_results でも '黛冬優子' がMusicBrainz検索で100の一致。表記ゆれとして確実に統合できる。"
+
+[[artist]]
+id = "artist-8a76cc30"
+canonical = "Osanzi"
+variants = ["Osanzi", "osanzi"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "生表記 'Osanzi' (1行, DJ: tri, 曲: 【初音ミク】LiFE【EDM】, coWorks: ボカロ) と 'osanzi' (2行, DJ: tri, 曲: Repulsion/おうちに帰りたい, coWorks: このすば/ボカロ) は 'agg,bigram,caseonly' で大小のみの違いで同DJ・アーティスト系統も同じ。api_results でも 'Osanzi' がMusicBrainzでスコア100。表記ゆれとして高い根拠で統合可。"
+
+[[artist]]
+id = "artist-94531a7a"
+canonical = "Mitchie M"
+variants = ["Mitchie M", "Michie_M"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "2件の \"Mitchie M\" と1件の \"Michie_M\" は、いずれも同種のボカロ曲でDJ・曲名に重複がなく、表記の違いは \"edit\" の綴りミスに加え、大文字小文字・アンダースコアとスペースのみの差。また、\"Mitchie M\" のapi_results.titleに完全一致で検索スコア100。よって表記ゆれであり、variantsは[Mitchie M, Michie_M]とする。"
+
+[[artist]]
+id = "artist-a8fb8389"
+canonical = "えなこ feat. P丸様。"
+variants = ["えなこ feat. P丸様。", "えなこ feat.P丸様。"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "「えなこ feat. P丸様。」と「えなこ feat.P丸様。」は、両者とも曲名『アイデン貞貞メルドダウン/アイデン貞貞メルトダウン』でDJ違いだが同一曲。同じ組み合わせ名義で、差は空白と表記揺れのみ。\"agg,bigram,caseonly\"のedgeもあり表記ゆれで確定。rowsの値も両方1件。canonicalは候補両方にある「えなこ feat. P丸様。」（空白あり）を優先。"
+
+[[artist]]
+id = "artist-adda738b"
+canonical = "fhána"
+variants = ["fhána", "Fhána"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両表記に共通した曲名『青空のラプソディ』とアニメ『小林さんちのメイドラゴン』が出ており、3名のDJが両表記を使い分けている。edges は agg, bigram, caseonly の重複（大小・表記揺れ系のみ）。さらに api_results.title も \"fhána\" で一致し、Variant の『Fhána』は明らかにタイポ。よって同一アーティストの表記ゆれと見なせる。"
+
+[[artist]]
+id = "artist-b1de0e82"
+canonical = "RADWIMPS"
+variants = ["RADWIMPS", "RADWIPS"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "『RADWIMPS』と『RADWIPS』は edit のみで繋がっているが、『RADWIMPS』の rows が多く、共通DJも存在。また『RADWIMP』周辺で使われる曲名もJ-pop文脈で一致しており、api_results.title で『RADWIMPS』が100スコアで一致。『RADWIPS』は明確なタイポ類似で同一とみなせる。"
+
+[[artist]]
+id = "artist-c0ca4be5"
+canonical = "どーなつ◎くいんてっと"
+variants = [
+    "どーなつ◎くいんてっと",
+    "どーなつ◎くいんてっと (宮森あおい(木村珠莉)&安原絵麻(佳村はるか)&坂木しずか(千菅春香)&藤堂美沙(高野麻美)&今井みどり(大和田仁美))",
+]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方とも曲名『プラチナジェット』とアニメ『SHIROBAKO』で共通し、3名のDJが両方を利用している。具体的に『どーなつ◎くいんてっと』単体と、キャラクター+声優注記付きの名義はAの規則通り「注記があってもキャラクター名が同じなら表記ゆれ」。api_results.titleも一致している。"
+
+[[artist]]
+id = "artist-00429df5"
+canonical = "Yunomi"
+variants = ["Yunomi", "yunomi"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方ともアーティスト名として使われていることが候補・rowsからわかる。エッジにagg,bigram,caseonlyがあり、文字列の違いは大小のみ。variantsは『Yunomi』『yunomi』の2つ。rows数も同等。"
+
+[[artist]]
+id = "artist-1d11fa63"
+canonical = "ターニャ・デグレチャフ (CV:悠木碧)"
+variants = ["ターニャ・デグレチャフ (CV:悠木碧)", "ターニャ・デグレチャフ(悠木碧)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方とも『幼女戦記』に対応する同じキャラクター名義であり、CV表記有無・空白違いのみ。edgeにbigram,cooccurがあり、DJ・曲名・作品も非常に近い。規則Bより声優名本人とは分けてよい。variantsは『ターニャ・デグレチャフ (CV:悠木碧)』『ターニャ・デグレチャフ(悠木碧)』。"
+
+[[artist]]
+id = "artist-29a628c3"
+canonical = "[Alexandros]"
+variants = ["Alexandros", "[Alexandros]"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "エッジがagg,bigramで文字列は括弧の有無だけ。どちらもアーティストとして同種の曲が記録されている。rows数も1ずつ。variantsは『Alexandros』『[Alexandros]』。"
+
+[[artist]]
+id = "artist-2f742d07"
+canonical = "チーム\"ハナヤマタ\""
+variants = ["チーム\"ハナヤマタ\"", "チーム“ハナヤマタ”"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "チーム\"ハナヤマタ\"（rows:1）とチーム“ハナヤマタ”（rows:1）は、文字列の違いが引用符（\"と“”）だけであり、どちらも同じ作品『ハナヤマタ』で同じ曲名「花ハ踊レヤいろはにほ」を持っていることから、agg,bigram エッジの通り表記ゆれと判断できる。"
+
+[[artist]]
+id = "artist-33eab863"
+canonical = "極♨落女会"
+variants = ["極♨落女会", "極♨︎落女会"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "極♨落女会（rows:1）と極♨︎落女会（rows:1）は文字列の違いが温泉マークの文字コードだけ。両方とも『お後がよろしくって・・・よ!』という曲（表記差あり）で、ほぼ同じアーティストを指し agg,bigram エッジもあるため表記ゆれとしてまとめる。"
+
+[[artist]]
+id = "artist-47aaaeae"
+canonical = "Official髭男dism"
+variants = ["Official髭男dism", "official髭男dism"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "Official髭男dism（rows:1）とofficial髭男dism（rows:1）は大小の違いのみ。どちらも同一アーティストで使われており、agg,bigram,caseonly エッジもあることから確実に表記ゆれ。"
+
+[[artist]]
+id = "artist-47afcd86"
+canonical = "EasyPop"
+variants = ["EasyPop", "Easypop"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "EasyPop（rows:1）とEasypop（rows:1）は大小の違いのみで、同じ『ハッピーシンセサイザ』の作者を指す。agg,bigram,caseonly エッジもあり、表記ゆれと判断。"
+
+[[artist]]
+id = "artist-48854adb"
+canonical = "CosMo@暴走P"
+variants = ["CosMo@暴走P", "cosMo@暴走P"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "CosMo@暴走P（rows:1）とcosMo@暴走P（rows:1）は大小の違いのみで同じ曲・同じdjs。agg,bigram,caseonly エッジもあり、表記ゆれと判断。"
+
+[[artist]]
+id = "artist-4c06aa20"
+canonical = "駒田琉生"
+variants = ["駒田琉生", "駒田琉生/CV.早見沙織"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両表記 '駒田琉生'（1行）/ '駒田琉生/CV.早見沙織'（1行）は曲名・作品（Dear my future (Roya Bootleg)/駒田蒸留所へようこそ）が完全一致で、違いはCV注記の有無のみであり表記ゆれと判断できる。"
+
+[[artist]]
+id = "artist-55d8f028"
+canonical = "阿保剛"
+variants = ["阿保剛", "阿保 剛"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両表記にcaseonly,agg,bigramのエッジがあり、違いは空白のみ。raw（阿保剛/阿保 剛）が1件ずつだが、同シリーズ（シュタインズ・ゲート ゼロ/シュタゲゼロ）の関連曲でdjsも異なるため、どちらも代表表記として扱える。"
+
+[[artist]]
+id = "artist-6e6fa489"
+canonical = "灰島銀華"
+variants = ["灰島銀華", "灰島銀華 (CV: 澁谷梓希)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両表記 '灰島銀華'（1行）/ '灰島銀華 (CV: 澁谷梓希)'（1行）はMake Some Noise/電音部で共通し、違いはCV注記の有無のみ。djsが異なるが、曲名と作品が完全一致のため表記ゆれとみなす。"
+
+[[artist]]
+id = "artist-af269429"
+canonical = "Fear, and Loathing in Las Vegas"
+variants = ["Fear, and Loathing in Las Vegas", "Fear, and loathing in LasVegas"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両候補『Fear, and Loathing in Las Vegas』（rows:1, coTitles:Just Awake, coWorks:Hunter x Hunter (2011)）と『Fear, and loathing in LasVegas』（rows:1, coTitles:Rave-up Tonight, coWorks:機動戦士ガンダム EXTREME VS. マキシブースト）は大小・空白・記号以外の違いはなく、agg, bigram, caseonly エッジで繋がっている。表記ゆれと判断できる。"
+
+[[artist]]
+id = "artist-b084351b"
+canonical = "じん (自然の敵P)"
+variants = ["じん (自然の敵P)", "じん(自然の敵P)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "『じん (自然の敵P)』（rows:1, coTitles:カゲロウデイズ）と『じん(自然の敵P)』（rows:1, coTitles:如月アテンション）は括弧と空白のみ違いで、agg, bigram, caseonlyエッジあり。表記ゆれとしてまとめられる。"
+
+[[artist]]
+id = "artist-b1d47209"
+canonical = "Rionos"
+variants = ["Rionos", "rionos"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両表記『Rionos』（rows:1, coTitles:ウィアートル）と『rionos』（rows:1, coTitles:ここにいる(Stephen Walking Remix)）は大小のみの違いで、agg, bigram, caseonlyエッジあり。表記ゆれと判断できる。"
+
+[[artist]]
+id = "artist-cab9b2e7"
+canonical = "NACHERRY"
+variants = ["NACCHERY", "NACHERRY"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方のvariantsは同じ曲「My dream girls」で実際に両方使われており、綴り違いはタイポの可能性が高い（bigramエッジ）。rows も1ずつで、同じ coWorks。より多くの検索でヒットさせたい目的と規則Cに従いまとめる。"
+
+[[artist]]
+id = "artist-d30b0bb4"
+canonical = "阿良々木月火(cv:井口裕香)"
+variants = ["阿良々木月火(cv:井口裕香)", "阿良々木月火(井口裕香)"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方のvariantsは『偽物語』の「白金ディスコ」で行数1ずつ、同じ曲・同じ声優名で、違いはcv:の有無のみ。bigram, cooccur のエッジもあり。"
+
+[[artist]]
+id = "artist-e4caccc2"
+canonical = "YUPPUN"
+variants = ["YUPPUN", "YUPPUN Remix"]
+confidence = "low"
+source = "llm:openai/gpt-4.1"
+reason = "両方の表記とも1行ずつしか出現しておらず、DJ triが両方を使っている点は表記ゆれの証拠として弱いが、片方はリミックス表記のため（YUPPUN Remix）、同じアーティストを指している可能性がある。しかし、substrだけの繋がりなので自動統合はせず、confidence=\"low\"で人間レビューに回す。rows=1、djs=tri、coTitles=色違いの翼 (YUPPUN J-CORE Remix)／ここから、ここから。"
+
+[[artist]]
+id = "artist-fcf4f2bc"
+canonical = "多田李衣菜"
+variants = ["多田李衣菜", "相葉夕美 多田李衣菜 中野有香"]
+confidence = "high"
+source = "llm:openai/gpt-4.1"
+reason = "両方ともアイドルマスターシンデレラガールズ関連で、coWorksにその表記があり、相葉夕美 多田李衣菜 中野有香はキャラクター連名で分割する根拠がない。多田李衣菜単体と、連名に含まれる場合は同じ人物を指すため表記ゆれ。両者coTitles/rows/djsとも別曲だが、artist欄の表記だけの違い。rows=1、coTitles=Twilght Sky／秋風に手を振って、coWorks=アイドルマスターシンデレラガールズ／THa iDLOM@STER シンデレラガールズ スターライトステージ 楽曲。"
