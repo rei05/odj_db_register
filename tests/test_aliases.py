@@ -1486,12 +1486,15 @@ class AskTest(unittest.TestCase):
     def test_keep_apart_pairs_are_never_summarised(self) -> None:
         """keep_apart.toml は要約せず、組のまま渡すこと。
 
-        要約すると必ず「アイマス系は分ける」のような一般則に化けて、逆に
-        「アイドルマスターシンデレラガールズ」と「デレマス」（同じもの）まで
-        分けられてしまう。組で持てば効き目が正確になる。
+        要約すると必ず「綴りが近い L 始まりは分ける」のような一般則に化けて、
+        逆に `LiSA` の表記ゆれまで分けられてしまう（system_prompt の docstring と
+        同じ理由）。組で持てば効き目が正確になる。
 
-        載せる場所はシステムプロンプトではなく各バッチの入力側。全 26 組で
-        664tok あり、入力上限 4000 に対して固定費として重すぎるため。
+        載せる場所はシステムプロンプトではなく各バッチの入力側。work のペア
+        26 組を方針転換で削ったので、今 keep_apart.toml にあるのは artist の
+        27 組だけ（全部載せても llm.estimate_tokens("\\n".join(...)) で実測
+        434tok）。それでも入力上限 4000 に対して固定費として重いことは
+        変わらないので、絞る仕組み自体は要る。
         """
         pairs = store.load_keep_apart_pairs()  # 本物の data/aliases/keep_apart.toml
         self.assertGreater(len(pairs), 20)
@@ -1500,29 +1503,78 @@ class AskTest(unittest.TestCase):
             with self.subTest(pair=(pair["a"], pair["b"])):
                 self.assertIn(f"- 「{pair['a']}」 ≠ 「{pair['b']}」", lines)
 
+    def test_keep_apart_toml_has_no_work_pairs(self) -> None:
+        """新方針では work のペアを keep_apart.toml に足してはいけない。
+
+        方針転換で「同じブランドはまとめる」に変わったので、以前あった work の
+        シーズン／ブランド分離26組（けいおん!/けいおん!!、学マス/デレマス など）は
+        そもそも逆方針になった。誰かが古い感覚で work のペアを復活させていないかを
+        機械的に確かめたい。
+
+        field の情報はファイルに無いので、web/public/data/plays.json（git 管理下）の
+        実データと突き合わせる。各ペアの a/b が両方とも plays.json の artist 欄
+        （'a' キー）に実在する値であることを確認する。今の27組は全部artistのペアで、
+        54個の値すべてが artist 欄に実在することを事前に確認済み（work 欄にしか
+        出ない値はここで検出できる）。plays.json 側がたまたま同じ文字列を work・
+        artist 両方の欄に持つ場合（例: 「supercell」）は見逃すが、
+        「新しく足された work 由来のペアに気付ける」という目的には十分。
+        """
+        with open(paths.WEB_DATA_JSON, encoding="utf-8") as fh:
+            plays = json.load(fh)["plays"]
+        artist_values = {p["a"] for p in plays if p.get("a")}
+        pairs = store.load_keep_apart_pairs()
+        self.assertEqual(len(pairs), 27)
+        for pair in pairs:
+            with self.subTest(pair=(pair["a"], pair["b"])):
+                self.assertIn(pair["a"], artist_values)
+                self.assertIn(pair["b"], artist_values)
+        # 削除した work のペアの代表例が戻っていないことも直接見ておく
+        # （plays.json とのすり合わせが偶然すり抜けても、ここで拾える）。
+        raw_pairs = {frozenset((p["a"], p["b"])) for p in pairs}
+        for a, b in (
+            ("けいおん!", "けいおん!!"),
+            ("学マス", "デレマス"),
+            ("ラブライブ!", "ラブライブ!サンシャイン!!"),
+            ("マクロスF", "マクロスΔ"),
+        ):
+            with self.subTest(pair=(a, b)):
+                self.assertNotIn(frozenset((a, b)), raw_pairs)
+
     def test_keep_apart_is_narrowed_to_the_values_in_the_batch(self) -> None:
         """バッチに関係する組だけを載せること。
 
         絞っても防止力は落ちない。プロンプトに出さなかった組も、返ってきた提案は
         block.load_keep_apart() で必ず再検査する。
+
+        work のペアは方針転換で全削除されたので artist のペアで見る。
+        「LiSA」/「ELISA」（綴りが近い別人。keep_apart.toml の reason 参照）が
+        バッチに出てくる値に絞られ、無関係な「じん」/「ジン」の組は載らないこと。
         """
-        lines = llm.keep_apart_lines({"アイカツ!", "アイカツ"})
-        self.assertIn("- 「アイカツ!」 ≠ 「アイカツスターズ」", lines)
+        lines = llm.keep_apart_lines({"LiSA", "Lisa"})
+        self.assertIn("- 「LiSA」 ≠ 「ELISA」", lines)
         # 無関係な組は載らない
-        self.assertNotIn("- 「けいおん!」 ≠ 「けいおん!!」", lines)
+        self.assertNotIn("- 「じん」 ≠ 「ジン」", lines)
         self.assertLess(len(lines), len(llm.keep_apart_lines()))
 
     def test_the_detour_through_an_annotated_variant_still_gets_the_pair(self) -> None:
-        # 「アイカツ! 楽曲」しか無いバッチでも「アイカツ! ≠ アイカツスターズ」が
-        # 要る。生の文字列だけで突き合わせると取りこぼす組。
-        lines = llm.keep_apart_lines({"アイカツ! 楽曲"})
-        self.assertIn("- 「アイカツ!」 ≠ 「アイカツスターズ」", lines)
+        # work の「アイカツ! 楽曲」(strip_notes で「アイカツ!」に化ける表記)は
+        # ペアごと削除されたので、artist 側で同じ迂回路の型を使う。
+        # plays.json には「nano.RIPE」(5行)と「Nano.RIPE」(1行、大文字小文字違い)の
+        # 両方が実在し、agg_key は大小・記号を畳むので後者はキーの上で前者と同じになる。
+        # バッチに「Nano.RIPE」しか無くても、生の文字列（小文字始まり）だけで
+        # 突き合わせると取りこぼす「nano.RIPE ≠ ano」の組が要る。
+        lines = llm.keep_apart_lines({"Nano.RIPE"})
+        self.assertIn("- 「nano.RIPE」 ≠ 「ano」", lines)
 
     def test_the_system_prompt_carries_the_absolute_rules(self) -> None:
         text = llm.system_prompt("work")
-        for phrase in ("迷ったら「分ける」", "創作", "空配列でもよい", "confidence=\"low\""):
+        for phrase in ("同じブランドなら迷わずまとめる", "創作", "空配列でもよい", "confidence=\"low\""):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, text)
+        # work は「ブランド単位でまとめる」方針に転換したので、artist 側の
+        # 「迷ったら分ける」規則は読ませない（読ませると同じブランドの
+        # シーズン違いまで分けにいく）。
+        self.assertNotIn("迷ったら「分ける」", text)
 
     def test_hints_are_explained_in_the_prompt(self) -> None:
         # series-risk と split-from-large は「なぜ疑うか」まで書かないと効かない。
@@ -1566,8 +1618,12 @@ class AskTest(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, artist)
                 self.assertNotIn(phrase, work)
-        # 共通の骨格は両方に残っていること（片方だけ直されて乖離しないため）
-        for phrase in ("迷ったら「分ける」", "創作は禁止", "空配列でもよい"):
+        # 共通の骨格は両方に残っていること（片方だけ直されて乖離しないため）。
+        # 規則1・4の結論（迷ったら分けるか／同じブランドで理由になるか）は
+        # ここには含めない。あちらは work と artist で判断の向きが逆になる
+        # 場所で、下の test_the_work_policy_is_the_reverse_of_the_artist_policy が
+        # 「同じでは困る」ことを検査する。
+        for phrase in ("創作は禁止", "空配列でもよい"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, artist)
                 self.assertIn(phrase, work)
@@ -1575,6 +1631,43 @@ class AskTest(unittest.TestCase):
         # 訊かない（response_format と食い違うと LLM が書けない項目を求めることになる）
         self.assertIn("- kind …", work)
         self.assertNotIn("- kind …", artist)
+
+    def test_the_work_policy_is_the_reverse_of_the_artist_policy(self) -> None:
+        """work だけ方針が逆、という今回の転換の核心をテストで固定する。
+
+        利用者の指示は「同じシリーズのシーズン1と2などを区別する必要はない」
+        （ブランド単位でまとめる）。artist は過剰統合のほうが危険な欄のままで、
+        この非対称性が _FIELD_TEXT の rule1 / rule4 / cooccur に効いている
+        （src/odj/aliases/llm.py の _FIELD_TEXT のコメントを参照）。
+        """
+        work = llm.system_prompt("work")
+        artist = llm.system_prompt("artist")
+        # rule1: work は「同じブランドならまとめる」方向で、artist の
+        # 「迷ったら分ける」を読ませない。artist は従来どおり。
+        self.assertIn("同じブランドなら迷わずまとめる", work)
+        self.assertNotIn("迷ったら「分ける」", work)
+        self.assertIn("迷ったら「分ける」", artist)
+        self.assertNotIn("同じブランドなら迷わずまとめる", artist)
+        # rule4: work は「同じブランドだから」を理由として認めるが、artist は
+        # 「同じシリーズだから」を却下する規則を保っている。
+        self.assertIn("「同じブランドだから」も理由になります", work)
+        self.assertIn("「一般的にそう呼ばれるため」「同じシリーズだから」は理由として認められません", artist)
+        self.assertNotIn("同じシリーズだから」は理由として認められません", work)
+        # cooccur: work は「曲名が重ならない＝別物」という否定推論を読ませない
+        # （シーズン違いは曲が別なのが普通なので、読ませると規則1と衝突する）。
+        # artist は従来どおり、曲名もアーティストの系統も重ならなければ疑ってよい。
+        self.assertIn("曲名が重ならないことは分ける根拠になりません", work)
+        self.assertNotIn("別作品を疑う", work)
+        self.assertNotIn("別アーティストを疑う", work)
+        self.assertIn("別アーティストを疑う", artist)
+
+    def test_field_text_has_the_same_keys_for_work_and_artist(self) -> None:
+        # _FIELD_TEXT は system_prompt の f-string 側で text["rule1"] のように
+        # キー直参照される。どちらかのキーが欠けると KeyError で即死するが、
+        # それを実行時ではなくテストで先に検出できるようにしておく。
+        work_keys = set(llm._FIELD_TEXT["work"])
+        artist_keys = set(llm._FIELD_TEXT["artist"])
+        self.assertEqual(work_keys, artist_keys)
 
     def test_the_artist_prompt_forbids_splitting_joint_credits(self) -> None:
         """合同名義を単独名義に寄せない、が artist で一番効く規則。
@@ -1689,7 +1782,7 @@ class AskTest(unittest.TestCase):
         self.assertEqual(code, 0)
         out = buf.getvalue()
         self.assertIn("1 リクエスト", out)
-        self.assertIn("迷ったら「分ける」", out)  # システムプロンプト全文
+        self.assertIn("同じブランドなら迷わずまとめる", out)  # システムプロンプト全文（work）
         self.assertIn("work-aaa", out)  # 実際に投げる入力も全文
 
     def test_ask_without_a_token_fails_readably(self) -> None:

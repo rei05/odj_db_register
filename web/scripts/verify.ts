@@ -302,7 +302,10 @@ check(
   draft.includes('おかりん'),
   draft.split('\n')[2] ?? '',
 )
-check('下書きが series-risk の警告を書く', draft.includes('シリーズの別作品'))
+// work 方針転換後、series-risk は「同じブランドなら統合してよい」と
+// 「無関係な語の部分一致は統合してはいけない」の両方があり得ると書く
+// （draft.ts の HINT_LABEL_BY_FIELD.work を参照）。
+check('下書きが series-risk の警告を書く（work）', draft.includes('同じブランドのシリーズ作品'))
 
 console.log(failed === 0 ? '\nすべて通過' : `\n${failed} 件失敗`)
 process.exit(failed === 0 ? 0 : 1)

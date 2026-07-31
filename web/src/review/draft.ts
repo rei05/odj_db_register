@@ -8,7 +8,7 @@
  * ここで書くのは行数・根拠の種別・共起・ヒントといった見れば分かる事実だけで、
  * 統合の可否は書かない。人間が消すなり足すなりする土台にする。
  */
-import type { Cluster } from './types.ts'
+import type { Cluster, Field } from './types.ts'
 
 /** 辺の種別を、何が根拠なのか読んで分かる日本語にする。 */
 const EDGE_LABEL: Record<string, string> = {
@@ -21,11 +21,40 @@ const EDGE_LABEL: Record<string, string> = {
   substr: '片方が片方に含まれるだけ（最も弱い）',
 }
 
+// hints は field に関係なく共通の意味を持つもの。
 const HINT_LABEL: Record<string, string> = {
-  'series-risk': '部分一致だけで繋がった組を含む。シリーズの別作品が混ざっている恐れ',
-  'series-mark-mismatch': '「2期」「劇場版」のような続編の印が食い違う値が混ざる',
   'split-from-large': '元は繋がりすぎた大きな塊の破片。中身を疑ってかかること',
   'artist-as-work': 'アーティスト名が元ネタ欄に入っている値を含む',
+}
+
+// series-risk と series-mark-mismatch は work と artist で意味が違う
+// （block.py の hints 生成部のコメントを参照）。
+//
+// - series-risk: work では「アイカツ」⊂「アイカツスターズ」のように
+//   ブランド名を共有する同シリーズ作品（統合してよい）と、無関係な語が
+//   たまたま部分一致しただけの組（統合してはいけない）の両方がここに
+//   混ざるので、中身を見て判断するよう促す。artist では従来どおり
+//   合同名義と単独名義が混ざっている恐れ。
+// - series-mark-mismatch: work では方針転換により「印が食い違う＝別物」
+//   ではなくなった（同じブランドのシーズン違いは積極的に統合する）ので、
+//   分ける理由にはならないと明記する。それでもどの表記がどのシーズンを
+//   指すかは判断材料になるので、ヒント自体は work でも出す。
+//   artist では従来どおりの意味。
+const HINT_LABEL_BY_FIELD: Record<Field, Record<string, string>> = {
+  work: {
+    'series-risk':
+      '部分一致だけで繋がった組を含む。同じブランドのシリーズ作品なら統合してよいが、無関係な語がたまたま部分一致しただけの恐れもあるので中身を見て判断すること',
+    'series-mark-mismatch':
+      '「2期」「劇場版」のような続編の印が食い違う値が混ざる。印の違いだけなら同じブランドとして統合してよいので、これ単体は分ける理由にならない',
+  },
+  artist: {
+    'series-risk': '部分一致だけで繋がった組を含む。合同名義と単独名義が混ざっている恐れ',
+    'series-mark-mismatch': '「2期」「劇場版」のような続編の印が食い違う値が混ざる',
+  },
+}
+
+function hintLabel(hint: string, field: Field): string | undefined {
+  return HINT_LABEL_BY_FIELD[field]?.[hint] ?? HINT_LABEL[hint]
 }
 
 export function draftReason(cluster: Cluster): string {
@@ -61,7 +90,8 @@ export function draftReason(cluster: Cluster): string {
   if (artists.length) lines.push(`アーティストが重なる: ${artists.slice(0, 3).join('、')}。`)
 
   for (const h of cluster.hints) {
-    if (HINT_LABEL[h]) lines.push(`※ ${HINT_LABEL[h]}。`)
+    const label = hintLabel(h, cluster.field)
+    if (label) lines.push(`※ ${label}。`)
   }
   return lines.join('\n')
 }
