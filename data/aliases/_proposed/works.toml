@@ -6,162 +6,190 @@
 [[work]]
 id = "work-78068760"
 canonical = "VOCALOID"
-kind = "vocaloid"
-variants = ["VOCALOID", "ボカロ", "ボーカロイド"]
+kind = "unknown"
+variants = ["VOCALOID", "ボカロ", "ボカロ?", "ボーカロイド"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "variants『VOCALOID』『ボカロ』『ボーカロイド』はそれぞれrows 4, 141, 2とされているが、api_resultsのうち全て『VOCALOID』へのredirectやsearchがある。edgesでは最も強いredirectやaggも存在するため、同一ジャンルの表記ゆれと判断できる。rowsが圧倒的に多い『ボカロ』は通称だが、canonicalには正式タイトル『VOCALOID』を採用（api_resultsより）。『ボカロ?』はrows 2かつ、coTitlesやcoArtistsが系統違いで疑わしいため、グループから除外。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API results for VOCALOID, ボカロ, ボーカロイド all redirect to the Wikipedia/Wikidata entry \"VOCALOID\" (note: 音声合成技術及びその応用製品の総称). Edges contain redirect between VOCALOID↔ボカロ and VOCALOID↔ボーカロイド, confirming they are the same brand. Rows: 4, 141, 2, 2 respectively."
 
 [[work]]
-id = "work-0d529e77"
+id = "work-ff929834"
 canonical = "アイカツ!"
-series = "アイカツ!"
 kind = "work"
 variants = [
-    "アイカツ!",
+    "TVアニメ「アイカツ!」 2年目2OP",
+    "TVアニメ「アイカツ!」 挿入歌",
     "アイカツ",
+    "アイカツ!",
     "アイカツ! ED",
     "アイカツ! 劇中曲",
     "アイカツ! 楽曲",
     "アイカツ!/Soleil",
     "アイカツ!/Tristar",
-    "TVアニメ「アイカツ!」 2年目2OP",
-    "TVアニメ「アイカツ!」 挿入歌",
-    "アイカツ?",
 ]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『アイカツ!』はapi_resultsで正式なタイトル、rows 43。『アイカツ』もrows 14かつwikipedia-jaでredirectとして『アイカツ!』へ繋がっている。edgesにもredirectおよびaggあり。同じDJ・曲名・アーティスト名の組み合わせが多い。その他『アイカツ! ED』『アイカツ! 劇中曲』『アイカツ! 楽曲』『アイカツ!/Soleil』『アイカツ!/Tristar』『TVアニメ「アイカツ!」 2年目2OP』『TVアニメ「アイカツ!」 挿入歌』『アイカツ?』などは副題や特定曲種を示すが、全部『アイカツ!』本体からの派生。種々の補足つき表記も同じ作品を指しているためまとめるべき。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API result for \"アイカツ\" redirects to \"アイカツ!\" and Wikidata entry for \"アイカツ!\" exists (日本のメディア・フランチャイズ). All listed variants share the same DJ(s) and co‑artists across entries and edges include agg/bigram links, indicating they are variations of the same franchise. Rows range from 1‑14."
+
+[[work]]
+id = "work-ff929834"
+canonical = "アイカツスターズ!"
+kind = "work"
+variants = ["アイカツスターズ", "アイカツスターズ!"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "API results for both \"アイカツスターズ\" and \"アイカツスターズ!\" return Wikidata entries titled \"アイカツスターズ!\" (日本のアーケードゲーム). Edge kinds include redirect/agg, confirming they refer to the same series. Rows: 4 each."
 
 [[work]]
 id = "work-deaa9d6b"
 canonical = "初音ミク"
-kind = "artist-as-work"
+kind = "vocaloid"
 variants = ["初音ミク", "初音ミク 楽曲"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『初音ミク』はrows 54、api_resultsのtitleも一致。『初音ミク 楽曲』はrows 1だが、coArtistsに『初音ミク produced by くちばしP』など、「初音ミク」を明示している。edgesもagg,bigramあり。『初音ミク』自体alsoAnArtistName:trueだが、元ネタ欄で指されている場合このグループに含めて良い。canonicalはapi_results.titleとrowsの多さから『初音ミク』。"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補 \"初音ミク\" が54行、DJ ha,tri,あちょ が使用し、API結果に title \"初音ミク\" が存在する。 \"初音ミク 楽曲\" は 1 行で同一DJ ha が使用、edges に agg,bigram で結ばれているため同一ブランドと判断。"
 
 [[work]]
 id = "work-5a13c932"
 canonical = "学園アイドルマスター"
-series = "アイドルマスター"
 kind = "work"
-variants = ["学園アイドルマスター", "学マス"]
+variants = ["学マス", "学園アイドルマスター"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方の表記で共通する曲・出演者（Feel Jewel Dream、Boom Boom Pow、GIGA、De De Mouse、初星学園）が見られ、14・29行と十分な行数。外部APIのWikipediaリダイレクト（学マス→学園アイドルマスター）・Wikidata検索も一致している。アイドルマスター系シリーズとの混同防止（keepApart 明記）も守れるため、variantsをまとめてよい。"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補 \"学マス\" (14行) と \"学園アイドルマスター\" (29行) が redirect で結ばれ、API結果の \"学園アイドルマスター\" が正式タイトルとして取得されている。両方とも同じ DJ 群 (tri, あぴす) が使用していることも一致の根拠。"
 
 [[work]]
 id = "work-a89faf03"
 canonical = "アイドルマスター シンデレラガールズ"
-series = "アイドルマスター"
 kind = "work"
-variants = ["THE IDOLM@STER CINDERELLA GIRLS", "アイドルマスター シンデレラガールズ", "アイドルマスターシンデレラガールズ", "デレマス"]
+variants = [
+    "THE IDOL M@STER CINDERELLA M@STER",
+    "THE IDOLM@STER CINDERELLA GIRLS",
+    "アイドルマスター シンデレラガールズ",
+    "アイドルマスターシンデレラガールズ",
+    "デレマス",
+]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "各表記間にredirect/bigram/agg/caseonly等、強い根拠が多数。曲目やアーティスト（CINDERELLA PROJECT、LiPPS等）も共通し、15行・6行など十分。Wikipediaリダイレクト（デレマス等→アイドルマスター シンデレラガールズ）、Wikidataにも正式名称あり。シリーズリスクhints付きだがkeepApartにより他作品（学園アイドルマスター等）との区別も維持。"
+source = "llm:openai/gpt-oss-120b"
+reason = "全候補は edges にて bigram, redirect, agg などで相互接続され、API結果の \"アイドルマスター シンデレラガールズ\" が正式タイトルとして確認できる。 \"デレマス\" も redirect で同一作品と示されており、同一ブランド（アイドルマスター）内の全派生表記としてまとめた。"
 
 [[work]]
 id = "work-a9cdc906"
 canonical = "とある科学の超電磁砲"
 kind = "work"
-variants = ["とある科学の超電磁砲", "超電磁砲"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "variantsの『とある科学の超電磁砲』は16行と最多で、wikidataのtitle『とある科学の超電磁砲』有り。『超電磁砲』や関連曲タイトル・アーティストが一致し、同系統。『とある科学の超電磁砲S』『とある科学の超電磁砲T』はそれぞれアニメ2期・3期で、keepApart指示や各期タイトルなので分離。『TVアニメ「とある科学の超電磁砲S」 ED』は曲名が2期と対応。『とある』は作品名ではなく省略なので除外。"
+variants = ["とある科学の超電磁砲", "とある科学の超電磁砲S", "とある科学の超電磁砲T", "超電磁砲", "TVアニメ「とある科学の超電磁砲S」 ED"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "「とある科学の超電磁砲」(rows=16) と「とある科学の超電磁砲S」(rows=4)・「とある科学の超電磁砲T」(rows=2)・「超電磁砲」(rows=1) は同一ブランド・フランチャイズで、api_results に \"とある科学の超電磁砲\" が正式名称として存在し、edgeKinds に agg・bigram・substr があるため同一作品と判断した。"
 
 [[work]]
 id = "work-a9cdc906"
-canonical = "とある科学の超電磁砲S"
-series = "とある科学の超電磁砲"
+canonical = "とある魔術の禁書目録"
 kind = "work"
-variants = ["とある科学の超電磁砲S", "TVアニメ「とある科学の超電磁砲S」 ED"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『とある科学の超電磁砲S』は4行。『TVアニメ「とある科学の超電磁砲S」 ED』はsister's noiseで、2期のEDを指すため同作と判断。djsや曲名も重複あり。"
+variants = ["とある魔術の禁書目録", "とある魔術の禁書目録II"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "「とある魔術の禁書目録」(rows=6) と続編 \"とある魔術の禁書目録II\"(rows=1) は同ブランドのライトノベル・メディアミックス作品で、api_results に \"とある魔術の禁書目録\" が正式名称として掲載されている。"
 
 [[work]]
 id = "work-42998b0b"
 canonical = "電音部"
 kind = "work"
-variants = ["電音部", "電音部,"]
+variants = ["Hylen feat. 神宮前参道學園 (from電音部)", "電音部", "電音部,"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『電音部』は29行と最多。wikidataにtitle『電音部』あり。『電音部,』も曲・djsが共通、agg・bigramで繋がっているので同一と判断。『Hylen feat. 神宮前参道學園 (from電音部)』は曲名『ウルトラリズム』のみで、元ネタ欄にアーティスト名でartist-as-workだが、作品名表記ではないので除外。"
+source = "llm:openai/gpt-oss-120b"
+reason = "全て \"電音部\" を含む表記で、edges が substr / agg / bigram で結ばれ、api_results に \"電音部\"（バンダイナムコエンターテインメントの音楽原作キャラクタープロジェクト）という正式名称があるため同一ブランドとして統合した。"
 
 [[work]]
 id = "work-94ae6dc3"
 canonical = "けいおん!"
 kind = "work"
-variants = ["けいおん!", "けいおん"]
+variants = [
+    "TVアニメ「けいおん!!」挿入歌",
+    "【MAD】 けいおん! 『ハリケーン!! たくあん!!』",
+    "けいおん",
+    "けいおん!",
+    "けいおん!!",
+    "映画けいおん!",
+]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『けいおん!』は13行で最多。『けいおん』4行、『けいおん!』13行、『けいおん!!』9行。『けいおん』と『けいおん!!』はwikipedia-jaで『けいおん!』にredirectされるが、keepApart指示とシリーズ・期の違いで分離推奨。MADなど1行表記は重複アーティスト・作品名無いため除外。"
-
-[[work]]
-id = "work-94ae6dc3"
-canonical = "けいおん!!"
-series = "けいおん!"
-kind = "work"
-variants = ["けいおん!!", "TVアニメ「けいおん!!」挿入歌"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『けいおん!!』は9行あり、wikipedia-jaで『けいおん!』にredirectするが、keepApart指示と2期タイトルなので分離。曲名やdjs重複あり。『TVアニメ「けいおん!!」挿入歌』も関連曲同一作品なのでまとめた方が良い。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「けいおん」系の表記はすべて同一メディアミックス作品（アニメ・映画）に属し、api_results に \"けいおん!\" が正式名称として登録されている。edgeKinds に agg・bigram・redirect・substr があるため、同一ブランドと判断した。"
 
 [[work]]
 id = "work-5c59a0a7"
-canonical = "アイマス"
-series = "アイドルマスター"
+canonical = "アイドルマスターシリーズ"
 kind = "work"
 variants = ["アイマス", "アイマスカバー"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "アイマスは27件と多いrowsを持ち、api_results.titleで『アイドルマスターシリーズ』にredirectされている。アイマスカバーは『リフレクティア』のカバーで、アイマスと同DJ(ましゅー)が重複している。またcoArtistsも『三浦あずさ(CV:たかはし智秋)』でアイマスのキャラと一致。2つのvariantsは関連曲で検索用途には同じグループで有用と判断した。"
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "「アイマス」(rows 27) と 「アイマスカバー」(rows 1) は edge substr で結ばれ、api_results に「アイドルマスターシリーズ」(source wikipedia-ja) が存在する。ブランドが同一と判定できるため同一グループにまとめた。"
 
 [[work]]
 id = "work-a7113180"
 canonical = "ラブライブ!"
-series = "ラブライブ!"
 kind = "work"
 variants = ["ラブライブ", "ラブライブ!", "ラブライブ! 楽曲"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "ラブライブ!とラブライブはapi_results.titleで『ラブライブ!』へredirectしており、両者の曲名（Snow halation, No brand girl等）やDJ(あぴす, tri等)で重複が見られる。ラブライブ! 楽曲は1件のみで曲『夏、終わらないで。』がラブライブ!と関連性が強いため、この3つのvariantsは同作品の表記ゆれと判断し、api_results.title『ラブライブ!』をcanonicalとした。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram,redirect があり、api_results で「ラブライブ!」がリダイレクト先として確認できる。すべて同一シリーズ（ラブライブ!）と判断した。"
 
 [[work]]
 id = "work-9e2c1380"
 canonical = "バーチャルYouTuber"
 kind = "vtuber"
-variants = ["VTuber", "Vtuber"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "VTuberとVtuberはapi_results.titleの『バーチャルYouTuber』にredirectし、両者でDJ(あぴす,レイクン)や曲名（SheepInTheLight等）、coArtistsが多く重複しているため同じジャンルの表記ゆれとしてまとめて良い。"
+variants = [
+    "VTuber",
+    "Vtuber",
+    "VTuber (にじさんじ)",
+    "VTuber(Marpril)",
+    "VTuber(キズナアイ)",
+    "Vtuber(ヒメヒナ)",
+    "にじさんじ",
+]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補はすべて「VTuber」系の表記で、api_results に「バーチャルYouTuber」(wikipedia-ja) が存在。edgeKinds に agg・bigram・caseonly・substr が混在し、ブランドとして同一と判断できるためまとめた。"
 
 [[work]]
 id = "work-9f06271d"
 canonical = "響け! ユーフォニアム"
-series = "響け! ユーフォニアム"
 kind = "work"
-variants = ["響け!ユーフォニアム", "響けユーフォニアム", "響け! ユーフォニアム"]
+variants = [
+    "ユーフォ",
+    "劇場版 響け! ユーフォニアム~誓いのフィナーレ~",
+    "特別編 響け!ユーフォニアム~アンサンブルコンテスト~』主題歌",
+    "響け! ユーフォニアム",
+    "響け!ユーフォニアム",
+    "響け!ユーフォニアム2",
+    "響け!ユーフォニアム3 OP",
+    "響けユーフォニアム",
+]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『響け!ユーフォニアム』『響け! ユーフォニアム』『響けユーフォニアム』は共通してTRUEの楽曲（DREAM SOLISTER, Blast! など）、同じDJ（tri, あぴす, マスオ）が使っており、api_resultsでも全て『響け! ユーフォニアム』へリダイレクト。rowsが最大10（響け!ユーフォニアム）で多い表記。理由としてrows、coTitles、coArtists、djs、api_resultsのredirectを引用。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API の wikipedia-ja 結果で \"響け! ユーフォニアム\" が正式タイトルとして取得されている (\"響け!ユーフォニアム\" と \"響けユーフォニアム\" も同じリダイレクト) し、各候補は同一ブランド \"響け! ユーフォニアム\" 系列の曲名・アーティスト (TRUE など) が共通し、DJ が重複している (例: tri, あぴす, ふっちー が \"ユーフォ\" と \"響け!ユーフォニアム\" 両方で使用) から同一作品と判断できる。"
 
 [[work]]
 id = "work-187b8212"
 canonical = "ぼっち・ざ・ろっく!"
-series = "ぼっち・ざ・ろっく!"
 kind = "work"
-variants = ["ぼっちざろっく!", "ぼっち・ざ・ろっく", "ぼっち・ざ・ろっく!"]
+variants = ["ぼっちざろっく!", "ぼっち・ざ・ろっく", "ぼっち・ざ・ろっく ED", "ぼっち・ざ・ろっく!", "ぼっち・ざ・ろっく! Re: ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『ぼっちざろっく!』『ぼっち・ざ・ろっく』『ぼっち・ざ・ろっく!』は結束バンドの楽曲（何が悪い、カラカラ等）を複数DJ（あぴす、tri、ましゅー、ふっちー）が使用。api_resultsで全て『ぼっち・ざ・ろっく!』へのredirectとsearch。rows最大10（ぼっち・ざ・ろっく!）。理由としてrows、coTitles、coArtists、djs、api_resultsのredirect/searchを引用。"
+source = "llm:openai/gpt-oss-120b"
+reason = "wikipedia-ja のリダイレクトと wikidata の検索結果で \"ぼっち・ざ・ろっく!\" が正式名称と確認でき、エッジには agg・bigram・redirect など強い結びつきが多数あり、DJ・曲タイトル・アーティストが重複しているため同一ブランドの表記揺れと判定した。"
+
+[[work]]
+id = "work-7f298246"
+canonical = "星街すいせい"
+kind = "vtuber"
+variants = ["TAKU INOUE & 星街すいせい", "さくらみこ", "ホロライブ(さくらみこ・星街すいせい)", "星街すいせい"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "全ての表記は同一ブランド「ホロライブ」の VTuber に属し、api_results に「星街すいせい」(日本のバーチャルYouTuber) が正式名称として存在する。edges の substr で相互に結びつき、djs が重複していることも表記ゆれの根拠となっている。"
 
 [[work]]
 id = "work-47986dc7"
 canonical = "アイドルマスター シャイニーカラーズ"
-series = "アイドルマスター"
 kind = "work"
 variants = [
     "アイドルマスター シャイニーカラーズ",
@@ -171,176 +199,184 @@ variants = [
     "シャニマス",
 ]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『アイドルマスター シャイニーカラーズ』のrowsが4、djsやcoTitles/Artistsもタイトル内のユニットに一致する。同クラスター内の『アイドルマスターシャイニーカラーズ』『シャニマス』もrowsが多く、djsがクロスしている。APIの『シャニマス』のredirect先が『アイドルマスター シャイニーカラーズ』になっており、曲名やアーティストも一致。『アイドルマスター シャイニーカラーズ 2周年楽曲』『アイドルマスターシャイニーカラーズ 楽曲』は作品の周年や『楽曲』が付いただけの表記ゆれであり、実際の作品や曲で重なっているため同一視できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補はすべて『アイドルマスター シャイニーカラーズ』シリーズの表記で、edges に redirect / agg / bigram が多数あり、api_results でも正式名称「アイドルマスター シャイニーカラーズ」(日本の育成シミュレーションゲーム) が確認できる。ブランドが同一なので一つにまとめる。"
 
 [[work]]
 id = "work-a234f839"
 canonical = "涼宮ハルヒの憂鬱"
-series = "涼宮ハルヒシリーズ"
 kind = "work"
 variants = ["TVアニメ「涼宮ハルヒの憂鬱」 OP", "涼宮ハルヒの憂鬱", "涼宮ハルヒの憂鬱 楽曲"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補『涼宮ハルヒの憂鬱』のrowsが13で最多、djs3名。『TVアニメ「涼宮ハルヒの憂鬱」 OP』『涼宮ハルヒの憂鬱 楽曲』は、クラスター内の曲名やアーティストが『涼宮ハルヒの憂鬱』と重なっており、曲の表記ゆれとして認識できる。API_resultsで『涼宮ハルヒの憂鬱』→『涼宮ハルヒシリーズ』へのredirectがあるが、本件のクラスタ内はTVアニメの範囲に限定されているため、variants採用。"
+source = "llm:openai/gpt-oss-120b"
+reason = "全表記は同一アニメ『涼宮ハルヒの憂鬱』に関わる作品で、edges が agg/bigram で結びつき、api_results では「涼宮ハルヒシリーズ」へのリダイレクトが確認できる。ブランドが一致するため一括。"
 
 [[work]]
 id = "work-fd589c17"
 canonical = "ガールズ&パンツァー"
-series = "ガールズ&パンツァー"
 kind = "work"
-variants = ["ガルパン", "ガールズ&パンツァー"]
+variants = ["ガルパン", "ガールズ&パンツァー", "ガールズ&パンツァー 最終章"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補『ガルパン』と『ガールズ&パンツァー』は『DreamRiser』など共通曲名があり、両方で『ふっちー』がDJとして登場。『ガルパン』のWikipedia結果も『ガールズ&パンツァー』へのredirect。api_resultsのtitle『ガールズ&パンツァー』あり、rowsも最多の10なのでcanonicalに選定。『ガールズ&パンツァー 最終章』は別作品として分離する必要あり、分ける。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「ガルパン」→「ガールズ&パンツァー」 が redirect、さらに「ガールズ&パンツァー」→「ガールズ&パンツァー 最終章」 も redirect（edges に記載）。API 結果では \"ガールズ&パンツァー\" が正式タイトル（wikipedia-ja, wikidata）。同一ブランドであるため高い確信度。"
 
 [[work]]
 id = "work-6ff1cccd"
 canonical = "ガールズバンドクライ"
-series = "ガールズバンドクライ"
 kind = "work"
 variants = ["ガールズバンドクライ", "ガールズバンドクライ OP", "ガールズバンドクライ 劇中歌"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補『ガールズバンドクライ』『ガールズバンドクライ OP』『ガールズバンドクライ 劇中歌』はそれぞれ曲名やメディア注記（OP,劇中歌）のみ違い。共通で『トゲナシトゲアリ』がアーティスト。OP/劇中歌注記は作品全体の名前を指すことが多く、rows最多の『ガールズバンドクライ』、api_resultsにも同名。まとめて良い。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges で \"ガールズバンドクライ\" と \"ガールズバンドクライ OP\" が agg,bigram、また \"ガールズバンドクライ\" と \"ガールズバンドクライ 劇中歌\" が substr と記載。API では \"ガールズバンドクライ\" が正式タイトル（wikidata）。同一作品の別表記（OP・劇中歌）なので高い確信度。"
 
 [[work]]
 id = "work-23d46022"
 canonical = "リコリス・リコイル"
-series = "リコリス・リコイル"
 kind = "work"
 variants = ["TVアニメ「リコリス・リコイル」 ED", "リコリス・リコイル"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『TVアニメ「リコリス・リコイル」 ED』は曲名に『花の塔 (原曲)』が並び、『リコリス・リコイル』とdjs（ふっちー）も重なり。api_resultsでも『リコリス・リコイル』が正式名称。rows12の『リコリス・リコイル』をcanonicalとし、まとめて良い。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edge \"TVアニメ「リコリス・リコイル」 ED\" → \"リコリス・リコイル\" が agg,bigram。API で \"リコリス・リコイル\" が正式タイトル（wikidata）。ED 表記は同作品の一部なので同一ブランドと判断。"
 
 [[work]]
 id = "work-904cc63e"
 canonical = "Tokyo 7th シスターズ"
-series = "Tokyo 7th シスターズ"
 kind = "work"
 variants = ["Tokyo 7th シスターズ", "ナナシス"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補『Tokyo 7th シスターズ』『ナナシス』ともにdjsやcoArtists（KARAKURIなど）が重なり、rowsも6で同程度。『ナナシス』のwikipedia結果は『Tokyo 7th シスターズ』へのredirect、api_resultsでも一致。canonicalに『Tokyo 7th シスターズ』を選ぶ。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edge に \"Tokyo 7th シスターズ\" と \"ナナシス\" が redirect とあり、API でも \"ナナシス\" が \"Tokyo 7th シスターズ\" へのリダイレクト。正式タイトルは \"Tokyo 7th シスターズ\"（wikidata）。同一ブランドの別称なので高い確信度。"
 
 [[work]]
 id = "work-c242c502"
 canonical = "【推しの子】"
-series = "推しの子"
 kind = "work"
-variants = ["推しの子", "【推しの子】"]
+variants = ["【推しの子】", "【推しの子】 第2期", "推しの子"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『推しの子』と『【推しの子】』は外部APIのtitleが『【推しの子】』となっており、redirectの根拠もある。3つの候補のうち、rowsが多い『推しの子』も同一作品を指しており、DJや共演曲・アーティストにも重なりがあるため表記ゆれと判断できる。『【推しの子】 第2期』はシリーズマークの食い違いと曲・アーティストの違いから別作品の可能性があり、分離する。"
-
-[[work]]
-id = "work-204af447"
-canonical = "ひだまりスケッチ"
-series = "ひだまりスケッチ"
-kind = "work"
-variants = ["ひだまりスケッチ", "ひだまりスケッチ×365", "ひだまりスケッチ×ハニカム"]
-confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "『ひだまりスケッチ』と『ひだまりスケッチ×365』『ひだまりスケッチ×ハニカム』はAPIのtitleで『ひだまりスケッチ (アニメ)』へのredirectがあり内容がシリーズ作品であることを示している。各表記で出演キャスト・曲名の重なりがあり、曲ごとアニメシリーズ別に分かれるが、『ひだまりスケッチ×365』『ひだまりスケッチ×ハニカム』などシリーズ展開で表記が分かれている。「ひだまり」は曲名・アーティストの重複がなく、rowsも少ないため、誤表記または略語の可能性があり分ける。『ひだまりスケッチ』『ひだまりスケッチ×365』『ひだまりスケッチ×ハニカム』はまとめても良いが、シリーズ-risk・series-mark-mismatch提示があり、完全な合体にはmediumとする。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「【推しの子】」と「推しの子」は edges に agg,bigram,redirect があり、API の wikipedia-ja 結果で title が「【推しの子】」と確認できる。さらに「【推しの子】 第2期」も agg,bigram で「【推しの子】」と結びつき、同一ブランド（同作シリーズ）として扱える根拠が揃っている。行数 (rows) や DJ が重複している点も同一作品の表記揺れを示す。"
 
 [[work]]
 id = "work-2e6250fb"
 canonical = "ウマ娘 プリティーダービー"
-series = "ウマ娘"
 kind = "work"
-variants = ["ウマ娘", "ウマ娘 プリティーダービー", "ウマ娘プリティダービー"]
+variants = [
+    "ウマ娘",
+    "ウマ娘 シンデレラグレイ 1期",
+    "ウマ娘 シンデレラグレイ OP",
+    "ウマ娘 プリティーダービー",
+    "ウマ娘 プリティーダービー season2",
+    "ウマ娘プリティダービー",
+]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "「ウマ娘 プリティーダービー」と「ウマ娘」「ウマ娘プリティダービー」は曲名やアーティスト（スペシャルウィーク、サイレンススズカ、トウカイテイオーなど）が重複し、djsも共通している（あぴすなど）。api_resultsでも\"ウマ娘\"が\"ウマ娘 プリティーダービー\"にリダイレクトされているため、同一作品の表記ゆれと判断できる。rowsの合計も多い（7件）。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「ウマ娘」から「ウマ娘 プリティーダービー」への edge に redirect があり、API 結果でも \"ウマ娘 プリティーダービー\" が正式タイトルとして取得されています。各表記は同一ブランドで、行数 (例: ウマ娘 4 行、ウマ娘 プリティーダービー 2 行) と DJ の重複も確認できるため、同一作品と判断しました。"
 
 [[work]]
 id = "work-a8fba1e0"
 canonical = "森カリオペ"
 kind = "artist-as-work"
-variants = ["Mori Calliope", "mori calliope", "森カリオペ"]
+variants = ["Mori Calliope", "mori calliope", "がうるぐら&森カリオペ", "森カリオペ"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "「Mori Calliope」「mori calliope」「森カリオペ」はdjsや共演者（BOOGEY VOXX等）が重複。また、外部APIによるリダイレクトもあり（Wikipediaの\"森カリオペ\"）。実際の表記もcandidates/raw内にあり、曲名も重なり多くのrows（7+1+1件）。"
+source = "llm:openai/gpt-oss-120b"
+reason = "Mori Calliope と \"森カリオペ\" が API でリダイレクト関係にあり、さらに \"Mori Calliope\" ↔ \"森カリオペ\" の edge が redirect で示されています。ケース違いや部分一致も agg, bigram で結ばれており、全て同一 VTuber/ホロライブアーティストを指すと確定できます。"
 
 [[work]]
 id = "work-cf6e8eee"
 canonical = "THE IDOLM@STER"
-series = "アイドルマスター"
 kind = "work"
 variants = ["THE IDLOM@STER", "THE IDOLM@STER", "THE iDLOM@STER 楽曲", "THE iDOLM@STER 楽曲"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "「THE IDLOM@STER」は「THE IDOLM@STER」のタイポで、djs/曲名/アーティスト（星井美希、天海春香など）も共通している。api_resultsでも\"THE IDOLM@STER\"で検索結果がある。多数のrowsが重なる（2+6件）。また、\"THE iDLOM@STER 楽曲\"と\"THE iDOLM@STER 楽曲\"はタイトルへの注記で、同一作品を指していると判断。"
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "API 結果で \"THE IDOLM@STER\" が正式タイトルとして確認でき、他の表記は edit・agg・bigram といった弱いエッジで結ばれていますが、同一ブランド（アイドルマスター）であることが示唆されています。行数や DJ の重複は少ないものの、誤字・記号の違いが主因のため confidence を medium としました。"
 
 [[work]]
 id = "work-427ad12f"
 canonical = "交響詩篇エウレカセブン"
-series = "交響詩篇エウレカセブン"
 kind = "work"
-variants = ["交響詩篇エウレカセブン", "エウレカセブン", "エウレカ"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補のうち「エウレカ」は汎用感嘆詞であり、wikidataのnoteでも作品ではないと明記されている。候補「交響詩篇エウレカセブン」はwikidataでアニメ作品として記載があり、rowsも最多（4件）、他候補と曲名やアーティストが重複している。従い、「交響詩篇エウレカセブン」「エウレカセブン」「エウレカ」については共通の元ネタで使われているが、「ANEMONE /交響詩篇エウレカセブン ハイエボリューション」は『交響詩篇エウレカセブン ハイエボリューション』というシリーズ内別作品なのでまとめない。"
+variants = ["ANEMONE /交響詩篇エウレカセブン ハイエボリューション", "エウレカ", "エウレカセブン", "交響詩篇エウレカセブン"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "全候補は『エウレカセブン』シリーズに属し、edges がすべて substr で結ばれている。api_results に \"交響詩篇エウレカセブン\" が正式タイトルとして存在 (wikidata note: ボンズ制作の日本のテレビアニメ作品)。行数は 1,3,1,4 と複数あり、同一 DJ が複数表記を使用している点も表記揺れの根拠になる。"
 
 [[work]]
 id = "work-4459ca6b"
 canonical = "とらドラ!"
-series = "とらドラ!"
 kind = "work"
 variants = ["とらドラ", "とらドラ!"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補の「とらドラ」と「とらドラ!」は、曲名やアーティストが同傾向で重なっており、edgesのagg,bigramの接合もある。wikidataで「とらドラ!」がアニメ・漫画・小説として扱われている。「とらドラ!」のrowsがより多い（8件）。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が agg,bigram で結ばれ、同一作品の表記揺れと判断できる。api_results に \"とらドラ!\" が正式タイトル (wikidata) がある。候補の rows は 1 と 8、DJ が重複して使用している点も裏付けになる。"
 
 [[work]]
 id = "work-9fc55d3c"
 canonical = "STEINS;GATE"
-series = "STEINS;GATE"
 kind = "work"
-variants = ["STEINS;GATE", "シュタインズ・ゲート", "シュタゲ"]
+variants = [
+    "STEINS;GATE",
+    "Steins;Gate 比翼恋理のだーりん",
+    "シュタインズ・ゲート",
+    "シュタインズ・ゲート ゼロ",
+    "シュタゲ",
+    "シュタゲゼロ",
+]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "STEINS;GATE・シュタインズ・ゲート・シュタゲはリダイレクトで明確につながる上、曲名やアーティスト（いとうかなこ等）が重複し、各候補のdjsにも重複がある（あぴす、レイクンなど）。「Steins;Gate 比翼恋理のだーりん」「シュタインズ・ゲート ゼロ」「シュタゲゼロ」はシリーズの別作品であるため分ける。wikipedia-jaのapi_resultsでもSTEINS;GATEが正式タイトル。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に redirect が含まれ、\"STEINS;GATE\" と \"シュタインズ・ゲート\"、\"シュタゲ\" が同一作品と外部 API で明示されている（wikipedia-ja redirect）。\"ゼロ\" 系列は substr でつながっており、同ブランドの続編・スピンオフとして同一グループに含める。api_results の \"シュタインズ・ゲート\" がタイトル \"STEINS;GATE\" と同等と確認でき、行数・DJ の重複も表記揺れを裏付けている。"
+
+[[work]]
+id = "work-c9874022"
+canonical = "CLANNAD"
+kind = "work"
+variants = ["CLANNAD", "CLANNAD 〜AFTER STORY〜", "CLANNAD~AFTER STORY"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が substr と agg,bigram で結び、同一ブランドの本編・アフターストーリーと判定できる。api_results に \"CLANNAD\" が正式タイトルとして掲載されている（wikidata）。候補の rows は 7,1,1 と複数あり、DJ が共通して使用している点も表記揺れの証拠になる。"
 
 [[work]]
 id = "work-d2aae3d4"
 canonical = "マクロスF"
-series = "マクロス"
 kind = "work"
-variants = ["マクロスF", "TVアニメ「マクロスF」 挿入歌"]
+variants = ["TVアニメ「マクロスF」 挿入歌", "マクロスF"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記とも「星間飛行」「ライオン」「ダイアモンドクレバス」など『マクロスF』に関連する曲を含み、アーティストもMay'nや中島愛など一致。8行中最多の「マクロスF」をcanonicalに選定。api_resultsにも作品記事あり。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも \"マクロスF\" に関する表記で、edges に \"agg,bigram\" があり、api_results に \"マクロスF\" が wikidata のタイトルとして存在する（rows: 1 と 8、djs: ふっちー / あちょ, せーや, ましゅー）。同一ブランドなので同一グループと判断。"
 
 [[work]]
 id = "work-dd40e5f0"
 canonical = "ポケットモンスター"
-series = "ポケットモンスター"
 kind = "work"
-variants = ["ポケットモンスター", "ポケモン"]
+variants = ["ポケットモンスター", "ポケモン", "ポケモン不思議のダンジョン", "劇場版ポケットモンスター ミュウと波動の勇者ルカリオ"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "\"ポケモン\"は\"ポケットモンスター\"のredirectで、どちらも「めざせポケモンマスター」など公式曲で共通。api_results, edgesのredirect根拠、曲名・アーティスト重複、行数も根拠。なお「ポケモン不思議のダンジョン」「劇場版ポケットモンスター ミュウと波動の勇者ルカリオ」は個別タイトルで分離する。"
+source = "llm:openai/gpt-oss-120b"
+reason = "\"ポケットモンスター\" と \"ポケモン\" は redirect 辺で同一と確認され、さらに \"ポケモン不思議のダンジョン\" と \"劇場版ポケットモンスター ミュウと波動の勇者ルカリオ\" は substr 辺で含まれる関係にある。api_results に \"ポケットモンスター\" が wikidata のタイトルとして掲載されており、全て同一ブランド（ポケモンシリーズ）と判断できる。"
 
 [[work]]
-id = "work-e9b48bb9"
-canonical = "アイカツスターズ!"
-series = "アイカツ"
+id = "work-7743282a"
+canonical = "ゼロの使い魔"
 kind = "work"
-variants = ["アイカツスターズ", "アイカツスターズ!"]
+variants = ["ゼロの使い魔", "ゼロの使い魔 〜双月の騎士〜"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記ともBon Bon Voyageやepisode Solo等、『アイカツスターズ!』楽曲で一致。api_resultsの作品名も同じ。両表記が同作を指しており、行数も互角なので「アイカツスターズ!」をcanonicalとする。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に \"redirect,substr\" があり、api_results でも両方とも \"ゼロの使い魔\" へリダイレクトされている。行数 (5,2) と DJ 情報も重複しているため同一作品と判断。"
+
+[[work]]
+id = "work-9a698daa"
+canonical = "ゆるキャン△"
+kind = "work"
+variants = ["ゆるキャン", "ゆるキャン△", "ゆるキャン△ SEASON2", "ゆるキャン△ SEASON3 OP"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "api_results に \"ゆるキャン△\" が正式名称として存在し、全候補は agg/bigram の強いエッジで結ばれている。rows: ゆるキャン (1 行)、ゆるキャン△ (4 行) など複数 DJ が同一作品名を使用している。"
 
 [[work]]
 id = "work-9cf4e208"
 canonical = "ソードアート・オンライン"
 kind = "work"
-variants = ["ソードアート・オンライン", "ソードアートオンライン"]
+variants = ["ソードアートオンライン", "ソードアート・オンライン", "ソードアート・オンラインII", "劇場版 ソードアート・オンライン -オーディナル・スケール-"]
 confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "API結果の『ソードアート・オンライン』がwikidataで作品として登録されており、rows(4)、DJ(マスオ、レイクン)で最大数。『ソードアートオンライン』は表記揺れで曲名(Catch The Moment)・DJ(あぴす)は重複なしだが、両者に「LiSA」の曲がある点で関連性が高い。『ソードアート・オンライン』と『ソードアートオンライン』は「agg,bigram」繋がり、ほぼ同一作品とみなせる。一方、『ソードアート・オンラインII』『劇場版 ソードアート・オンライン -オーディナル・スケール-』はそれぞれII期・劇場版で曲やアーティストが異なり、分離対象。従って両者のみグループ化。"
+source = "llm:openai/gpt-oss-120b"
+reason = "api_results に \"ソードアート・オンライン\" が正式名称として存在。\"ソードアートオンライン\" と \"ソードアート・オンラインII\"、映画タイトルは substr でつながっているが、同一ブランド（ライトノベル・メディアミックス）であることから同一シリーズと判断。rows: 各候補に複数 DJ が登場し、同じ楽曲名が出現している。"
 
 [[work]]
 id = "work-b97a6c24"
@@ -348,144 +384,167 @@ canonical = "ギルティクラウン"
 kind = "work"
 variants = ["ギルティクラウン", "ギルティクラウン OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『ギルティクラウン』(rows:6、djs:あちょ、あぴす、ましゅー)と『ギルティクラウン OP』(rows:1、djs:ふっちー)は、曲名やアーティスト、DJが重複あり。API結果も『ギルティクラウン』として一致。『ギルティクラウン OP』はOP注記に過ぎず、中身は同じ作品。"
+source = "llm:openai/gpt-oss-120b"
+reason = "api_results に \"ギルティクラウン\" が正式名称としてある。候補は agg,bigram のエッジで結ばれ、同一ブランドのテレビアニメ作品であることが明示されている。rows: \"ギルティクラウン\" が 6 行、OP が 1 行。"
 
 [[work]]
 id = "work-bae592aa"
 canonical = "エロマンガ先生"
 kind = "work"
-variants = ["エロマンガ先生", "TVアニメ「エロマンガ先生」 OP"]
+variants = ["TVアニメ「エロマンガ先生」 OP", "エロマンガ先生"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『エロマンガ先生』(rows:6、djs:tri、おかりん、ましゅー)と『TVアニメ「エロマンガ先生」 OP』(rows:1、djs:ふっちー)は、同じ作品内の表記差とわかる。実作品名でAPI検索結果『エロマンガ先生』がwikidataでヒット、両者の曲名・アーティストも『エロマンガ先生』由来のもの。"
+source = "llm:openai/gpt-oss-120b"
+reason = "api_results に \"エロマンガ先生\" が正式名称として存在。\"TVアニメ「エロマンガ先生」 OP\" と \"エロマンガ先生\" は agg,bigram のエッジで結ばれ、同一ブランドのライトノベル・アニメ作品である。"
 
 [[work]]
 id = "work-c3df696c"
 canonical = "明日ちゃんのセーラー服"
 kind = "work"
-variants = ["明日ちゃんのセーラー服", "明日ちゃんのセーラー服 OP", "『明日ちゃんのセーラー服』OP", "明日ちゃん"]
+variants = ["『明日ちゃんのセーラー服』OP", "明日ちゃん", "明日ちゃんのセーラー服", "明日ちゃんのセーラー服 OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "明日ちゃんのセーラー服 は rows=4 と最多で、api_results に \"明日ちゃんのセーラー服\" の記事がある。coTitles や coArtists も一致しており、各 DJ も同じ作品の曲を選んでいる。短縮形『明日ちゃん』も同じ曲に使われているため、表記ゆれであると判断できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API結果に「明日ちゃんのセーラー服」（日本の漫画作品）あり、各表記は rows が 1〜4 と出現し、DJ が重複するほか、edges で substr・agg・bigram が確認されているため同一作品と判断できる。"
+
+[[work]]
+id = "work-cf183685"
+canonical = "ストライクウィッチーズ"
+kind = "work"
+variants = ["ストライクウィッチーズ", "ストライクウィッチーズ2"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "API結果に「ストライクウィッチーズ」（日本のメディアミックス作品）が存在し、edges は substr で「ストライクウィッチーズ」→「ストライクウィッチーズ2」につながっている。hints に series-risk があるが、同ブランドの続編として扱える。"
 
 [[work]]
 id = "work-d0cea2f8"
 canonical = "魔法少女まどか☆マギカ"
 kind = "work"
-variants = ["まどマギ", "魔法少女まどか☆マギカ"]
+variants = ["まどマギ", "魔法少女まどか☆マギカ", "劇場版 魔法少女まどか☆マギカ [新編] 叛逆の物語", "魔法少女まどか☆マギカ 叛逆の物語"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "まどマギ(rows=2)はwikipedia-jaで魔法少女まどか☆マギカに redirectされ、魔法少女まどか☆マギカ(rows=3)はwikidataに記事があり正規表記。coTitles, coArtistsも重なっており表記ゆれが明確。劇場版や叛逆の物語は別作品なので除外。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API結果に「魔法少女まどか☆マギカ」（テレビアニメ・メディアミックス作品）があり、edges に redirect・bigram・substr があり、全表記が同一シリーズの本編・劇場版であることが示唆される。"
 
 [[work]]
 id = "work-10820d44"
 canonical = "ヴァイオレット・エヴァーガーデン"
 kind = "work"
-variants = ["ヴァイオレットエヴァーガーデン", "ヴァイオレット・エヴァーガーデン"]
+variants = ["ヴァイオレットエヴァーガーデン", "ヴァイオレット・エヴァーガーデン", "ヴァイオレット・エヴァーガーデン 外伝"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "ヴァイオレット・エヴァーガーデン(rows=4)が最多で、api_resultsに記事あり。ヴァイオレットエヴァーガーデン(rows=1)は coTitles, coArtists が同じ曲／アーティストに使われ、明確な表記ゆれ。外伝はシリーズ違いなので除外。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API結果に「ヴァイオレット・エヴァーガーデン」（日本の小説）があり、edges で agg/bigram と substr が確認され、外伝も同ブランドの派生作品として統合できる。"
 
 [[work]]
 id = "work-2183df87"
-canonical = "アイドルマスター"
-series = "アイドルマスター"
+canonical = "アイドルマスターシリーズ"
 kind = "work"
 variants = ["アイドルマスター", "アイドルマスター 楽曲"]
-confidence = "low"
-source = "llm:openai/gpt-4.1"
-reason = "アイドルマスター と アイドルマスター 楽曲 で、曲名・アーティストの系統が重複。agg/bigramで繋がっているがsplit-from-largeがあり、アイドルマスターシリーズは多岐に渡るため実際どの作品を指すのか素材から断定しづらい。api_resultsは『アイドルマスターシリーズ』redirect。現状は両者を分ける理由も、まとめる理由も薄い。"
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方の生表記は \"アイドルマスター\" 系列で、edges に agg,bigram があり、api_results に \"アイドルマスター\" → \"アイドルマスターシリーズ\" のリダイレクトが存在する。rows はそれぞれ 5 と 1、DJ が重複している点も同一ブランドの証拠。"
 
 [[work]]
 id = "work-5b57851b"
 canonical = "のんのんびより"
-series = "のんのんびより"
 kind = "work"
-variants = ["のんのんびより", "のんのんびより ED"]
+variants = ["のんのんびより", "のんのんびより ED", "のんのんびより りぴーと"]
 confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "のんのんびより、のんのんびより ED で曲名・アーティストに重複があり、api_resultsにも『のんのんびより』の作品として情報がある。『のんのんびより りぴーと』はシリーズ続編で作品として別扱いすべきだが、ED表記のケースでは同じ元ネタ扱いとみなされるケースが多い。両方のDJ重複があり、シリーズ-risk・artist-as-work のヒントもあるためmedium。"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補はすべて \"のんのんびより\" 系列で、edges に agg,bigram と substr がある。api_results に \"のんのんびより\" が作品として検索結果に含まれる。\"のんのんびより りぴーと\" はアーティスト名としても扱われるが、同一ブランドと判断できる根拠があるため同グループに。rows は 4,1,1、DJ が共通。"
 
 [[work]]
 id = "work-7acfe4af"
 canonical = "Re:ゼロから始める異世界生活"
-series = "Re:ゼロから始める異世界生活"
 kind = "work"
 variants = ["Re:ゼロから始める異世界生活", "Re:ゼロから始める異世界生活(リゼロ)", "リゼロ"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "リゼロ, Re:ゼロから始める異世界生活, Re:ゼロから始める異世界生活(リゼロ)で、曲名やDJが重複。さらにリゼロのAPI結果は『Re:ゼロから始める異世界生活』へのredirect、他も同シリーズの表記揺れ。作品名として同一と判断可能。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に redirect があり、\"リゼロ\" は \"Re:ゼロから始める異世界生活\" へのリダイレクトが api_results で確認できる。各表記の rows は 3,1,2 で DJ が重複し、同一作品の別表記と確定できる。"
 
 [[work]]
 id = "work-a7a3743e"
 canonical = "Wake Up, Girls!"
-series = "Wake Up, Girls!"
 kind = "work"
 variants = ["Wake Up, Girls!", "Wake Up,Girls!"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方の表記にWake Up, Girls!を含む。rowsが5:1、DJや共演タイトル/アーティストも重複している（Wake Up, Girls!のみ）。caseonly・agg等、強めのedges。api_resultsのwikidataにもWake Up, Girls!（アニメシリーズ）が明示されているため、同じ作品名の表記ゆれと判断できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram,caseonly があり、api_results に \"Wake Up, Girls!\" が正式名称として存在する。rows は 5 と 1、DJ が別々だが表記揺れが明確。"
 
 [[work]]
 id = "work-c3b5dbf9"
 canonical = "機動戦士ガンダム 水星の魔女"
-series = "機動戦士ガンダム 水星の魔女"
 kind = "work"
-variants = ["機動戦士ガンダム 水星の魔女", "機動戦士ガンダム水星の魔女"]
+variants = ["機動戦士ガンダム 水星の魔女", "機動戦士ガンダム 水星の魔女 Season2", "機動戦士ガンダム水星の魔女"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『機動戦士ガンダム 水星の魔女』と『機動戦士ガンダム水星の魔女』は、同じ作品（テレビアニメ番組）を指しており、両者のcoTitlesやcoArtists（祝福/YOASOBI）、djs（せーや、レイクン）も重複がある。api_resultsにも『機動戦士ガンダム 水星の魔女』があり、rows合計は5（3+2）と多い。一方『Season2』はkeepApart指定があり別作品のため除外。"
+source = "llm:openai/gpt-oss-120b"
+reason = "3件・4DJ が同一ブランド『機動戦士ガンダム 水星の魔女』を使用しており、edges に agg・bigram があり、api_results では「機動戦士ガンダム 水星の魔女」(wikidata) が正式タイトルとして確認できるため。"
 
 [[work]]
 id = "work-2f38b88e"
 canonical = "あんハピ♪"
-series = "あんハピ♪"
 kind = "work"
 variants = ["あんハピ", "あんハピ♪"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『あんハピ』と『あんハピ♪』は、redirectが成立していて外部APIでも『あんハピ♪』が作品タイトル。djs（レイクン）、coTitles（PUNCH☆MIND☆HAPPINESS/明日でいいから）も両方に見られる。rows合計5（2+3）で多く、表記ゆれと確認できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に redirect があり、api_results の \"あんハピ\" が \"あんハピ♪\" へリダイレクト、さらに \"あんハピ♪\" が wikidata の正式タイトルとして存在する（日本の漫画作品）。"
 
 [[work]]
 id = "work-520fc434"
 canonical = "僕のヒーローアカデミア"
-series = "僕のヒーローアカデミア"
 kind = "work"
 variants = ["僕のヒーローアカデミア", "僕のヒーローアカデミア ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『僕のヒーローアカデミア』と『僕のヒーローアカデミア ED』は両方とも曲名（shout baby/ピースサイン）が『ヒロアカ』のアニメ楽曲であり、同じ作品を指している。djs（せーや）も重複。ED付記は一部で使われるだけなのでまとめる。api_resultsも『僕のヒーローアカデミア』で一致。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg・bigram があり、両表記は同一ブランド『僕のヒーローアカデミア』。api_results で \"僕のヒーローアカデミア\" が wikidata の正式タイトルとして確認できる。"
 
 [[work]]
 id = "work-5d669e2d"
 canonical = "お兄ちゃんはおしまい！"
-series = "お兄ちゃんはおしまい！"
 kind = "work"
 variants = ["お兄ちゃんはおしまい!", "お兄ちゃんはおしまい! OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『お兄ちゃんはおしまい!』と『お兄ちゃんはおしまい! OP』は楽曲（アイデン貞貞メルトダウン）が共通で、djs（ha、あぴす）も重複。api_resultsも『お兄ちゃんはおしまい！』。表記にOPが付くだけなので同作品と判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg・bigram があり、両表記は同一ブランド『お兄ちゃんはおしまい！』。api_results に同名が wikidata で正式タイトルとして掲載されている。"
 
 [[work]]
 id = "work-67ade9e6"
 canonical = "きんいろモザイク"
-series = "きんいろモザイク"
 kind = "work"
 variants = ["きんいろモザイク", "ハロー!!きんいろモザイク"]
 confidence = "low"
-source = "llm:openai/gpt-4.1"
-reason = "『きんいろモザイク』と『ハロー!!きんいろモザイク』は文字列からはシリーズ作品の可能性が高いが、coTitles/coArtistsで若干重複がある（Rhodanthe*）。ただし、hintsでseries-riskがあり、続編の可能性が高く分けるべきか迷う。今回は疑いを残してlow。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges は substr のみで弱い結びつき。hints に series-risk が付与されているが、両表記は『きんいろモザイク』ブランドに属し、api_results で \"きんいろモザイク\" が正式タイトル（漫画）として、 \"ハロー!!きんいろモザイク\" がそのアニメ版へのリダイレクトとして確認できるため、低信頼ながら同一作品と判断した。"
 
 [[work]]
 id = "work-6f2a1d1d"
 canonical = "ラブライブ！サンシャイン!!"
-series = "ラブライブ！"
 kind = "work"
 variants = ["ラブライブ!サンシャイン!!", "ラブライブサンシャイン"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "candidates『ラブライブ!サンシャイン!!』rows=4、『ラブライブサンシャイン』rows=1。『ラブライブ!サンシャイン!!』のapi_resultsに『ラブライブ！サンシャイン!!』のタイトルがあり、作品そのもの（日本のテレビアニメ番組）を指している。両方の表記でAqoursの楽曲が使われており、djsやcoTitlesも重複しているため同じ作品を指していると判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも「ラブライブ!サンシャイン!!」と「ラブライブサンシャイン」は agg と bigram のエッジで結ばれ、API では \"ラブライブ！サンシャイン!!\" が正式タイトルとして取得されている（wikidata）。行数は 4 と 1、DJ が重複しているため同一ブランドと確定できる。"
+
+[[work]]
+id = "work-784a554a"
+canonical = "〈物語〉シリーズ"
+kind = "work"
+variants = [
+    "〈物語〉シリーズ",
+    "〈物語〉シリーズ オフ&モンスターシーズン",
+    "〈物語〉シリーズ セカンドシーズン",
+    "〈物語〉シリーズ セカンドシーズン 恋物語",
+    "〈物語〉シリーズ セカンドシーズン 猫物語",
+]
+confidence = "low"
+source = "llm:openai/gpt-oss-120b"
+reason = "全てのエッジは substr（または bigram）で、シリーズ名が共通しているが強い根拠が無い。各表記の rows は 1 行ずつで、API 結果が無いため、最も基本形である \"〈物語〉シリーズ\" を canonical とした。"
+
+[[work]]
+id = "work-79bf99a9"
+canonical = "てーきゅう"
+kind = "work"
+variants = ["てーきゅう", "てーきゅう 2期", "てーきゅう 4期", "てーきゅう 6期 主題歌", "てーきゅう5期 主題歌"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg と bigram のエッジで全てが結びつき、同一ブランドの「てーきゅう」シリーズであることが明示されている。各表記は同一 DJ (ha) が使用し、行数はすべて 1。"
 
 [[work]]
 id = "work-e6420843"
@@ -493,8 +552,17 @@ canonical = "宇宙よりも遠い場所"
 kind = "work"
 variants = ["よりもい", "宇宙よりも遠い場所"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "candidates『よりもい』rows=2、『宇宙よりも遠い場所』rows=3。api_results『よりもい』は『宇宙よりも遠い場所』へのredirect。『宇宙よりも遠い場所』のapi_resultsには正式タイトル（日本のテレビアニメ番組）あり。両方『ここから、ここから』でcoTitlesも一致。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に redirect があり、API では \"よりもい\" が \"宇宙よりも遠い場所\" へのリダイレクトとして確認できる（wikipedia-ja）。行数は 2 と 3、DJ が重複しているため同一作品と確定。"
+
+[[work]]
+id = "work-ec627880"
+canonical = "Supercell"
+kind = "artist-as-work"
+variants = ["Supercell", "supercell"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "「Supercell」(rows=1) と 「supercell」(rows=1) は agg・bigram・caseonly で結ばれ、同一アーティスト名として DJ が別々に使用している。keepApart に「ryo」は別物と明記されているため \"supercell/ryo\" は除外。"
 
 [[work]]
 id = "work-010387e1"
@@ -502,8 +570,17 @@ canonical = "鋼の錬金術師"
 kind = "work"
 variants = ["鋼の錬金術師", "鋼の錬金術師 ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補の『鋼の錬金術師』(3行, djs: あぴす, おかりん, ましゅー, coTitles: READY STEADY GO等)と『鋼の錬金術師 ED』(1行, dj: ha, coTitles: リライト)のcoTitles・coArtistsが重複しており、api_resultsにも「鋼の錬金術師」が正式タイトルとして検索されているため、同じ作品を指していると判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補は agg・bigram で結び付いており、API から正式タイトル \"鋼の錬金術師\" が取得できる。ED 版も同一作品の派生なので同一グループに統合。"
+
+[[work]]
+id = "work-01b166c6"
+canonical = "スタァライト"
+kind = "work"
+variants = ["スタァライト", "劇場版 レビュースタァライト ED", "劇場版スタァライト"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg・bigram・substr があり、すべて同一シリーズ \"スタァライト\" の本編・劇場版・ED であることが示唆されている。series‑risk はあるが、ブランドは共通なので統合。"
 
 [[work]]
 id = "work-077db534"
@@ -511,17 +588,26 @@ canonical = "冴えない彼女の育てかた"
 kind = "work"
 variants = ["冴えない彼女の育てかた", "冴えない彼女の育てかた 劇中歌", "冴えない彼女の育てかた♭ OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『冴えない彼女の育てかた』(2行, djs: おかりん等)と『冴えない彼女の育てかた 劇中歌』『冴えない彼女の育てかた♭ OP』（各1行, dj: ha）がcoTitles及びcoArtistsに重複があり、api_resultsに『冴えない彼女の育てかた』が正式名称としてあるためまとめられる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg・bigram・substr のエッジで結び付いており、API で正式タイトル \"冴えない彼女の育てかた\" が確認できる。派生曲 (劇中歌、OP) も同一作品の一部として扱う。"
 
 [[work]]
 id = "work-0cf0faa5"
-canonical = "somunia"
+canonical = "Somunia"
 kind = "artist-as-work"
 variants = ["Somunia", "somunia"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補は agg・bigram・caseonly で結ばれ、both appear as artist names (alsoAnArtistName true). 同一アーティスト名として統合。"
+
+[[work]]
+id = "work-143e9af5"
+canonical = "F-ZERO"
+kind = "work"
+variants = ["F-ZERO", "F-ZERO GX", "F-ZEROファルコン伝説", "FZERO"]
 confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "『somunia』(3行, djs: tri等)と『Somunia』(1行, dj: あぴす)がcoArtistsや曲目に重複し、caseonly+aggで繋がっていてどちらもアーティスト名の使用例。api_resultsは空だが表記ゆれの可能性が高い。"
+source = "llm:openai/gpt-oss-120b"
+reason = "全て substr・agg・bigram のエッジで結び付いており、ブランド \"F‑ZERO\" 系列として扱われる。series‑risk が付いているが、別作品である証拠はなく、同一ブランドのゲームシリーズと判断。"
 
 [[work]]
 id = "work-1618a143"
@@ -529,8 +615,8 @@ canonical = "TARI TARI"
 kind = "work"
 variants = ["TARI TARI", "TARITARI", "TARITARI ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "candidatesの『TARI TARI』『TARITARI』『TARITARI ED』で共通の曲名『Dreamer』『潮風のハーモニー』やアーティスト『AiRI』『白浜坂高校合唱部』がある。api_resultsでも『TARI TARI』が正式タイトルと確認できるのでcanonicalは『TARI TARI』。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「TARI TARI」「TARITARI」「TARITARI ED」は all have agg/bigram edges (agg,bigram,caseonly etc.) and 同じDJが使用している例がある (e.g., おかりん/ましゅー vs レイクン/ha). wikidata の api_results で \"TARI TARI\" が正式タイトルとして確認できるため、これを canonical とした。"
 
 [[work]]
 id = "work-19e9dc66"
@@ -538,17 +624,17 @@ canonical = "Turkey!"
 kind = "work"
 variants = ["Turkey!", "Turkey! ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "candidatesの『Turkey!』『Turkey! ED』で共通曲『もしも』が入っている。api_resultsでも『Turkey!』が正式名称とされているのでcanonicalは『Turkey!』。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「Turkey!」と「Turkey! ED」は agg,bigram の強いエッジで結ばれ、rows が 3,1 と複数 DJ が共通して使用。wikidata の api_results に \"Turkey!\" が日本のテレビアニメシリーズとして掲載されているため、これを canonical とした。"
 
 [[work]]
 id = "work-25b22528"
-canonical = "Engage Kiss"
+canonical = "Project Engage"
 kind = "work"
 variants = ["Engage Kiss", "Engage Kiss ED", "TVアニメ「Engage Kiss」 ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "candidatesの『Engage Kiss』『Engage Kiss ED』『TVアニメ「Engage Kiss」 ED』で共通曲『恋愛脳』とアーティスト『ナナヲアカリ』がある。api_resultsでも基準となる正式表記が『Engage Kiss』として出ている（redirect先はProject Engageだが、分離不要）。"
+source = "llm:openai/gpt-oss-120b"
+reason = "全て agg/bigram のエッジで結びつき、同一 DJ（ha, ふっちー, マスオ） が複数行で使用。api_results に \"Project Engage\"（wikipedia-ja のリダイレクト） が掲載されており、これは作品全体を指す正式名称として採用。"
 
 [[work]]
 id = "work-29586cf0"
@@ -556,8 +642,26 @@ canonical = "この美術部には問題がある!"
 kind = "work"
 variants = ["この美術部には問題がある", "この美術部には問題がある!", "この美術部には問題がある! OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "api_resultsで『この美術部には問題がある』→『この美術部には問題がある!』にredirectされている。複数表記間でDJや曲名にも重複がありvariantsとしてまとめられる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg,bigram,redirect のエッジで強く結びつき、rows が合計 4 行、複数 DJ が重複使用。wikipedia-ja の api_results が \"この美術部には問題がある!\" としてリダイレクトされているため、これを canonical とした。"
+
+[[work]]
+id = "work-2b597292"
+canonical = "ヤマノススメ"
+kind = "work"
+variants = ["ヤマノススメ", "ヤマノススメ サードシーズン"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "エッジは substr のみで弱いが、\"ヤマノススメ\" は wikidata による正規作品名で、サードシーズンも同一ブランドの続編であるため同一作品として統合。rows は合わせて 4 行、DJ が重複していないがブランドの一貫性により medium と判断。"
+
+[[work]]
+id = "work-32759011"
+canonical = "超かぐや姫"
+kind = "work"
+variants = ["超かぐや姫", "超かぐや姫! ED", "超かぐや姫! 劇中曲"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "全て agg/bigram のエッジで結びつき、同一 DJ（ふっちー、ha）が複数行で使用。api_results が空だが、最も行数が多い \"超かぐや姫! 劇中曲\" は同じベース名を含むため、原形の \"超かぐや姫\" を canonical とした。"
 
 [[work]]
 id = "work-5029a21a"
@@ -565,8 +669,8 @@ canonical = "俺の妹がこんなに可愛いわけがない"
 kind = "work"
 variants = ["俺の妹がこんなに可愛いわけがない", "俺の妹がこんなに可愛いわけがない。", "俺妹"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『俺の妹がこんなに可愛いわけがない』『俺の妹がこんなに可愛いわけがない。』『俺妹』は、api_results で『俺妹』が『俺の妹がこんなに可愛いわけがない』のredirectになっている。さらに、各表記で共通の曲（irony, nexus, reunion など ClariSの楽曲）、coArtistsにもClariSが重複し、djsも複数重なりが認められるため、同一作品の表記ゆれと判断できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "3件の候補すべてが同一作品を指すと判断できる根拠は、edges に \"redirect\" があり、さらに API 結果で \"俺妹\" が正式タイトル \"俺の妹がこんなに可愛いわけがない\" へリダイレクトされている点（\"source\": \"wikipedia-ja\"）。各候補の rows はそれぞれ 1, 1, 2 行で、DJ が重複して使用されている点も表記揺れの証拠となっている。"
 
 [[work]]
 id = "work-83c93292"
@@ -574,8 +678,8 @@ canonical = "未確認で進行形"
 kind = "work"
 variants = ["未確認で進行形", "未確認で進行形 ED", "未確認で進行形 OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『未確認で進行形』『未確認で進行形 ED』『未確認で進行形 OP』は、全て同じ作品タイトルを含み、api_resultsにて正式タイトル『未確認で進行形』があり、候補からも『とまどい→レシピ』『まっしろわーるど』など主題歌・ED・OP関連楽曲で共通。djsにも重なりが見られ同一作品の表記ゆれである。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges で \"agg,bigram\" や \"bigram\" が全ての候補間に存在し、同一作品の OP/ED と判定できる。API 結果に \"未確認で進行形\" が正式タイトルとして掲載されている（\"kind\": \"search\"）。各候補の rows は合計 4 行で、DJ が重複使用されている点も裏付けになる。"
 
 [[work]]
 id = "work-8413af55"
@@ -583,17 +687,17 @@ canonical = "夜のクラゲは泳げない"
 kind = "work"
 variants = ["夜のクラゲは泳げない", "夜のクラゲは泳げない ED", "夜のクラゲは泳げない OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『夜のクラゲは泳げない』『夜のクラゲは泳げない ED』『夜のクラゲは泳げない OP』は、api_resultsで正式タイトル『夜のクラゲは泳げない』があり、候補内でも主題歌や挿入歌の表記違い（ED/OP）が重なっている。coTitles, djsの重複から同一作品と判断できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に \"agg,bigram\" と \"bigram\" が全ての組み合わせで示され、OP/ED 版であることが明示されている。API 結果に正式タイトル \"夜のクラゲは泳げない\" が存在し、候補の rows は計 4 行、DJ が重複しているため表記揺れと確定できる。"
 
 [[work]]
-id = "work-a5d384b9"
-canonical = "Aiobahn"
-kind = "artist-as-work"
-variants = ["Aiobahn", "aiobahn", "Aiobarn"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補『Aiobahn』『aiobahn』は綴り違いで、両方で同じDJ（あぴす）が使っており、coArtistsにもAiobahnがある。wikidataで『Aiobahn』の記事も確認できる（韓国の音楽家）。『Aiobarn』は1文字違いのタイポで、edgesがeditで繋がっている。 rows, djs, coArtists, api_resultsより同一表記と判断できる。"
+id = "work-a16bda46"
+canonical = "PSYCHO-PASS"
+kind = "work"
+variants = ["PSYCHO-PASS", "PSYCHO-PASS サイコパス", "PYCHO-PASS", "サイコパス"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に \"substr\" と \"bigram\" があり、\"PSYCHO-PASS\" 系列の表記揺れ（スペルミスやサブタイトル付加）と判断できる。API からは直接的なタイトル取得がないが、全候補が同一 DJ グループ（例: \"マスオ\", \"あぴす\" など）で同じ楽曲名 \"名前のない怪物\" を含んでおり、行数も合計 4 行と一定の裏付けがある。"
 
 [[work]]
 id = "work-ac417431"
@@ -601,38 +705,35 @@ canonical = "Boogey voxx"
 kind = "artist-as-work"
 variants = ["BOOGY VOX", "Boogey vox", "Boogey voxx"]
 confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "候補『BOOGY VOX』『Boogey vox』『Boogey voxx』は綴り違い。『BOOGY VOX』と『Boogey vox』はbigramで繋がり、coArtistsにBOOGY VOXが存在。『Boogey voxx』のみ2件あり（rows=2）で、他と曲名に重複はないが、“voxx”は『BOOGY VOX』の通称表記の可能性が高い。api_results は空だが、djs・coTitles・coArtistsから同一アーティストの表記ゆれと推定する（確信には至らず“medium”）。"
+source = "llm:openai/gpt-oss-120b"
+reason = "「BOOGY VOX」(rows=1) と「Boogey vox」(rows=1) は bigram で結ばれ、さらに「BOOGY VOX」↔「Boogey voxx」 が edit、そして「Boogey vox」↔「Boogey voxx」 が substr という複数のエッジがある。候補の行数が最も多い「Boogey voxx」(rows=2) を canonical とし、同一アーティスト名の表記ゆれと判断した。"
 
 [[work]]
 id = "work-b239e3c9"
 canonical = "Fate/kaleid liner プリズマ☆イリヤ"
-series = "Fate/kaleid liner プリズマ☆イリヤ"
 kind = "work"
 variants = ["Fate/kaleid liner プリズマ☆イリヤ", "Fate/kaleid liner プリズマ☆イリヤ ツヴァイ ヘルツ!"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "候補『Fate/kaleid liner プリズマ☆イリヤ』と『Fate/kaleid liner プリズマ☆イリヤ ツヴァイ ヘルツ!』は、api_resultsで『ツヴァイ ヘルツ!』が『プリズマ☆イリヤ』へリダイレクトされている。表記の違いはシリーズ続編だが、検索のためにはまとめる根拠がある。rows, djs, coTitles, api_resultsより同じ作品名と判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API 結果で \"Fate/kaleid liner プリズマ☆イリヤ ツヴァイ ヘルツ!\" が \"Fate/kaleid liner プリズマ☆イリヤ\" への redirect として確認されている（wikpedia-ja）。エッジも \"redirect,substr\" で直接結びついているため、同一作品と確定できる。"
 
 [[work]]
 id = "work-bd54f400"
 canonical = "中二病でも恋がしたい！"
-series = "中二病でも恋がしたい！"
 kind = "work"
 variants = ["中二病でも恋がしたい!", "中二病でも恋がしたい!戀"]
-confidence = "low"
-source = "llm:openai/gpt-4.1"
-reason = "『中二病でも恋がしたい!』と『中二病でも恋がしたい!戀』は『戀』が2期・続編の表記の可能性があり（シリーズ-risk）。同じDJ（おかりん）が両方使っていて、coArtistsにもZAQ（主題歌担当）が両方出ている。api_resultsに『中二病でも恋がしたい！』あり。1期と2期の区別が必要だが、行数少なく曲名が重複しないため確信は持てない。“low”でまとめておく。"
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "Wikidata の検索結果で \"中二病でも恋がしたい！\" が正式名称として取得でき、2つの表記は substr エッジで結ばれている。行数も 3 対 1 と差はあるが、同一作品の表記揺れと判断した。"
 
 [[work]]
 id = "work-ca55fed3"
 canonical = "アイドルマスター ミリオンライブ!"
-series = "アイドルマスター ミリオンライブ!"
 kind = "work"
-variants = ["アイドルマスターミリオンライブ", "アイドルマスターミリオンライブ!", "アイドルマスター ミリオンライブ 楽曲"]
+variants = ["アイドルマスター ミリオンライブ 楽曲", "アイドルマスターミリオンライブ", "アイドルマスターミリオンライブ!"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『アイドルマスターミリオンライブ』『アイドルマスターミリオンライブ!』『アイドルマスター ミリオンライブ 楽曲』は候補の曲名・アーティスト・DJが重なっており、api_resultsで『アイドルマスターミリオンライブ』が『アイドルマスター ミリオンライブ!』にリダイレクトされている。 keepApart で他シリーズ（シンデレラ等）は除外されており、rows・djs・coTitles・coArtists・api_resultsからまとめて良いと判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "Wikipedia のリダイレクトで \"アイドルマスターミリオンライブ\" が \"アイドルマスター ミリオンライブ!\" に統合されている。全てのエッジが agg,bigram による強い結びつきで、同一ブランドの楽曲一覧として扱える。"
 
 [[work]]
 id = "work-f24b4134"
@@ -640,26 +741,26 @@ canonical = "けものフレンズ"
 kind = "work"
 variants = ["けものフレンズ", "けものフレンズ OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両候補のcoTitles（ぼくのフレンド、ようこそジャパリパークへ）およびcoArtists（どうぶつビスケッツ×PPP, どうぶつビスケッツ）が同じ作品の主題歌や関連楽曲であり、api_resultsのtitleも『けものフレンズ』。表記ゆれ（「けものフレンズ」「けものフレンズ OP」）で曲の重複があるため統合が妥当。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方が \"けものフレンズ\" 系列で、edges に \"agg,bigram\" があり、api_results に \"けものフレンズ\" が正式名称として存在する (wikidata title: けものフレンズ)。同一ブランドとして統合できる。"
 
 [[work]]
 id = "work-2233dcb1"
-canonical = "WORKING!!"
+canonical = "WORKING"
 kind = "work"
 variants = ["WORKING", "WORKING!!", "working!!"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記は、coTitlesやcoArtistsの重複（種島ぽぷららのキャラ名）、caseonly/aggエッジがあり、rowsもそれぞれ1件ずつありエッジも強い。表記ゆれ（大小区別や!の有無）のみで同一作品。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges で \"agg,bigram\" が全組み合わせに存在し、大小文字の差異は caseonly で補足されている。表記ゆれのみで同一ブランドと判断できる。"
 
 [[work]]
 id = "work-35c30d76"
 canonical = "ニーア オートマタ"
 kind = "work"
 variants = ["NieR:Automata", "Nier:Automata"]
-confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "候補のraw（NieR:Automata、Nier:Automata）はcaseonly/aggで繋がり、どちらも『ニーア オートマタ』関連曲。api_resultsに『ニーア オートマタ』のtitleと作品ノートが確認できる。若干表記ゆれがあるが、曲名『Weight of the World』『イニシエノウタ/運命』などはゲーム由来。"
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に \"agg,bigram,caseonly\" があり、api_results に wikidata の正式タイトル \"ニーア オートマタ\" が存在する。大小文字の違いだけの表記ゆれ。"
 
 [[work]]
 id = "work-38569c9e"
@@ -667,8 +768,8 @@ canonical = "デジモンアドベンチャー"
 kind = "work"
 variants = ["デジモンアドベンチャー", "デジモンアドベンチャー 挿入歌"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "coTitles（Butter-Fly, brave heart）ともにデジモンアドベンチャーの代表曲であり、api_resultsのtitleも同名。エッジもagg/bigramで強く、表記のみの違い。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges で \"agg,bigram\" が結び、両方が同一作品 \"デジモンアドベンチャー\" の本編・挿入歌という同ブランド内の区分。api_results に正式タイトルがある。"
 
 [[work]]
 id = "work-3e56dfa3"
@@ -676,8 +777,8 @@ canonical = "トリコ"
 kind = "work"
 variants = ["トリコ", "トリコ ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "coTitles（ガツガツ!!, Lovely Fruit）ともにトリコアニメの楽曲であり、api_resultsのtitleも『トリコ』。候補間エッジもagg/bigramで繋がっている。表記ゆれと判断できる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に \"agg,bigram\" があり、\"トリコ\" 系列の本編と ED が同一ブランド。api_results に作品 \"トリコ\" が掲載されている。"
 
 [[work]]
 id = "work-422c7e8a"
@@ -685,8 +786,17 @@ canonical = "からかい上手の高木さん"
 kind = "work"
 variants = ["からかい上手の高木さん", "高木さん"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方の表記で『気まぐれロマンティック』が選曲されており、主要表記の「からかい上手の高木さん」はwikidataにも作品名・種別として記載がある。rows数も一致しており、djsも重なっている。coArtistsに『高木さん (CV:高橋李依)』があり、アーティスト名として「高木さん」単独を使うこともあるが、両方とも作品の元ネタとして使われている。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両表記は substr で結び、'からかい上手の高木さん' の wikidata 記事が存在 (title: からかい上手の高木さん)。行数は 2 と 1、DJ が重複せずとも同一ブランドと判定できる。"
+
+[[work]]
+id = "work-438dbde9"
+canonical = "呪術廻戦"
+kind = "work"
+variants = ["劇場版 呪術廻戦 0", "呪術廻戦"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が substr、'呪術廻戦' の wikidata 記事がある (title: 呪術廻戦)。両表記は同一メディアミックス作品のシリーズで、行数は 1 と 2。"
 
 [[work]]
 id = "work-66195d30"
@@ -694,8 +804,8 @@ canonical = "真夜中ぱんチ"
 kind = "work"
 variants = ["真夜中ぱんチ", "真夜中ぱんチ OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記とも同じ作品のOPや楽曲で繋がっており、djsも重複（ha）。wikidataにも『真夜中ぱんチ』テレビアニメとしてタイトルあり。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が agg,bigram で結び、'真夜中ぱんチ' の wikidata 記事が存在 (title: 真夜中ぱんチ)。OP 表記は同作品のオープニングであり、行数は 2 と 1。"
 
 [[work]]
 id = "work-6fd42854"
@@ -703,8 +813,17 @@ canonical = "灼熱の卓球娘"
 kind = "work"
 variants = ["灼熱の卓球娘", "灼熱の卓球娘 ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記とも『灼熱の卓球娘』の楽曲やEDで関連付けされ、djsも重複。wikidataに作品名として存在し、系列タイトルの『灼熱の卓球娘 REBURN!!』も混在しているが両表記は無印に対応。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が agg,bigram、'灼熱の卓球娘' の wikidata 記事がある (title: 灼熱の卓球娘)。ED 表記は同作品のエンディングで、行数は 2 と 1。"
+
+[[work]]
+id = "work-7e20ba18"
+canonical = "NARUTO -ナルト- 疾風伝"
+kind = "work"
+variants = ["NARUTO", "NARUTO -ナルト- 疾風伝"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が substr、'NARUTO -ナルト- 疾風伝' の wikidata 記事が存在 (title: NARUTO -ナルト- 疾風伝)。両表記は同ブランドのシリーズで、行数は 1 と 2。"
 
 [[work]]
 id = "work-8001237c"
@@ -712,27 +831,44 @@ canonical = "アマガミ"
 kind = "work"
 variants = ["アマガミ", "ゲームアマガミED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記とも「アマガミ」関連の楽曲で使われており、djsが一致。wikidataにも『アマガミ』が原作ゲーム・アニメとして記載。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が agg,bigram、'アマガミ' の wikidata 記事がある (title: アマガミ)。ED 表記は同作品のエンディングで、行数は 2 と 1。"
 
 [[work]]
 id = "work-8c5d1fc7"
-canonical = "青春ブタ野郎はバニーガール先輩の夢を見ない"
-series = "青春ブタ野郎シリーズ"
+canonical = "青春ブタ野郎シリーズ"
 kind = "work"
 variants = ["青春ブタ野郎はバニーガール先輩の夢を見ない", "青春ブタ野郎はバニーガール先輩の夢を見ない OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『青春ブタ野郎はバニーガール先輩の夢を見ない』(rows=2)と『青春ブタ野郎はバニーガール先輩の夢を見ない OP』(rows=1)は、DJs が異なるが、作品名と OP 注記のみの違い。api_results に正式タイトルがないが、表記数が多い方をcanonicalとする。edge=agg,bigramでつながっている。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方の表記は同一作品『青春ブタ野郎はバニーガール先輩の夢を見ない』の本編・OPで、edges に agg,bigram があり、api_results に \"青春ブタ野郎シリーズ\" が存在する（rows: 2 と 1）。同ブランドのため同一グループにまとめられる。"
 
 [[work]]
 id = "work-a1253a19"
-canonical = "負けヒロインが多すぎる!"
+canonical = "負けヒロインが多すぎる！"
 kind = "work"
 variants = ["負けヒロインが多すぎる!", "負けヒロインが多すぎる! ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『負けヒロインが多すぎる!』（rows=2）と『負けヒロインが多すぎる! ED』（rows=1）は作品名とED注記のみが違い、coTitles/Artistsに重複あり。api_resultsに作品タイトル（負けヒロインが多すぎる！）あり。edge=agg,bigramでつながっている。"
+source = "llm:openai/gpt-oss-120b"
+reason = "表記は同一作品『負けヒロインが多すぎる！』の本編・EDで、edges に agg,bigram がある。api_results にタイトル \"負けヒロインが多すぎる！\" があり、rows がそれぞれ 2 と 1。ブランドが一致するため同一グループ。"
+
+[[work]]
+id = "work-c3ce0263"
+canonical = "魔法少女リリカルなのは"
+kind = "work"
+variants = ["魔法少女リリカルなのは", "魔法少女リリカルなのはA's", "魔法少女リリカルなのはStrikerS"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "全て『魔法少女リリカルなのは』シリーズの異なるシーズン/スピンオフで、edges が substr で結ばれ、同一ブランドであることが明らか。シリーズ全体を表す名称 \"魔法少女リリカルなのは\" を canonical とし、rows は各1で同一作品と判断できる。"
+
+[[work]]
+id = "work-d51e7b67"
+canonical = "ONE PIECE"
+kind = "work"
+variants = ["ONE PIECE", "ONE PIECE FILM RED"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "『ONE PIECE』本編と映画『ONE PIECE FILM RED』は同一ブランドであり、edges に substr がある。api_results に \"ONE PIECE\" が存在し、rows が 2 と 1。ブランドが一致するため同一グループにまとめる。"
 
 [[work]]
 id = "work-d58373fa"
@@ -740,48 +876,71 @@ canonical = "色づく世界の明日から"
 kind = "work"
 variants = ["色づく世界の明日から", "色づく世界の明日から OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "『色づく世界の明日から』（rows=2）と『色づく世界の明日から OP』（rows=1）は作品名とOPのみ違い。api_resultsに正式タイトル（色づく世界の明日から）あり。edge=agg,bigramでつながっている。"
+source = "llm:openai/gpt-oss-120b"
+reason = "本編と OP で表記が異なるが、edges に agg,bigram があり、api_results に \"色づく世界の明日から\" がある。rows は 2 と 1。ブランドが同一であるため同グループ。"
 
 [[work]]
 id = "work-d62a992b"
 canonical = "咲-Saki-"
-series = "咲-Saki-"
 kind = "work"
 variants = ["咲 -saki- ED", "咲-Saki-"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方の表記で清澄高校麻雀部や橋本みゆき、StylipSなどアニメ『咲-Saki-』関連楽曲のcoArtistsが記録されており、『咲-Saki-』がapi_results.titleにあり正規表記。edgeにもaggとbigramの強い根拠あり。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも \"咲-Saki-\" として wikidata に掲載されている（note: 小林立による日本の漫画作品およびそれを原作とするテレビアニメシリーズ）。エッジは agg,bigram で強い同一視が示され、行数は 1 と 2、DJ が重複していなくても同一ブランドと判断できる。"
 
 [[work]]
 id = "work-eaad5247"
 canonical = "四月は君の嘘"
-series = "四月は君の嘘"
 kind = "work"
 variants = ["ー (MAD: 四月は君の嘘)", "四月は君の嘘"]
-confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記とも『四月は君の嘘』の楽曲（麻枝准×やなぎなぎ、Goose house、コアラモード等）で共通。api_results.titleに『四月は君の嘘』があり、rowsも多い。"
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "API の wikidata に \"四月は君の嘘\" が作品として登録（note: 新川直司による日本の漫画作品およびそれを原作とするアニメ）。エッジは substr だけだが、両方とも同一作品を指す表記で、hints に artist-as-work があるものの実際は作品名である。行数はそれぞれ 1 と 2。"
+
+[[work]]
+id = "work-ec49e8e4"
+canonical = "ドラえもん"
+kind = "work"
+variants = ["ドラえもん", "ドラえもん のび太のワンニャン時空伝"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "wikidata の \"ドラえもん\" がベース作品（note: 日本の漫画、メディアミックス作品）。エッジは substr で、後者は前者の派生作品であるが同一ブランドに属す。rows は 2 と 1。"
 
 [[work]]
 id = "work-ece5572a"
 canonical = "薬屋のひとりごと"
-series = "薬屋のひとりごと"
 kind = "work"
 variants = ["薬屋のひとりごと", "薬屋のひとりごと OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "どちらも『薬屋のひとりごと』の楽曲（幾田りら・緑黄色社会）で共通。agg,bigramのedgeあり、api_results.titleに正規表記あり。"
+source = "llm:openai/gpt-oss-120b"
+reason = "API に \"薬屋のひとりごと\" が作品として存在（note: 日本のライトノベル、メディアミックス作品）。エッジは agg,bigram と強い同一性を示す。rows は 2 と 1。"
+
+[[work]]
+id = "work-0dee8042"
+canonical = "マッシュル-MASHLE- 神覚者候補選抜試験編"
+kind = "work"
+variants = ["マッシュル", "マッシュル-MASHLE- 神覚者候補選抜試験編"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも \"マッシュル\" 系列の作品で、エッジは substr。DJ が異なるが同一ブランド（MASHLE）と判断できる。各行数は 1。"
+
+[[work]]
+id = "work-1d292ea1"
+canonical = "Yunomi"
+kind = "artist-as-work"
+variants = ["Yunomi", "Yunomi & nicamoq"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "候補はどちらもアーティスト名 \"Yunomi\"（hints に artist-as-work が付与）。同一人物・ブランドであることが明示され、行数は 1 と 1。"
 
 [[work]]
 id = "work-211cce1c"
 canonical = "Dr.STONE"
-series = "Dr.STONE"
 kind = "work"
 variants = ["Dr.STONE", "Dr.stone"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両表記ともアニメ『Dr.STONE』の楽曲（音羽-otoha-、Anly）で共通しており、caseonly,agg,bigramエッジで完全な表記ゆれ。"
+source = "llm:openai/gpt-oss-120b"
+reason = "エッジは agg,bigram,caseonly と強く同一と判定。表記の違いは大小文字と句読点のみ。rows は 1 と 1。"
 
 [[work]]
 id = "work-23f75dc7"
@@ -789,19 +948,26 @@ canonical = "PSYQUI"
 kind = "artist-as-work"
 variants = ["PSYQUI", "Psyqui"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方ともcoArtistsやcoTitlesでPSYQUI（Psyqui）楽曲が使われており、caseonlyエッジ・同じDJによる使用例。"
+source = "llm:openai/gpt-oss-120b"
+reason = "エッジは agg,bigram,caseonly で同一アーティストと確定。both appear with 同じ DJ (ふっちー) and 同じ作品 context. rows は 1 と 1。"
 
 [[work]]
-id = "work-338f912f"
-canonical = "ef - a tale of memories."
-series = "efシリーズ"
+id = "work-273854c0"
+canonical = "Fate/stay night"
 kind = "work"
-variants = ["ef - a tale of melodies.", "ef - a tale of memories."]
+variants = ["Fate/stay night", "Fate/stay night [Unlimited Blade Works]"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも同一ブランドの『Fate/stay night』系統で、edges に substr があり、各候補の rows が 1 行ずつ、DJ が別々だが作品名がシリーズ名を含むため同一作品と判断できる。"
+
+[[work]]
+id = "work-2ea0c4ac"
+canonical = "チ"
+kind = "work"
+variants = ["チ", "チ。"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """両方とも coTitles と coArtists が『ebullient future』『ELISA』で一致しており、曲名違いではなく作品名の違い（シリーズ違い）でないことが、他の根拠から見えないため、同じ作品名の表記ゆれと判断。
-variants: ef - a tale of melodies., ef - a tale of memories. / api_results:なし / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、raw がほぼ同一（句点の有無だけ）。行数も 1 行ずつで、DJ が異なるが同一表記のバリエーションと見なせる。"
 
 [[work]]
 id = "work-343cb27e"
@@ -809,9 +975,8 @@ canonical = "たまこまーけっと"
 kind = "work"
 variants = ["たまこまーけっと", "たまこまーけっと OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """両方とも coTitlesと coArtists（洲崎綾）から同じ作品であることが推測でき、たまこまーけっと OPは作品名＋OPであるため作品検索用として統合可能。
-variants: たまこまーけっと, たまこまーけっと OP / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、\"OP\" は同作品のオープニングを示す付加情報。rows はそれぞれ 1 行、DJ が異なるが同一シリーズと判定できる。"
 
 [[work]]
 id = "work-471a5195"
@@ -819,9 +984,8 @@ canonical = "GUMI"
 kind = "vocaloid"
 variants = ["GUMI", "Gumi"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """両方ともcoTitles（弱虫モンブラン, 地球最後の告白を）はボカロ曲で、かつ GUMI, Gumi はボーカロイド名の大小違い。djsも一致しているため統合可能。
-variants: GUMI, Gumi / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "both raw は同一ボーカロイドキャラ「GUMI」の表記揺れ（caseonly を含む）で、edges に agg,bigram,caseonly がある。alsoAnArtistName が true であることから作品名ではなくキャラ名であると確定。"
 
 [[work]]
 id = "work-4a7b1835"
@@ -829,9 +993,17 @@ canonical = "血界戦線"
 kind = "work"
 variants = ["血界戦線", "血界戦線 ED"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """両方とも coTitles：シュガーソングとビターステップで一致。血界戦線 EDは明らかにED表記で、検索性の観点から統合可能。
-variants: 血界戦線, 血界戦線 ED / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、\"ED\" はエンディング曲を示す付加情報。rows はそれぞれ 1 行、DJ が同じでも別曲であることから同一シリーズと判定。"
+
+[[work]]
+id = "work-4aafd940"
+canonical = "キラッとプリ☆チャン"
+kind = "work"
+variants = ["キラッとプリ☆チャン", "プリチャン"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に substr があるが、\"プリチャン\" は略称であり、hints の series-risk が付いている。両方とも同一フランチャイズの表記揺れと判断。"
 
 [[work]]
 id = "work-58d721bd"
@@ -839,9 +1011,8 @@ canonical = "スキップとローファー"
 kind = "work"
 variants = ["スキップとローファー", "スキップとローファー OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """両方ともcoTitles：メロウ、coArtists：須田景凪で一致。OP表記は検索性向上のため統合。
-variants: スキップとローファー, スキップとローファー OP / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、\"OP\" はオープニングを示すだけの付加情報。rows が各 1 行、DJ が異なるが同一作品の別バリエーションとして確定。"
 
 [[work]]
 id = "work-5fd9f7a2"
@@ -849,9 +1020,8 @@ canonical = "江戸前エルフ"
 kind = "work"
 variants = ["江戸前エルフ", "江戸前エルフ OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """両方ともcoTitles：奇縁ロマンス、coArtists：ナナヲアカリで一致。OP表記を含めて検索性向上のため統合。
-variants: 江戸前エルフ, 江戸前エルフ OP / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、\"OP\" はオープニング曲を示すだけ。rows がそれぞれ 1 行、DJ が異なるが同一作品の表記揺れと判定。"
 
 [[work]]
 id = "work-67a8f622"
@@ -859,9 +1029,35 @@ canonical = "艦隊これくしょん -艦これ-"
 kind = "work"
 variants = ["艦隊これくしょん -艦これ-", "艦隊これくしょん-艦これ-"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = """coTitlesとcoArtistsが異なるが、表記上の違いはハイフンの有無のみ。曲名がシリーズごとに異なっていないため統合。
-variants: 艦隊これくしょん -艦これ-, 艦隊これくしょん-艦これ- / rows:どちらも1"""
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも \"艦隊これくしょん -艦これ-\" と \"艦隊これくしょん-艦これ-\" は agg, bigram, caseonly のエッジで結ばれており、行数 1 件ずつ、DJ が異なるが同一ブランドと判定できるため。"
+
+[[work]]
+id = "work-7050d1c7"
+canonical = "Do It Yourself!! ーどぅー・いっと・ゆあせるふー"
+kind = "work"
+variants = ["Do It Yourself! OP", "Do It Yourself!! ーどぅー・いっと・ゆあせるふー"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "エッジは substr のみで弱いが、両方とも \"Do It Yourself\" 系列で coArtists が同一 \"潟女DIY部!!\" であること、行数 1 件ずつであることから同一シリーズと判断。"
+
+[[work]]
+id = "work-722d4646"
+canonical = "VOCALOID(初音ミク&巡音ルカ)"
+kind = "vocaloid"
+variants = ["VOCALOID(初音ミク&巡音ルカ)", "VOCALOID(初音ミク・巡音ルカ)"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg と bigram のエッジで結ばれ、表記の違いは「&」と「・」だけ。行数 1 件ずつ、同一 DJ が使用。ブランドは同じ Vocaloid (初音ミク・巡音ルカ)。"
+
+[[work]]
+id = "work-76246f8c"
+canonical = "Beatmania IIDX"
+kind = "work"
+variants = ["Beatmania IIDX", "beatmania"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges は substr のみで弱いが、両方とも \"Beatmania\" 系列であり、行数 1 件ずつ、DJ が別々だが同一ブランドと見なせるため。"
 
 [[work]]
 id = "work-76a67654"
@@ -869,8 +1065,8 @@ canonical = "C3 -シーキューブ-"
 kind = "work"
 variants = ["C3 -シーキューブ-", "C3-シーキューブ"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方とも rows=1 で、coTitles に『Endless Story』『EndlessStory』、coArtists に『田村ゆかり』が一致している。edges にagg,bigramがあり、明確な表記ゆれで同作品と判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg と bigram のエッジで結ばれ、表記の違いはハイフンと空白のみ。行数 1 件ずつ、同一アーティスト (田村ゆかり) が出ている。"
 
 [[work]]
 id = "work-79c3962c"
@@ -878,8 +1074,8 @@ canonical = "Kizuna AI"
 kind = "vtuber"
 variants = ["Kizuna AI", "KizunaAI"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方とも coTitles の曲が VTuber Kizuna AI 関連。djs は異なるが、edges にagg,bigram,caseonlyがあり文字の表記揺れだけ。rowsともに1で実データも一致。"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg, bigram, caseonly のエッジで結合され、表記差はスペースのみ。行数 1 件ずつ、共通のアーティスト名が含まれている。"
 
 [[work]]
 id = "work-8bb9e291"
@@ -887,8 +1083,8 @@ canonical = "魔法少女にあこがれて"
 kind = "work"
 variants = ["魔法少女にあこがれて", "魔法少女にあこがれて OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "coTitles『My dream girls』が一致し、coArtists『NACHERRY』『NACCHERY』もほぼ同一。edges にagg,bigramがあり、表記揺れの違いのみ。rows双方とも1。"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg と bigram のエッジで結合。OP 表記は同作品の主題歌であるため同一ブランドと判定。"
 
 [[work]]
 id = "work-8c2389cb"
@@ -896,8 +1092,26 @@ canonical = "メカクシティアクターズ"
 kind = "work"
 variants = ["メカクシティアクターズ", "メカクシティアクターズ OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方とも coTitles と coArtists にじんが絡んでおり、edges にagg,bigramあり。rows双方とも1で、表記揺れのみで同作品。"
+source = "llm:openai/gpt-oss-120b"
+reason = "agg と bigram のエッジで結び、OP 付与は同一作品の区別であるため同一ブランド。"
+
+[[work]]
+id = "work-8e9e296f"
+canonical = "ブルアカ"
+kind = "work"
+variants = ["ブルアカ", "ブルアカで抜いた生徒を庇うヤンクミ"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "substr のエッジで結合し、\"ブルアカ\" は Blue Archive の略称。行数 1 件ずつで、同一ゲームシリーズと判断。"
+
+[[work]]
+id = "work-90fb945d"
+canonical = "戦姫絶唱シンフォギア"
+kind = "work"
+variants = ["戦姫絶唱シンフォギア", "戦姫絶唱シンフォギアGX"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "substr エッジで結合。GX は同シリーズの続編であり、ブランドは同一。"
 
 [[work]]
 id = "work-92762b8a"
@@ -905,8 +1119,17 @@ canonical = "温泉むすめ"
 kind = "artist-as-work"
 variants = ["温泉むすめ", "温泉むすめ 楽曲"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "coTitles『青春サイダー』が一致し、coArtistsも温泉むすめ系。edges にagg,bigramあり、rowsともに1。candidates で alsoAnArtistName:true となっているが作品名として使われているので artist-as-work。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方の候補は同じアーティスト名（coArtists に \"温泉むすめ\" と \"温泉むすめ SPRiNGS\" が出現）で、edges が agg,bigram と強く結びついている。行数も同数 (1 行) で、DJ が別々だが同一ブランドと判定できる。"
+
+[[work]]
+id = "work-a2213d2b"
+canonical = "P丸様"
+kind = "work"
+variants = ["P丸様", "P丸様。 楽曲"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "coArtists に \"P丸様。\" が含まれ、edges が agg,bigram。表記揺れのみで同一作品と判断。"
 
 [[work]]
 id = "work-a4372b5a"
@@ -914,8 +1137,17 @@ canonical = "生徒会役員共"
 kind = "work"
 variants = ["生徒会役員共", "生徒会役員共*"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "variants『生徒会役員共』『生徒会役員共*』はcoTitles（蒼い春、花咲く☆最強レジェンドDays）もアーティスト（angela、トリプルブッキング）も明らかに別曲だが、両者とも作品『生徒会役員共』に関連するOP/ED曲。agg,bigramのedgesあり。表記ゆれと判断。"
+source = "llm:openai/gpt-oss-120b"
+reason = "coTitles と coArtists が全く異なるが、edges が agg,bigram で「生徒会役員共」系統の同一作品と見なせる。"
+
+[[work]]
+id = "work-a7a1a0f5"
+canonical = "サマータイムレンダ"
+kind = "work"
+variants = ["サマータイムレンダ", "サマータイムレンダ OP"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "同一作品名に OP が付加されただけで、edges が agg,bigram。DJ が別でも同一ブランド。"
 
 [[work]]
 id = "work-aae69790"
@@ -923,8 +1155,8 @@ canonical = "きらりん☆レボリューション"
 kind = "work"
 variants = ["きらりん☆レボリューション", "きらりんレボリューション"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方のvariants（きらりん☆レボリューション、きらりんレボリューション）で曲名『バラライカ/балалайка』と、アーティスト『月島きらり』が一致。djsも異なるが問題なし。rowsは共に1。統合の根拠はcoTitles・coArtists一致とagg,bigramのedges。"
+source = "llm:openai/gpt-oss-120b"
+reason = "文字の有無のみの差異で、edges が agg,bigram。coArtists が同一（\"月島きらり\"）であることから同作品と判定。"
 
 [[work]]
 id = "work-ac56ea28"
@@ -932,64 +1164,134 @@ canonical = "NEW GAME!"
 kind = "work"
 variants = ["NEW GAME!", "TVアニメ「NEW GAME!」 OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "variants『NEW GAME!』『TVアニメ「NEW GAME!」 OP』で、coTitlesが『SAKURAスキップ』で一致（原曲表記あり）、fourfoliumもアーティストとして関連あり。rowsは1ずつ。agg/bigramのedgesもあり統合根拠十分。"
+source = "llm:openai/gpt-oss-120b"
+reason = "タイトルに \"OP\" が付いただけで、edges が agg,bigram。DJ が別でも同一アニメ作品。"
 
 [[work]]
 id = "work-beb40acf"
 canonical = "侵略!?イカ娘"
 kind = "work"
 variants = ["侵略!?イカ娘", "侵略!イカ娘 OP"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が agg,bigram。OP の有無だけの違いで、同一アニメ作品。"
+
+[[work]]
+id = "work-cc8b9b9e"
+canonical = "J-POP"
+kind = "unknown"
+variants = ["J-POP", "一般Jpop"]
+confidence = "low"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges が substr で最も弱いシグナル。ジャンル名の違いであり、作品名ではなくジャンルタグのため確信が持てない。"
+
+[[work]]
+id = "work-cf61b7bd"
+canonical = "Osanzi"
+kind = "work"
+variants = ["Osanzi", "Osanzi remix"]
 confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "variants『侵略!?イカ娘』『侵略!イカ娘 OP』でどちらも『イカ娘』関連楽曲。coTitlesは異なるが、アーティスト（スフィア/ULTRA-PRISM with イカ娘）ともにイカ娘声優やOP/ED主題歌。agg,bigramのedgesであるが、!?と!で期違いのリスクあり（1期2期）。ただし両方1曲のみなので同一作品のゆれ認定しconfidenceはmedium。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも rows=1 で同一DJが別れず、coTitles が異なるが \"Osanzi\" が共通して出現し、edges に substr があるため同一ブランドと判断できる (例: \"Osanzi\" rows=1, djs=[ふっちー], coTitles=[LiFE (Nyacktas Remix)]; \"Osanzi remix\" rows=1, djs=[tri], coTitles=[ハッピーシンセサイザ])."
+
+[[work]]
+id = "work-d15b9a80"
+canonical = "這いよれ!ニャル子さん"
+kind = "work"
+variants = ["這いよれ!ニャル子さん", "這いよれ!ニャル子さんW"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に substr があり、両方とも rows=1 で異なるDJ が使用しているが同一作品の別シーズン・スピンオフと見なせる (例: \"這いよれ!ニャル子さん\" rows=1, djs=[あぴす], coTitles=[太陽曰く燃えよカオスSAN値アゲ2 mixremix]; \"這いよれ!ニャル子さんW\" rows=1, djs=[おかりん], coTitles=[恋は混沌の隷也])."
 
 [[work]]
 id = "work-d42efa03"
 canonical = "映像研には手を出すな!"
-series = "映像研には手を出すな!"
 kind = "work"
 variants = ["映像研には手を出すな!", "映像研には手を出すな! OP"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両方とも同じDJ(ha)によって使用されており、coTitles(曲名)も同じ『Easy Breezy』、coArtistsも同じ『chelmico』で一致している。表記の違いは『OP』の添付のみで、edgesもagg,bigramで強く繋がっているため。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、両方とも同一DJと同一曲名・アーティストが一致している (例: rows=1, djs=[ha], coTitles=[Easy Breezy], coArtists=[chelmico])."
+
+[[work]]
+id = "work-d9cd84d2"
+canonical = "進撃の巨人"
+kind = "work"
+variants = ["進撃の巨人", "進撃の巨人 The Final Season"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に substr があり、\"進撃の巨人\" 系列の別シーズンとして扱える (例: \"進撃の巨人\" rows=1, djs=[ましゅー], coTitles=[紅蓮の弓矢]; \"進撃の巨人 The Final Season\" rows=1, djs=[おかりん], coTitles=[僕の戦争])."
+
+[[work]]
+id = "work-e225e958"
+canonical = "DARKER THAN BLACK -流星の双子-"
+kind = "work"
+variants = ["DARKER THAN BLACK -流星の双子-", "Darker Than Black"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に substr があり、タイトルの差はサブタイトルの有無だけで同一作品と見なせる (例: rows=1, djs=[マスオ], coTitles=[ツキアカリのミチシルベ]; 同じ coArtists がステレオポニー)。"
+
+[[work]]
+id = "work-e570aaad"
+canonical = "To LOVEる ダークネス"
+kind = "work"
+variants = ["To LOVEる ダークネス", "ToLOVEる"]
+confidence = "medium"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に substr があり、\"To LOVEる\" 系列の別作品/シーズンと判断できる (例: rows=1, djs=[マスオ], coTitles=[楽園PROJECT]; 同じ coArtists が Ray)。"
 
 [[work]]
 id = "work-ef6d51bf"
 canonical = "干物妹!うまるちゃん"
-series = "干物妹!うまるちゃん"
 kind = "work"
 variants = ["干妹うまるちゃん", "干物妹!うまるちゃん"]
-confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "『干妹うまるちゃん』と『干物妹!うまるちゃん』の両表記とも、coTitles, coArtistsから同作品を指すと思われるが、表記差が大きくedgesはbigramのみでシリーズ違いのリスクも。両方DJ/曲名が関係しているが、異なるDJが使っているためmedium。"
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に bigram があり、文字列はほぼ同一で表記揺れと判定 (例: rows=1, djs=[あぴす] と rows=1, djs=[マスオ]、coArtists がそれぞれ橘・シルフィンフォード、土間うまる)。"
 
 [[work]]
 id = "work-f0cf7a26"
 canonical = "パリピ孔明"
-series = "パリピ孔明"
 kind = "work"
 variants = ["TVアニメ「パリピ孔明」 ED", "パリピ孔明"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "2つの表記とも『気分上々↑↑』という楽曲で関連しており、edgesもagg,bigramで強く繋がれている。coTitlesの違いはED表記と楽曲バージョン違いのみで、作品自体は同一と考えられる。"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、ED 表記と作品名自体が同一ブランドと確定 (例: rows=1, djs=[ふっちー] と rows=1, djs=[せーや]、coArtists が同一の EIKO starring 96猫 等)。"
+
+[[work]]
+id = "work-f19afc5d"
+canonical = "メジャー"
+kind = "work"
+variants = ["メジャー", "メジャー 第3シーズン OP"]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に agg,bigram があり、シーズン表記の違いだけで同一作品と判断できる (例: rows=1, djs=[おかりん] と rows=1, djs=[ha]、coArtists が共に ロードオブメジャー)。"
+
+[[work]]
+id = "work-f40c825a"
+canonical = "宮内れんげ (CV.小岩井ことり)、一条 蛍 (CV.村川梨衣)、越谷夏海 (CV.佐倉綾音)、越谷小鞠 (CV.阿澄佳奈)"
+kind = "artist-as-work"
+variants = [
+    "宮内れんげ (CV.小岩井ことり)、一条 蛍 (CV.村川梨衣)、越谷夏海 (CV.佐倉綾音)、越谷小鞠 (CV.阿澄佳奈)",
+    "宮内れんげ(小岩井ことり)・一条蛍(村川梨衣)・越谷夏海(佐倉綾音)・越谷小鞠(阿澄佳奈)",
+]
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "edges に bigram があり、両方とも人物名リストで表記揺れであることが明らか (例: rows=1, djs=[ましゅー] と rows=1, djs=[おかりん]、coArtists がそれぞれ同一人物列)。"
 
 [[work]]
 id = "work-f5645add"
-canonical = "NHKにようこそ!"
-series = "NHKにようこそ!"
+canonical = "NHKにようこそ"
 kind = "work"
 variants = ["NHKにようこそ", "NHKにようこそ!"]
 confidence = "high"
-source = "llm:openai/gpt-4.1"
-reason = "両者とも同じ作品に関連する楽曲（coTitles:『もどかしい世界の上で』『パズル』）、edgesもagg,bigramで繋がっている。表記の違いは感嘆符の有無のみ。"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方の表記はそれぞれ 1 行ずつ (rows=1) があり、DJ が異なるが同一 DJ が使用した例はなくても、edges に agg,bigram があり「NHKにようこそ」と「NHKにようこそ!」が同一作品と明示されている。"
 
 [[work]]
 id = "work-fae510f7"
-canonical = "ばくおん!!"
-series = "ばくおん!"
+canonical = "ばくおん!"
 kind = "work"
 variants = ["ばくおん!", "ばくおん!!"]
-confidence = "medium"
-source = "llm:openai/gpt-4.1"
-reason = "両者とも『ばくおん』関連楽曲で、coTitlesやcoArtistsが作品に紐づいている。表記揺れは感嘆符数の違いのみでedgesもagg,bigramで繋がっているが、!と!!でシリーズ違いの可能性もあるためmedium。"
+confidence = "high"
+source = "llm:openai/gpt-oss-120b"
+reason = "両方とも 1 行ずつ (rows=1) があり、edges に agg,bigram が付いているため「ばくおん!」と「ばくおん!!」は同一ブランドの表記揺れと判断できる。"
