@@ -1466,8 +1466,13 @@ class AskTest(unittest.TestCase):
         for batch in prepared["batches"]:
             with self.subTest(batch=batch["clusters"][0].get("id")):
                 self.assertLessEqual(batch["tokens"], llm.SAFE_INPUT_TOKENS)
-                self.assertLessEqual(batch["tokens"], llm.INPUT_TOKEN_LIMIT)
                 self.assertLessEqual(len(batch["clusters"]), llm.MAX_CLUSTERS_PER_CALL)
+                # **入力と出力の合計が TPM に収まること。** 超えるバッチは
+                # どの1分にも収まらないので必ず 429 になり、リトライしても
+                # 回復しない。刻みを動かしたときにここが破れるのが一番痛い。
+                self.assertLessEqual(
+                    batch["tokens"] + llm.MAX_OUTPUT_TOKENS, llm.TPM_LIMIT
+                )
 
     def test_a_tight_limit_forces_one_cluster_per_call(self) -> None:
         # 上限を極端に下げても、1クラスタずつには必ず割れて落ちないこと
@@ -1479,13 +1484,16 @@ class AskTest(unittest.TestCase):
     def test_the_batch_size_constants_stay_consistent(self) -> None:
         """バッチの刻みは値そのものより**関係**が大事なので、そちらを固定する。
 
-        入力の刻みは API が強制する上限ではなくこちらが選んだ値で、効いている
-        制約は Groq 無料枠の TPM 8,000 のほう（llm.py の INPUT_TOKEN_LIMIT
-        直上のコメントに実際の内訳がある）。なので値は状況に応じて動かして
-        よい。**動かしたときに壊れてはいけない関係**だけをここで見る。
+        入力と出力の配分は Groq 無料枠の TPM から逆算した値で、状況に応じて
+        動かしてよい（llm.py の TPM_LIMIT 直上のコメントに内訳がある）。
+        **動かしたときに壊れてはいけない関係**だけをここで見る。
         """
-        # 上限ちょうどを狙うと推定の誤差ぶんだけリクエストが無駄になる。
-        self.assertLess(llm.SAFE_INPUT_TOKENS, llm.INPUT_TOKEN_LIMIT)
+        # **1リクエストが TPM に収まること。** 入力と出力はトレードオフで、
+        # 入力を増やすと1回に詰まるクラスタが増えて必要な出力も増える。
+        # 合計が TPM を超えると、そのリクエストは何度投げても 429 になる。
+        self.assertLessEqual(
+            llm.SAFE_INPUT_TOKENS + llm.MAX_OUTPUT_TOKENS, llm.TPM_LIMIT
+        )
         # **出力枠が1リクエスト分のクラスタに足りていること。** 1クラスタ ≒
         # 出力 200tok で、足りないと finish_reason="length" で JSON が途中で
         # 切れ、そのバッチのクラスタが丸ごと提案なしになる。画面には「提案なし」
