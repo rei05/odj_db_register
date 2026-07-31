@@ -29,6 +29,8 @@ npm run build    # tsc -b && vite build
 # 表記ゆれの名寄せ（data/aliases/）
 PYTHONPATH=src python3 -m odj.aliases fetch --field work   # 外部APIで裏取り。要ネットワーク
 PYTHONPATH=src python3 -m odj.aliases block --field work   # 候補クラスタ。fetch の後に回す
+PYTHONPATH=src python3 -m odj.aliases ask --field work      # LLM に提案させる。要 OPENAI_API_KEY
+PYTHONPATH=src python3 -m odj.aliases ask --field work --dry-run   # 投げる文字列とリクエスト数だけ見る。キー不要
 cd web && npm run review   # 5174。1件ずつ承認する GUI。dev 専用でビルドには入らない
 PYTHONPATH=src python3 -m odj.aliases export               # 承認済み → aliases.json
 ```
@@ -37,6 +39,12 @@ PYTHONPATH=src python3 -m odj.aliases export               # 承認済み → al
 なので clone しただけでは無い。**先に `fetch` → `block` の順で回す**（`block` が外部 API の
 リダイレクトを辺として使うため。「ナナシス」と「Tokyo 7th シスターズ」は文字列類似では
 繋がらない）。候補の生成そのものは GitHub Actions の `aliases.yml` が回して PR で運んでくる。
+
+`ask` だけ**課金される外部 API（OpenAI）**を叩く。もとは GitHub Models の無料枠だったが、
+**2026-07-30 に GitHub Models が完全廃止された**ので直叩きに移した（OpenAI 互換だったので
+リクエストの形と JSON スキーマはそのまま流用している）。`OPENAI_API_KEY` が要り、Actions で
+回すには**リポジトリの Settings > Secrets に手で登録しておく**必要がある（`secrets.GITHUB_TOKEN`
+と違い自動では用意されない）。金を使わずに確認したいときは `--dry-run`。
 
 `uv` を使わない場合は `PYTHONPATH=src python3 -m odj.build`。Python 側は標準ライブラリのみで書いてあり（`pyproject.toml` の dependencies は空）、追加インストールは不要。lint / 型チェックの設定は置いていないので、Python 側の自動チェックは unittest だけ。
 

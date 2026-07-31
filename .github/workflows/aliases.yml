@@ -1,4 +1,4 @@
-name: Generate alias candidates with GitHub Models
+name: Generate alias candidates with OpenAI API
 
 on:
   workflow_dispatch:
@@ -7,13 +7,12 @@ on:
         description: 'work / artist'
         default: 'work'
       model:
-        # カタログに載っていても rate_limit_tier が custom のモデル（gpt-5 など）は
-        # 標準の無料枠では使えず unavailable_model が返る。ここで差し替えられる。
-        description: 'GitHub Models のモデル ID'
-        default: 'openai/gpt-4.1'
+        # OpenAI API のモデル ID。従量課金なので、試すときはここを軽いモデルに
+        # 差し替えるとコストを抑えられる。
+        description: 'OpenAI API のモデル ID'
+        default: 'gpt-4.1'
 
 permissions:
-  models: read
   contents: write
   pull-requests: write
 
@@ -38,10 +37,12 @@ jobs:
       - name: Block duplicate clusters
         run: PYTHONPATH=src python -m odj.aliases block --field ${{ inputs.field }}
 
-      - name: Ask GitHub Models to generate candidates
+      - name: Ask OpenAI API to generate candidates
         run: PYTHONPATH=src python -m odj.aliases ask --field ${{ inputs.field }} --model ${{ inputs.model }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # secrets.GITHUB_TOKEN と違い Actions が自動で用意してくれるトークンではないので、
+          # リポジトリの Settings > Secrets に OPENAI_API_KEY を事前に手動登録しておく必要がある。
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Create pull request with candidates
         uses: peter-evans/create-pull-request@v7
@@ -50,5 +51,5 @@ jobs:
           add-paths: data/aliases/_proposed/
           title: Alias candidates for ${{ inputs.field }} field
           body: |
-            GitHub Models が生成した候補です。**中身のレビューは不要**。すべて approved=false なので公開データ（aliases.json）には出ません。マージ後、ローカルで `npm run review` を実行して1件ずつ判断してください。
+            OpenAI API が生成した候補です。**中身のレビューは不要**。すべて approved=false なので公開データ（aliases.json）には出ません。マージ後、ローカルで `npm run review` を実行して1件ずつ判断してください。
           delete-branch: false

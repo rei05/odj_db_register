@@ -1173,7 +1173,11 @@ class AskTest(unittest.TestCase):
 
     @staticmethod
     def reply(*groups: dict) -> dict:
-        """GitHub Models（OpenAI 互換）の応答をそのまま真似た形。"""
+        """OpenAI API の応答をそのまま真似た形。
+
+        以前は GitHub Models（OpenAI 互換）を叩いていたが、応答の形自体は
+        変わっていない。
+        """
         return {
             "choices": [{
                 "message": {
@@ -1424,7 +1428,8 @@ class AskTest(unittest.TestCase):
 
         以前は「一定数ずつ切ってから、収まらないバッチを半分に割る」やり方で、
         割った片方が枠の半分しか使わず実データで 37 リクエストになっていた。
-        無料枠は 50 req/日しかないので、枠を使い切れないと一度の直しで枯渇する。
+        OpenAI API は従量課金で、リクエストごとに system_prompt の固定費が
+        丸ごと乗るため、枠を使い切れないとその半端な分だけ余計に払うことになる。
         """
         with self.fixture():
             prepared = llm.plan("work")
@@ -1442,15 +1447,18 @@ class AskTest(unittest.TestCase):
                 prepared = llm.plan("work")
         self.assertTrue(all(len(b["clusters"]) == 1 for b in prepared["batches"]))
 
-    def test_the_input_limit_matches_what_the_api_actually_allows(self) -> None:
-        # 実測値。事前の調べで 8000 としていたのは誤りで、GitHub Actions 上で
-        # 413 tokens_limit_reached が返って判明した。
+    def test_the_input_limit_is_a_chosen_batch_size_not_an_api_limit(self) -> None:
+        # 由来は GitHub Models の無料枠が入力 4000tok だったこと（413
+        # tokens_limit_reached が返って判明した実測値）。OpenAI API 自体は
+        # もっと大きいコンテキストを受け付けるが、**API が強制する上限では
+        # なくこちらが選んだ保守的なバッチサイズ**として値をそのまま引き継いで
+        # いる（llm.py の INPUT_TOKEN_LIMIT 直上のコメントを参照）。
         self.assertEqual(llm.INPUT_TOKEN_LIMIT, 4000)
         self.assertLess(llm.SAFE_INPUT_TOKENS, llm.INPUT_TOKEN_LIMIT)
 
     def test_the_same_input_hits_the_cache_instead_of_the_network(self) -> None:
-        # プロンプト全文の SHA256 が鍵。無料枠が 50 req/日しかないので、
-        # 作り直しのたびに投げ直すわけにいかない。
+        # プロンプト全文の SHA256 が鍵。OpenAI API は従量課金なので、
+        # 同じ入力を作り直すたびに投げ直すと無駄な出費になる。
         with self.fixture():
             _, _, first = self.run_ask(self.reply(self.group()))
             second_result, logs, second = self.run_ask(self.reply(self.group()))
@@ -1472,7 +1480,7 @@ class AskTest(unittest.TestCase):
         # 原因の分からない検証エラーになる。
         with self.fixture():
             self.run_ask(self.reply(self.group()))
-            _, _, again = self.run_ask(self.reply(self.group()), model="openai/gpt-4o")
+            _, _, again = self.run_ask(self.reply(self.group()), model="gpt-4o")
         self.assertEqual(again.call_count, 1)
 
     def test_the_cache_lands_outside_the_repository(self) -> None:
@@ -1704,7 +1712,7 @@ class AskTest(unittest.TestCase):
         # artist のクラスタは単独で 1363tok あり、固定費と足して SAFE_INPUT_TOKENS を
         # 超えると、そのクラスタだけ1件のバッチで枠を超える。ここは意図的に余裕が
         # 小さい（現状 2168 + 1363 = 3531）ので、プロンプトを足すと落ちる。
-        # 落ちたら文面を削るか、無料枠が何リクエストまで許すかを測り直すこと。
+        # 落ちたら文面を削るか、SAFE_INPUT_TOKENS の余裕を測り直すこと。
         self.assertLessEqual(prepared["systemTokens"] + 1363, llm.SAFE_INPUT_TOKENS)
 
     def test_the_artist_proposal_carries_no_kind(self) -> None:
@@ -1773,7 +1781,7 @@ class AskTest(unittest.TestCase):
         self.assertNotEqual(llm.cache_key(work), llm.cache_key(artist))
 
     def test_dry_run_never_touches_the_network(self) -> None:
-        # --dry-run は GITHUB_TOKEN が無くても通ること（CI 前の確認に使う）
+        # --dry-run は OPENAI_API_KEY が無くても通ること（CI 前の確認に使う）
         buf = io.StringIO()
         with self.fixture(), mock.patch.dict("os.environ", {}, clear=True):
             with mock.patch.object(llm, "post", side_effect=AssertionError("送信した")):
@@ -1789,7 +1797,17 @@ class AskTest(unittest.TestCase):
         with self.fixture(), mock.patch.dict("os.environ", {}, clear=True):
             with self.assertRaises(store.AliasError) as caught:
                 llm.ask("work")
-        self.assertIn("GITHUB_TOKEN", str(caught.exception))
+        self.assertIn("OPENAI_API_KEY", str(caught.exception))
+
+    def test_ask_reads_the_token_from_openai_api_key_not_github_token(self) -> None:
+        # GITHUB_TOKEN は GitHub Models 時代の名残で、もう読まれない。
+        # 設定されていても未設定と同じ扱いで落ちることを確かめる。
+        with self.fixture(), mock.patch.dict(
+            "os.environ", {"GITHUB_TOKEN": "leftover"}, clear=True
+        ):
+            with self.assertRaises(store.AliasError) as caught:
+                llm.ask("work")
+        self.assertIn("OPENAI_API_KEY", str(caught.exception))
 
     @staticmethod
     def _http_error(code: int) -> mock.Mock:
@@ -1801,7 +1819,8 @@ class AskTest(unittest.TestCase):
 
     def test_a_client_error_is_not_retried(self) -> None:
         # 400（プロンプトが長すぎる）や 401（トークン切れ）は待っても直らない。
-        # 無料枠が 50 req/日しかないので、無駄撃ちを3回に増やしてはいけない。
+        # 従量課金なので、直らないと分かっているものにリトライを費やすと
+        # コストとレイテンシの無駄になるだけで、即座に上げる。
         opened = self._http_error(400)
         with mock.patch("urllib.request.urlopen", opened):
             with mock.patch("time.sleep") as slept:
@@ -1811,7 +1830,10 @@ class AskTest(unittest.TestCase):
         self.assertEqual((opened.call_count, slept.call_count), (1, 0))
 
     def test_a_rate_limit_is_retried_with_a_wait(self) -> None:
-        # 10 req/分の上限は待てば空く。最後の1回のあとは待たずに諦める。
+        # 429 にはアカウントのティアごとの RPM/TPM 超過（待てば回復）と
+        # insufficient_quota（待っても回復しない）の2種類があるが、post() は
+        # コード側では区別せずどちらも待って retry する（区別は、落ちたときの
+        # メッセージに載る応答本文を人が読む）。最後の1回のあとは待たずに諦める。
         opened = self._http_error(429)
         with mock.patch("urllib.request.urlopen", opened):
             with mock.patch("time.sleep") as slept:
@@ -1819,30 +1841,31 @@ class AskTest(unittest.TestCase):
                     llm.post({"model": "m"}, "tok", retries=3)
         self.assertEqual((opened.call_count, slept.call_count), (3, 2))
 
-    def test_an_unavailable_model_is_named_in_the_message(self) -> None:
-        """使えないモデルのヒットにモデル名が入ること。
+    def test_a_not_found_model_is_named_in_the_message(self) -> None:
+        """存在しない/使えないモデルを指定したときのヒットにモデル名が入ること。
 
         post() の引数に model は無いので body から取る必要がある。直に
         model と書くと NameError になり、**本来の API エラー本文まで消える**。
-        この分岐は gpt-5（rate_limit_tier が custom で無料枠外）で実際に通った。
+        OpenAI では存在しないモデルや、この API キーでは使えないモデルを
+        指定すると 404 と model_not_found が返る（llm.post() の該当分岐を参照）。
         """
         opened = mock.Mock(
             side_effect=urllib.error.HTTPError(
                 llm.ENDPOINT,
-                400,
+                404,
                 "boom",
                 {},  # type: ignore[arg-type]
-                io.BytesIO(b'{"code":"unavailable_model","message":"..."}'),
+                io.BytesIO(b'{"code":"model_not_found","message":"..."}'),
             )
         )
         with mock.patch("urllib.request.urlopen", opened):
             with self.assertRaises(store.AliasError) as caught:
-                llm.post({"model": "openai/gpt-5"}, "tok")
+                llm.post({"model": "gpt-5"}, "tok")
         message = str(caught.exception)
-        self.assertIn("openai/gpt-5", message)
-        self.assertIn("unavailable_model", message)  # API の本文が消えていない
+        self.assertIn("gpt-5", message)
+        self.assertIn("model_not_found", message)  # API の本文が消えていない
 
-    def test_the_request_body_matches_what_github_models_accepts(self) -> None:
+    def test_the_request_body_matches_what_openai_api_accepts(self) -> None:
         # temperature を受け付けないモデルがあり、max_tokens ではなく
         # max_completion_tokens を見る。どちらも間違えると 400 で全滅する。
         body = llm.request_body(llm.DEFAULT_MODEL, "sys", "user", field="work")
@@ -1851,15 +1874,27 @@ class AskTest(unittest.TestCase):
         self.assertEqual(body["model"], llm.DEFAULT_MODEL)
         self.assertEqual([m["role"] for m in body["messages"]], ["system", "user"])
 
-    def test_the_default_model_is_in_the_free_tier(self) -> None:
-        """既定のモデルは無料枠で使えるものであること。
+    def test_the_default_model_is_not_a_reasoning_model(self) -> None:
+        """既定のモデルは reasoning 系（o シリーズや gpt-5 系）ではないこと。
 
-        カタログに載っていることと使えることは別だった。gpt-5 は
-        rate_limit_tier が "custom" で、Actions から投げると 400 が返る:
-          {"code":"unavailable_model","message":"Unavailable model: gpt-5"}
-        カタログを引くテストにはしない（ネットワークに出るため）。
+        reasoning 系は出力トークンを思考にも使うため、response_format で
+        強制している構造化 JSON が max_completion_tokens の途中で切れることが
+        ある。切れると parse_groups がバッチまるごと諦める（理由は llm.py の
+        DEFAULT_MODEL 直上のコメントを参照）。カタログを引くテストにはしない
+        （ネットワークに出るため）。
         """
         self.assertNotIn("gpt-5", llm.DEFAULT_MODEL)
+        self.assertFalse(llm.DEFAULT_MODEL.startswith("o"))
+
+    def test_the_endpoint_and_model_are_both_for_openai(self) -> None:
+        """エンドポイントとモデル名がプロバイダとして食い違わないこと。
+
+        GitHub Models 時代は "openai/gpt-4.1" のようにプロバイダ接頭辞つきの
+        モデル ID だった。その形のまま OpenAI のエンドポイントに投げると
+        model_not_found（404）になる。この2つがずれないことを固定しておく。
+        """
+        self.assertEqual(llm.ENDPOINT, "https://api.openai.com/v1/chat/completions")
+        self.assertNotIn("/", llm.DEFAULT_MODEL)
 
 
 class SandboxTest(unittest.TestCase):

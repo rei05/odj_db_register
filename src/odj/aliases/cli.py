@@ -100,17 +100,17 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
 def _print_plan(prepared: dict, model: str, dry_run: bool) -> None:
     """--dry-run の中身。**ネットワークに出ないまま**投げるものを全部見せる。
 
-    実際に投げるのと同じ文字列を出すことが要件。要約を見せても「無料枠に収まるか」
-    「keep_apart が本当に埋まっているか」の確認にならないので、システムプロンプトも
-    各バッチの入力も全文を出す。
+    実際に投げるのと同じ文字列を出すことが要件。要約を見せても「リクエスト数や
+    推定トークンが妥当か」「keep_apart が本当に埋まっているか」の確認にならないので、
+    システムプロンプトも各バッチの入力も全文を出す。
     """
     field = prepared["field"]
     plans = prepared["batches"]
     tokens = [b["tokens"] for b in plans] or [0]
     ev = prepared["evidence"]
     print(f"[{field}] {prepared['total']} クラスタ → {len(plans)} リクエスト")
-    print(f"  モデル: {model}（無料枠 50 req/日・{llm.INPUT_TOKEN_LIMIT} in / "
-          f"{llm.MAX_OUTPUT_TOKENS} out トークン）")
+    print(f"  モデル: {model}（1リクエストの入力を {llm.INPUT_TOKEN_LIMIT} tok で"
+          f"区切って送信・出力上限 {llm.MAX_OUTPUT_TOKENS} tok）")
     print(f"  裏取り: {'evidence ' + str(len(ev)) + ' 値' if ev else 'evidence 無し（省略して続行）'}")
     print(f"  システムプロンプト: 推定 {prepared['systemTokens']} tok")
     print(f"  推定トークン: 合計 {sum(tokens)} / 1回あたり最大 {max(tokens)}")
@@ -492,7 +492,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_ask.add_argument(
         "--limit", type=int, default=None, metavar="N",
-        help="先頭 N クラスタ（行数の多い順）だけ投げる。無料枠を試すとき用。"
+        help="先頭 N クラスタ（行数の多い順）だけ投げる。少量で試すとき用。"
              "_proposed/ は毎回作り直すので、限った実行の結果で上書きされる",
     )
     p_ask.add_argument(
@@ -501,7 +501,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_ask.add_argument(
         "--model", default=llm.DEFAULT_MODEL,
-        help=f"GitHub Models のモデル名（既定: {llm.DEFAULT_MODEL}）",
+        help=f"OpenAI のモデル名（既定: {llm.DEFAULT_MODEL}）",
     )
     p_ask.set_defaults(func=_cmd_ask)
 

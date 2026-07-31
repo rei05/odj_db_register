@@ -27,11 +27,13 @@ bigram でも編集距離でも部分一致でも一度も同じクラスタに�
   - keep_apart.toml の組をプロンプトに載せたうえで、返ってきたものも
     block.load_keep_apart() で再検査する（プロンプトは守られない前提で書く）
 
-GitHub Models の無料枠（High tier: 50 req/日・**入力 4000tok**）に収めるため、
-入力上限まで詰めてバッチにする。実測（--dry-run）で work の 152 クラスタが
-28 リクエスト、artist の 105 クラスタが 34 リクエスト。**1回の dispatch で
-1 field ぶんしか投げない**（aliases.yml が field を入力に取る）ので1回なら収まるが、
-**同じ日に work と artist の両方を回すと 62 で枠を超える**。日を分けること。
+クラスタは1件ずつではなく、SAFE_INPUT_TOKENS まで詰めてバッチで投げる。
+**OpenAI API は従量課金**で、1リクエストごとに system_prompt の固定費が丸ごと
+乗るため、1件ずつ投げると固定費をクラスタ数ぶん払うことになる。アカウントの
+レート制限（RPM / TPM）に当たりにくくなり、429 待ちが減るという効果もある。
+実測（--dry-run）で work の 151 クラスタが 29 リクエスト、
+artist の 105 クラスタが 34 リクエスト（work は「ブランド単位でまとめる」方針転換で
+keep_apart の組を消した結果クラスタが繋がり、152 → 151 に減っている）。
 artist はクラスタが少ないのにリクエストが多い。1クラスタが大きい
 （`わか・ふうり・すなお from STAR☆ANIS` のような長い生表記が並ぶ）ことと、
 system_prompt が field 固有の規則ぶん長い（work 1543tok に対して artist 2168tok）
@@ -58,34 +60,36 @@ from odj.aliases import block, rules, store
 from odj.aliases.store import AliasError
 
 # ---------------------------------------------------------------------------
-# GitHub Models
+# OpenAI API
 # ---------------------------------------------------------------------------
 
-# OpenAI 互換のエンドポイント。models.inference.ai.azure.com ではなくこちら
-# （2024 年末に models.github.ai へ移った）。
-ENDPOINT = "https://models.github.ai/inference/chat/completions"
+# 以前は GitHub Models（models.github.ai）の無料枠を叩いていたが、2026-07-30 に
+# 廃止されて 410 を返すようになったので OpenAI を直接叩く。GitHub Models 側が
+# OpenAI 互換だったため、リクエスト本文と応答の形はそのまま流用できている。
+ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
-# **Anthropic Claude は GitHub Models のカタログに無い**（実際に引いて確認済み）。
-# 使えるのは openai/* と meta/*、mistral-ai/* など。
+# プロバイダ接頭辞は付けない（GitHub Models 時代の "openai/gpt-4.1" から外した形）。
 #
-# gpt-5 ではない理由: カタログには載っているが rate_limit_tier が "custom" で、
-# 標準の無料枠には含まれない。Actions から投げると 400 が返る:
-#   {"code":"unavailable_model","message":"Unavailable model: gpt-5"}
-# **カタログに載っていることと使えることは別**だった。gpt-4.1 は "high" tier で
-# 標準の無料枠に入っている。
-#
-# gpt-5 は reasoning 持ちで、出力トークンを思考にも使う。max_completion_tokens
-# の枠を思考が食って答えが途中で切れる心配があり、その意味でも 4.1 のほうが素直。
-DEFAULT_MODEL = "openai/gpt-4.1"
+# reasoning 系（o シリーズや gpt-5 系）を既定にしない理由: 出力トークンを思考にも
+# 使うので、max_completion_tokens の枠を思考が食って肝心の JSON が途中で切れる。
+# ここは response_format で構造化 JSON を強制しており、切れると parse_groups が
+# バッチまるごと諦めることになるので、素直に出し切る 4.1 のほうが向いている。
+# --model で差し替えられるので、試すときはそちらで。
+DEFAULT_MODEL = "gpt-4.1"
 
-# 入力の上限。**実測値**で、事前の調べで 8000 としていたのは誤りだった。
-# GitHub Actions 上で 413 が返って判明した:
-#   {"code":"tokens_limit_reached",
-#    "message":"Request body too large for gpt-5 model. Max size: 4000 tokens."}
+# 1リクエストに詰める入力量の上限。**API が強制する上限ではなく、こちらが選んで
+# いる保守的なバッチサイズ**（gpt-4.1 のコンテキストはこれよりはるかに大きい）。
+# 由来は GitHub Models の無料枠が入力 4000tok だったこと。
+#
+# 上げれば1リクエストあたりのクラスタ数が増えてリクエスト数を減らせるが、
+# **MAX_CLUSTERS_PER_CALL と MAX_OUTPUT_TOKENS も一緒に見ないと出力側で答えが
+# 切れる**（1クラスタ ≒ 出力 200tok なので、入力だけ倍にすると出力が足りない）。
+# もう1つ、**上げるとプロンプト全文の SHA256 が変わってキャッシュ
+# （data/raw/llm/）が全部無効になる**。動かす価値があるときだけ動かすこと。
 INPUT_TOKEN_LIMIT = 4000
 
 # 実際に詰めてよい量。上限ちょうどを狙うと、推定の誤差ぶんだけリクエストが
-# まるごと無駄になる。1割の余裕を持たせるほうが、413 で落ちるより安い。
+# まるごと無駄になる。1割の余裕を持たせてある。
 SAFE_INPUT_TOKENS = 3600
 
 MAX_OUTPUT_TOKENS = 4000
@@ -418,7 +422,7 @@ _FIELD_LABEL = {
 # ほぼ常に空**になる。
 # この書き直しでリクエスト本文の SHA256 が変わり、data/raw/llm/ のキャッシュは
 # work のぶんが全部無効になる（Actions 上は data/raw/ が gitignore で常にコールドなので
-# 実害は無いが、ローカルの再実行は 28 リクエストぶんネットワークに出る）。
+# 実害は無いが、ローカルの再実行は 29 リクエストぶんネットワークに出る）。
 _FIELD_TEXT: dict[str, dict[str, str]] = {
     "work": {
         # 規則1の結論。work は**ブランド単位でまとめる**方針なので「迷ったら分ける」を
@@ -576,7 +580,7 @@ def system_prompt(field: str) -> str:
     **ここが長くなるとリクエスト数が増える。** 全バッチに乗る固定費なので、
     1バッチに詰められる量は SAFE_INPUT_TOKENS からこの長さを引いた残りになる。
     artist で実測すると、work と同じ文面（当時 1447tok）のままなら 22 リクエスト、
-    固有規則を書きたいだけ書いた 2577tok では **50 リクエスト（無料枠ちょうど）**で、
+    固有規則を書きたいだけ書いた 2577tok では **50 リクエスト**まで膨らみ、
     削って 2168tok / 34 リクエストに落としてある。100tok につき 2 リクエストほど
     増える勘定。規則を1つ足すときは、実データで実際に踏んだ組を1〜2個挙げるだけに
     して、一般論や他の規則と重なる説明は書かないこと。
@@ -661,7 +665,7 @@ def batches(items: list[Any], size: int = BATCH_SIZE) -> Iterator[list[Any]]:
 
 
 def estimate_tokens(text: str) -> int:
-    """ざっくりのトークン数。無料枠に収まるかを見るためだけの目安。
+    """ざっくりのトークン数。バッチが SAFE_INPUT_TOKENS に収まるかを見るための目安。
 
     tiktoken は依存を増やせないので入れられない。ASCII は 4 文字 1 トークン、
     それ以外（日本語）は 1 文字 1 トークンで数える。cl100k 系の実測に対して
@@ -739,9 +743,11 @@ _UA = "odj-db-register/0.1 ( hasegawa0kn@gmail.com )"
 def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dict:
     """POST 1回。drive.py の _get() と同じくリトライ + バックオフを持つ。
 
-    無料枠は 10 req/分なので、429 を踏んだら待って引き直す。50 req/日を使い切った
-    ときも 429 が返るが、そちらは待っても回復しないので retries を使い切って落ちる
-    （メッセージに本文を載せるので、どちらかは人が読めば分かる）。
+    **429 には意味が2種類ある。** アカウントのティアごとの RPM / TPM を超えた
+    場合は待てば回復するので、待って引き直す。クォータ切れや支払い方法の未設定
+    （insufficient_quota）でも 429 が返るが、そちらは待っても回復しないので
+    retries を使い切って落ちる。どちらなのかはメッセージに載せた応答本文
+    （error.code）を人が読めば分かる。
     """
     data = json.dumps(body, ensure_ascii=False).encode("utf-8")
     last: Exception | None = None
@@ -763,23 +769,25 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
         except urllib.error.HTTPError as exc:  # noqa: PERF203
             detail = exc.read().decode("utf-8", "replace")[:500]
             hint = ""
-            if "unavailable_model" in detail:
-                # カタログに載っていても、rate_limit_tier が "custom" のモデルは
-                # 標準の無料枠では使えない（gpt-5 がこれで、Actions から 400 が
-                # 返る）。tier は下のコマンドで確認できる。
+            if "model_not_found" in detail:
+                # 存在しないモデル ID か、この API キーの組織にアクセス権が無い
+                # モデルを指定すると 404 と model_not_found が返る。
+                # **綴り間違いと権限不足が同じエラーになる**ので、まず一覧を引いて
+                # もらうのが早い。
                 # モデル名は body から取る。post() の引数には無いので、
                 # ここで model を直に参照すると NameError になって本来の
-                # エラー本文まで消える（この分岐は gpt-5 で実際に通った）。
+                # エラー本文まで消える。
                 hint = (
-                    f"\n  モデル {body.get('model')!r} はこのトークンでは使えません。"
-                    "\n  無料枠で使えるのは rate_limit_tier が low / high のものです:"
-                    "\n    curl -s https://models.github.ai/catalog/models |"
+                    f"\n  モデル {body.get('model')!r} が見つからないか、"
+                    "この API キーでは使えません。"
+                    "\n  使えるモデルの一覧はこれで引けます:"
+                    "\n    curl -s https://api.openai.com/v1/models"
+                    ' -H "Authorization: Bearer $OPENAI_API_KEY" |'
                     " python3 -c \"import sys,json;"
-                    " [print(m['id'], m['rate_limit_tier'])"
-                    " for m in json.load(sys.stdin)]\""
+                    " [print(m['id']) for m in json.load(sys.stdin)['data']]\""
                     "\n  --model で切り替えられます。"
                 )
-            last = AliasError(f"GitHub Models が {exc.code} を返しました: {detail}{hint}")
+            last = AliasError(f"OpenAI API が {exc.code} を返しました: {detail}{hint}")
             # 400（プロンプトが長すぎる等）や 401 は待っても直らないので即座に上げる。
             if exc.code not in (429, 500, 502, 503, 504):
                 raise last from exc
@@ -789,7 +797,7 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
             wait = 3 * (attempt + 1)
         if attempt < retries - 1:  # 最後の1回のあとは待たずに諦める
             time.sleep(wait)
-    raise AliasError(f"GitHub Models の呼び出しに失敗しました: {last}")
+    raise AliasError(f"OpenAI API の呼び出しに失敗しました: {last}")
 
 
 def parse_groups(response: dict) -> list[dict]:
@@ -926,7 +934,7 @@ def pack_batches(clusters: list[dict], system_tokens: int, evidence: dict) -> li
 
     以前は「一定数ずつに切ってから、収まらないバッチを半分に割る」やり方だった。
     これだと割った片方が枠の半分しか使わず、実データで 37 リクエストになった
-    （無料枠は 50 req/日なので、プロンプトを一度直したら枯渇する）。
+    （その半端な分だけ system_prompt の固定費を余計に払うことになる）。
     1つずつ足しては上限を確かめるほうが、枠を使い切れてリクエスト数が減る。
 
     クラスタ数の上限も要る。入力に収まっても、1クラスタ ≒ 出力 200tok なので
@@ -990,7 +998,7 @@ def ask(
         if log is not None:
             log(text)
 
-    token = token or os.environ.get("GITHUB_TOKEN") or ""
+    token = token or os.environ.get("OPENAI_API_KEY") or ""
     prepared = plan(field, limit=limit, size=size)
     evidence = prepared["evidence"]
     keep_apart = block.load_keep_apart()
@@ -1007,8 +1015,9 @@ def ask(
         if response is None:
             if not token:
                 raise AliasError(
-                    "GITHUB_TOKEN がありません（--dry-run なら不要です）。"
-                    "GitHub Actions では permissions: models: read を付けてください"
+                    "OPENAI_API_KEY がありません（--dry-run なら不要です）。"
+                    "GitHub Actions ではリポジトリの secrets に OPENAI_API_KEY を"
+                    "登録し、env で渡してください"
                 )
             say(f"  [{i}/{len(prepared['batches'])}] 送信中… 推定 {batch['tokens']} tok")
             response = post(body, token)
