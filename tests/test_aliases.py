@@ -1225,6 +1225,74 @@ class AskTest(unittest.TestCase):
         self.assertEqual(entries[0]["variants"], ["アイカツ!", "アイカツ"])
         self.assertEqual(entries[0]["source"], f"llm:{llm.DEFAULT_MODEL}")
 
+    def test_a_json_validate_failure_skips_only_that_batch(self) -> None:
+        """**1バッチの確率的な失敗で実行全体を落とさないこと。**
+
+        strict の制約付きデコードが JSON を組み立て切れないと 400 の
+        json_validate_failed が返る。同じ入力でも通ったり落ちたりする確率的な
+        失敗で、Groq 側でも1割ほど出ると報告がある。実際にこれで29バッチ中
+        5件目で落ち、**成功していた4件も道連れになった**（Actions は毎回新品の
+        ランナーでキャッシュが残らないので、次の実行も1件目からやり直しになる。
+        確率的に必ずどこかで落ちる以上、永久に完走しない）。
+
+        飛ばしたことは黙ってはいけない。提案が減ったのが「まとめる根拠が
+        無かった」からなのか「投げ損ねた」からなのかを区別できないと、
+        もう一度回すべきかが判断できない。
+        """
+        boom = store.AliasError(
+            'Groq API が 400 を返しました: {"error":{"code":"json_validate_failed"}}'
+        )
+        logs: list[str] = []
+        with self.fixture():
+            # 1回目は失敗、2回目以降は正常な応答。バッチが1つしか無い
+            # フィクスチャなので、side_effect の1つ目だけが使われる。
+            with mock.patch.object(llm, "post", side_effect=boom):
+                result = llm.ask("work", token="dummy", log=logs.append)
+        # 例外にならず、結果が返っていること
+        self.assertEqual(result["proposed"], 0)
+        self.assertEqual(len(result["skipped"]), 1)
+        self.assertIn("json_validate_failed", result["skipped"][0])
+        # 飛ばしたことがログに出ること
+        self.assertTrue(
+            any("投げ損ねた" in line for line in logs), logs
+        )
+
+    def test_other_api_errors_still_abort_the_run(self) -> None:
+        """json_validate_failed 以外は従来どおり実行全体を止めること。
+
+        401（鍵が違う）や 413（1リクエストが TPM を超える）は systematic で、
+        続けても同じところで落ちるだけ。**握り潰すと、全バッチ失敗したのに
+        「提案 0 件」とだけ出て正常終了に見える**のが一番困る。
+        """
+        for message in (
+            "Groq API が 401 を返しました: invalid_api_key",
+            "Groq API が 413 を返しました: TPM を超えました",
+        ):
+            with self.subTest(message=message):
+                with self.fixture():
+                    with mock.patch.object(
+                        llm, "post", side_effect=store.AliasError(message)
+                    ):
+                        with self.assertRaises(store.AliasError):
+                            llm.ask("work", token="dummy")
+
+    def test_reasoning_effort_is_pinned_low(self) -> None:
+        """gpt-oss は推論モデルで、推論トークンも出力枠を食う。
+
+        Groq の既定は "medium" で、それだと 3,000tok の枠を推論が先に消費して
+        JSON が組み上がらず json_validate_failed になった。**答えに枠を使わせる
+        ために明示的に "low" を送る**（llm.py の REASONING_EFFORT の説明を参照）。
+        """
+        body = llm.request_body(llm.DEFAULT_MODEL, "sys", "user", field="work")
+        self.assertEqual(body["reasoning_effort"], "low")
+        # 出力枠と一緒に見るべき値なので、両方が本文に載っていること
+        self.assertEqual(body["max_completion_tokens"], llm.MAX_OUTPUT_TOKENS)
+        # **gpt-oss 以外には送らない。** "low" を受け付けないモデルがあり
+        # （qwen は "none" / "default"、他は非対応）、--model で差し替えた
+        # だけで 400 になるのは避けたい。
+        other = llm.request_body("llama-3.3-70b-versatile", "sys", "user", field="work")
+        self.assertNotIn("reasoning_effort", other)
+
     def test_approved_is_never_written(self) -> None:
         """**最重要。** LLM が approved を返しても提案には出ない。
 

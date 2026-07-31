@@ -131,6 +131,17 @@ MAX_CLUSTERS_PER_CALL = MAX_OUTPUT_TOKENS // 200
 # pack_batches が入る限り詰めるので、この値は --batch-size の既定でしかない。
 BATCH_SIZE = 6
 
+# gpt-oss は**推論モデル**で、推論トークンも出力枠（max_completion_tokens）を食う。
+# Groq の既定は "medium" だが、それだと 3,000tok の枠を推論が先に消費して JSON が
+# 組み上がらず、400 の json_validate_failed（failed_generation が空）で落ちた。
+# 実際に踏んでいる。**枠の大半を答えに使わせたいので "low" にしてある。**
+#
+# 判断の質とのトレードオフではある。上げるなら MAX_OUTPUT_TOKENS も一緒に上げる
+# 必要があるが、その合計は TPM に縛られる（TPM_LIMIT の説明を参照）ので、
+# 上げるには入力側＝1回あたりのクラスタ数を削ることになる。
+# 値は "low" / "medium" / "high"（gpt-oss 以外のモデルは受け付けない）。
+REASONING_EFFORT = "low"
+
 # ---------------------------------------------------------------------------
 # プロンプトに載せる量の上限
 # ---------------------------------------------------------------------------
@@ -752,7 +763,7 @@ def request_body(model: str, system: str, user: str, *, field: str) -> dict[str,
     field は response_format のためだけに要る（既定値を置いていないのは、
     呼ぶ側が work を暗黙に選んでしまうのを防ぐため）。
     """
-    return {
+    body: dict[str, Any] = {
         "model": model,
         "messages": [
             {"role": "system", "content": system},
@@ -761,6 +772,12 @@ def request_body(model: str, system: str, user: str, *, field: str) -> dict[str,
         "response_format": response_format(field),
         "max_completion_tokens": MAX_OUTPUT_TOKENS,
     }
+    # reasoning_effort の "low" / "medium" / "high" は gpt-oss 系しか受け付けない
+    # （qwen は "none" / "default"、他は非対応）。--model で差し替えたときに
+    # 400 にならないよう、載せるのは対象のモデルのときだけにする。
+    if "gpt-oss" in model:
+        body["reasoning_effort"] = REASONING_EFFORT
+    return body
 
 
 def cache_dir() -> Path:
@@ -866,9 +883,16 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
                     f"TOKEN_ESTIMATE_SLACK（現在 {TOKEN_ESTIMATE_SLACK}）を上げてください。"
                 )
             last = AliasError(f"Groq API が {exc.code} を返しました: {detail}{hint}")
-            # 400（プロンプトが長すぎる等）や 401 / 403 は待っても直らないので
-            # 即座に上げる。429 はここに含めない（上の docstring を参照）。
-            if exc.code not in (429, 500, 502, 503, 504):
+            # json_validate_failed は 400 だが**確率的**で、同じ本文でも投げ直すと
+            # 通ることが多い（strict の制約付きデコードが組み立て切れなかった
+            # だけ。Groq 側でも1割ほど出ると報告がある）。ここで拾っておかないと
+            # 1バッチにつき1割の確率で落ちる勘定になり、29 バッチではまず完走
+            # しない。待つ必要は無いので短いバックオフで引き直す。
+            retryable = exc.code in (429, 500, 502, 503, 504) or (
+                "json_validate_failed" in detail
+            )
+            # 401 / 403 / 413 や、モデル名の間違いは待っても直らないので即座に上げる。
+            if not retryable:
                 raise last from exc
             wait = 20 * (attempt + 1) if exc.code == 429 else 3 * (attempt + 1)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
@@ -1144,6 +1168,10 @@ def ask(
 
     entries: list[dict[str, Any]] = []
     rejected: list[str] = []
+    # API が確率的に失敗して丸ごと諦めたバッチ（json_validate_failed）。
+    # 提案が減ったのが「まとめる根拠が無かった」からなのか「投げ損ねた」からなのか
+    # を区別できないと、次に回すべきかどうかが判断できない。
+    skipped: list[str] = []
     cached_hits = 0
     calls = 0
 
@@ -1159,7 +1187,26 @@ def ask(
                     "手で登録し、env で渡してください"
                 )
             say(f"  [{i}/{len(prepared['batches'])}] 送信中… 推定 {batch['tokens']} tok")
-            response = post(body, token)
+            try:
+                response = post(body, token)
+            except AliasError as exc:
+                # **json_validate_failed だけは、そのバッチを飛ばして先へ進む。**
+                # strict の制約付きデコードが JSON を組み立て切れなかったときに
+                # 400 で返るもので、同じ入力でも通ったり落ちたりする確率的な失敗
+                # （Groq 側でも1割ほど出ると報告がある）。ここで実行全体を落とすと、
+                # **成功済みのバッチまで道連れになる** — Actions は毎回新品の
+                # ランナーで data/raw/llm/ のキャッシュが残らないので、次の実行も
+                # 1件目からやり直しになり、確率的に必ずどこかで落ちる以上、
+                # 永久に完走しない。parse_groups が読めない応答を捨てて続けるのと
+                # 同じ扱いにする（1バッチ諦めるほうが、全部失うより安い）。
+                #
+                # 他のエラー（401 / 413 / クォータ切れなど）は systematic で、
+                # 続けても同じところで落ちるだけなので従来どおり上げる。
+                if "json_validate_failed" not in str(exc):
+                    raise
+                skipped.append(f"[{i}] {exc}")
+                say(f"  [{i}] スキップ: JSON の生成に失敗（json_validate_failed）")
+                continue
             store_response(body, response)
             calls += 1
         else:
@@ -1188,6 +1235,13 @@ def ask(
     path = store.write_proposals(field, entries)
     for line in rejected:
         say(f"  捨てた提案: {line}")
+    if skipped:
+        # 黙って減らさない。**もう一度回せばこのバッチだけ拾い直せる**
+        # （確率的な失敗なので、次は通ることが多い。成功したぶんは
+        # data/raw/llm/ のキャッシュに載っているのでネットワークには出ない）。
+        say(f"  ⚠ 投げ損ねたバッチ {len(skipped)} 件（もう一度回すと拾い直せます）:")
+        for line in skipped:
+            say(f"    {line}")
     return {
         "path": store.rel_to_repo(path),
         "clusters": prepared["total"],
@@ -1196,4 +1250,5 @@ def ask(
         "cached": cached_hits,
         "proposed": len(entries),
         "rejected": rejected,
+        "skipped": skipped,
     }
