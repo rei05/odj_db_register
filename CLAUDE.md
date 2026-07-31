@@ -29,7 +29,7 @@ npm run build    # tsc -b && vite build
 # 表記ゆれの名寄せ（data/aliases/）
 PYTHONPATH=src python3 -m odj.aliases fetch --field work   # 外部APIで裏取り。要ネットワーク
 PYTHONPATH=src python3 -m odj.aliases block --field work   # 候補クラスタ。fetch の後に回す
-PYTHONPATH=src python3 -m odj.aliases ask --field work      # LLM に提案させる。要 GEMINI_API_KEY
+PYTHONPATH=src python3 -m odj.aliases ask --field work      # LLM に提案させる。要 GROQ_API_KEY
 PYTHONPATH=src python3 -m odj.aliases ask --field work --dry-run   # 投げる文字列とリクエスト数だけ見る。キー不要
 cd web && npm run review   # 5174。1件ずつ承認する GUI。dev 専用でビルドには入らない
 PYTHONPATH=src python3 -m odj.aliases export               # 承認済み → aliases.json
@@ -40,16 +40,17 @@ PYTHONPATH=src python3 -m odj.aliases export               # 承認済み → al
 リダイレクトを辺として使うため。「ナナシス」と「Tokyo 7th シスターズ」は文字列類似では
 繋がらない）。候補の生成そのものは GitHub Actions の `aliases.yml` が回して PR で運んでくる。
 
-`ask` だけ外部 API（Gemini）を叩く。GitHub Models の無料枠が 2026-07-30 に完全廃止され、
-その後 OpenAI 直叩きを試みたがアカウントのクレジット不足で通らなかったため、Gemini に
-切り替えた。ネイティブの `generateContent`（`x-goog-api-key` ヘッダ・モデル ID は URL
-パス）を叩いており、OpenAI 互換エンドポイントは使っていない。互換エンドポイントは beta
-扱いで「リストにないパラメータを黙って無視する」と公式に書かれており、JSON スキーマが
-無視されると提案が黙ってゼロになりかねないため避けた。`GEMINI_API_KEY`（APIキーは
-Google AI Studio で発行）が要り、Actions で回すには**リポジトリの Settings > Secrets に
-手で登録しておく**必要がある（`secrets.GITHUB_TOKEN` と違い自動では用意されない）。
-Gemini には無料枠があるが、レート制限（RPM/TPM/RPD）はモデルとティアで変わる。
-金を使わずに確認したいときは `--dry-run`。
+`ask` だけ外部 API（Groq）を叩く。GitHub Models → OpenAI 直叩き → Gemini と渡り歩いた末、
+Gemini は無料枠が1日20リクエストしかなく完走できないため Groq に落ち着いた（経緯の詳細は
+git 履歴）。OpenAI 互換エンドポイント（`https://api.groq.com/openai/v1/chat/completions`）
+を叩いており、既定モデルが `openai/gpt-oss-120b` なのは、Groq でスキーマ強制（strict な
+json_schema）が効くのが gpt-oss 系（120b/20b）だけだから。`--model` で他のモデルに
+差し替えるとスキーマ強制が外れ、提案が静かに質を落とす。無料枠は RPD 1,000 / TPM 8,000 /
+TPD 200,000（ドキュメント記載時点、openai/gpt-oss-120b）で、縛りになるのは TPM。バッチの
+刻みを広げすぎると1リクエストで分あたり上限を超える。`GROQ_API_KEY`（APIキーは Groq
+Console で発行）が要り、Actions で回すには**リポジトリの Settings > Secrets に手で
+登録しておく**必要がある（`secrets.GITHUB_TOKEN` と違い自動では用意されない）。金を
+使わずに確認したいときは `--dry-run`。
 
 `uv` を使わない場合は `PYTHONPATH=src python3 -m odj.build`。Python 側は標準ライブラリのみで書いてあり（`pyproject.toml` の dependencies は空）、追加インストールは不要。lint / 型チェックの設定は置いていないので、Python 側の自動チェックは unittest だけ。
 

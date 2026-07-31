@@ -1,4 +1,4 @@
-name: Generate alias candidates with Gemini API
+name: Generate alias candidates with Groq API
 
 on:
   workflow_dispatch:
@@ -7,10 +7,12 @@ on:
         description: 'work / artist'
         default: 'work'
       model:
-        # Gemini API のモデル ID。無料枠があるが、レート制限（RPM/TPM/RPD）は
-        # モデルとティアで変わる。詰まる場合はここを別のモデルに差し替える。
-        description: 'Gemini API のモデル ID'
-        default: 'gemini-3.6-flash'
+        # Groq API のモデル ID。無料枠は RPD 1,000 / TPM 8,000 / TPD 200,000（openai/gpt-oss-120b、
+        # ドキュメント記載時点）で、縛りになるのは TPM。
+        # スキーマ強制（strict な json_schema）が効くのは gpt-oss 系（120b/20b）だけなので、
+        # ここを他のモデルに差し替えるとスキーマ強制が外れて提案が静かに質を落とすことがある。
+        description: 'Groq API のモデル ID（既定は openai/gpt-oss-120b。gpt-oss 系以外はスキーマ強制が効かない）'
+        default: 'openai/gpt-oss-120b'
 
 permissions:
   contents: write
@@ -37,12 +39,12 @@ jobs:
       - name: Block duplicate clusters
         run: PYTHONPATH=src python -m odj.aliases block --field ${{ inputs.field }}
 
-      - name: Ask Gemini API to generate candidates
+      - name: Ask Groq API to generate candidates
         run: PYTHONPATH=src python -m odj.aliases ask --field ${{ inputs.field }} --model ${{ inputs.model }}
         env:
           # secrets.GITHUB_TOKEN と違い Actions が自動で用意してくれるトークンではないので、
-          # リポジトリの Settings > Secrets に GEMINI_API_KEY を事前に手動登録しておく必要がある。
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # リポジトリの Settings > Secrets に GROQ_API_KEY を事前に手動登録しておく必要がある。
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
       - name: Create pull request with candidates
         uses: peter-evans/create-pull-request@v7
@@ -51,5 +53,5 @@ jobs:
           add-paths: data/aliases/_proposed/
           title: Alias candidates for ${{ inputs.field }} field
           body: |
-            Gemini API が生成した候補です。**中身のレビューは不要**。すべて approved=false なので公開データ（aliases.json）には出ません。マージ後、ローカルで `npm run review` を実行して1件ずつ判断してください。
+            Groq API が生成した候補です。**中身のレビューは不要**。すべて approved=false なので公開データ（aliases.json）には出ません。マージ後、ローカルで `npm run review` を実行して1件ずつ判断してください。
           delete-branch: false

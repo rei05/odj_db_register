@@ -501,7 +501,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_ask.add_argument(
         "--model", default=llm.DEFAULT_MODEL,
-        help=f"Gemini のモデル名（既定: {llm.DEFAULT_MODEL}）",
+        help=f"Groq のモデル名（既定: {llm.DEFAULT_MODEL}）。"
+             "スキーマ強制（strict な json_schema）が効くのは gpt-oss 系だけなので、"
+             "他のモデルに差し替えると提案が静かに質を落とす",
     )
     p_ask.set_defaults(func=_cmd_ask)
 

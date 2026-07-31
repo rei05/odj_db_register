@@ -1173,24 +1173,22 @@ class AskTest(unittest.TestCase):
 
     @staticmethod
     def reply(*groups: dict) -> dict:
-        """Gemini API（generateContent）の応答をそのまま真似た形。
+        """Groq API（OpenAI 互換の chat/completions）の応答をそのまま真似た形。
 
-        candidates[0].content.parts[0].text に JSON 文字列が入る。
-        finishReason="STOP" は正常終了の印で、parse_groups 自体はこの値を
-        見ないが、no_groups_reason() が「なぜ0件だったか」を判定する材料に
-        するので、正常系のフィクスチャでも実際の値を書いておく。
+        choices[0].message.content に JSON 文字列が入る。finish_reason="stop" は
+        正常終了の印で、parse_groups 自体はこの値を見ないが、no_groups_reason() が
+        「なぜ0件だったか」を判定する材料にするので、正常系のフィクスチャでも
+        実際の値を書いておく。
         """
         return {
-            "candidates": [{
-                "content": {
-                    "parts": [{"text": json.dumps({"groups": list(groups)}, ensure_ascii=False)}],
-                    "role": "model",
+            "choices": [{
+                "message": {
+                    "role": "assistant",
+                    "content": json.dumps({"groups": list(groups)}, ensure_ascii=False),
                 },
-                "finishReason": "STOP",
+                "finish_reason": "stop",
             }],
-            "usageMetadata": {
-                "promptTokenCount": 2500, "candidatesTokenCount": 300, "totalTokenCount": 2800,
-            },
+            "usage": {"prompt_tokens": 2500, "completion_tokens": 300},
         }
 
     @staticmethod
@@ -1313,6 +1311,11 @@ class AskTest(unittest.TestCase):
                 )
             )
         self.assertEqual(result["proposed"], 0)
+        # reply() が壊れて0件応答になっているだけでも proposed=0 は自明に成立
+        # してしまう。ここで本当に見たいのは「1件提案されたが keep_apart の
+        # 再検査で捨てられた」経路を通ったことなので、rejected の中身まで見る。
+        self.assertEqual(len(result["rejected"]), 1)
+        self.assertIn("keep_apart", result["rejected"][0])
 
     def test_variants_outside_the_cluster_are_dropped(self) -> None:
         # 表記を「整えて」返してくるのが典型（「ボカロ?」→「ボカロ？」）。
@@ -1335,21 +1338,26 @@ class AskTest(unittest.TestCase):
         with self.fixture():
             result, _, _ = self.run_ask(self.reply(self.group(reason="  ")))
         self.assertEqual(result["proposed"], 0)
+        # reply() が壊れて0件応答になっているだけでも proposed=0 は自明に成立
+        # してしまう。ここで本当に見たいのは「1件提案されたが reason が空で
+        # 捨てられた」経路を通ったことなので、rejected の中身まで見る。
+        self.assertEqual(len(result["rejected"]), 1)
+        self.assertIn("reason が空", result["rejected"][0])
 
     def test_a_truncated_response_yields_nothing(self) -> None:
-        """出力上限（maxOutputTokens）に当たると JSON が途中で切れる。バッチごと諦める。
+        """出力上限（max_completion_tokens）に当たると JSON が途中で切れる。バッチごと諦める。
 
-        フィクスチャの text 自体は壊れた JSON なので「読めないから0件」は
-        finishReason が無くても再現してしまう（parse_groups は JSONDecodeError で
+        フィクスチャの content 自体は壊れた JSON なので「読めないから0件」は
+        finish_reason が無くても再現してしまう（parse_groups は JSONDecodeError で
         空を返すだけ）。**ここで本当に見たいのは出力切れそのものを検出できて
-        いるか**なので、finishReason="MAX_TOKENS" を含めたうえで、ログに
+        いるか**なので、finish_reason="length" を含めたうえで、ログに
         「出力上限」と出ること（no_groups_reason 経由の判定が働いていること）
         まで確認する。
         """
         broken = {
-            "candidates": [{
-                "content": {"parts": [{"text": '{"groups": [{"cluster'}], "role": "model"},
-                "finishReason": "MAX_TOKENS",
+            "choices": [{
+                "message": {"role": "assistant", "content": '{"groups": [{"cluster'},
+                "finish_reason": "length",
             }],
         }
         with self.fixture():
@@ -1446,10 +1454,11 @@ class AskTest(unittest.TestCase):
         以前は「一定数ずつ切ってから、収まらないバッチを半分に割る」やり方で、
         割った片方が枠の半分しか使わず実データで 37 リクエストになっていた。
         1リクエストごとに system_prompt の固定費が丸ごと乗るため、枠を使い切れ
-        ないとその半端な分だけ余計にリクエスト数を払うことになる。Gemini の
-        無料枠のレート制限はモデルとティアで変わり具体値も公開されていないが、
-        リクエスト数を減らしておけばどのティアでも 429 待ちに当たりにくい
-        （llm.py の DEFAULT_MODEL 直上のコメントと同じ理由）。
+        ないとその半端な分だけ余計にリクエスト数を払うことになる。Groq の
+        無料枠は RPD 1,000 / TPM 8,000 / TPD 200,000（openai/gpt-oss-120b、
+        ドキュメント記載時点）で、リクエスト数を減らしておけば TPM 8,000 にも
+        RPD 1,000 にも当たりにくい（llm.py の DEFAULT_MODEL 直上のコメントと
+        同じ理由）。
         """
         with self.fixture():
             prepared = llm.plan("work")
@@ -1467,14 +1476,23 @@ class AskTest(unittest.TestCase):
                 prepared = llm.plan("work")
         self.assertTrue(all(len(b["clusters"]) == 1 for b in prepared["batches"]))
 
-    def test_the_input_limit_is_a_chosen_batch_size_not_an_api_limit(self) -> None:
-        # 由来は GitHub Models の無料枠が入力 4000tok だったこと（413
-        # tokens_limit_reached が返って判明した実測値）。Gemini のコンテキスト長は
-        # これよりはるかに大きいが、**API が強制する上限ではなくこちらが選んだ
-        # 保守的なバッチサイズ**として値をそのまま引き継いでいる（llm.py の
-        # INPUT_TOKEN_LIMIT 直上のコメントを参照）。
-        self.assertEqual(llm.INPUT_TOKEN_LIMIT, 4000)
+    def test_the_batch_size_constants_stay_consistent(self) -> None:
+        """バッチの刻みは値そのものより**関係**が大事なので、そちらを固定する。
+
+        入力の刻みは API が強制する上限ではなくこちらが選んだ値で、効いている
+        制約は Groq 無料枠の TPM 8,000 のほう（llm.py の INPUT_TOKEN_LIMIT
+        直上のコメントに実際の内訳がある）。なので値は状況に応じて動かして
+        よい。**動かしたときに壊れてはいけない関係**だけをここで見る。
+        """
+        # 上限ちょうどを狙うと推定の誤差ぶんだけリクエストが無駄になる。
         self.assertLess(llm.SAFE_INPUT_TOKENS, llm.INPUT_TOKEN_LIMIT)
+        # **出力枠が1リクエスト分のクラスタに足りていること。** 1クラスタ ≒
+        # 出力 200tok で、足りないと finish_reason="length" で JSON が途中で
+        # 切れ、そのバッチのクラスタが丸ごと提案なしになる。画面には「提案なし」
+        # としか出ないので、入力側だけ増やした事故が一番見つけにくい。
+        self.assertGreaterEqual(
+            llm.MAX_OUTPUT_TOKENS, llm.MAX_CLUSTERS_PER_CALL * 200
+        )
 
     def test_the_same_input_hits_the_cache_instead_of_the_network(self) -> None:
         # プロンプト全文の SHA256 が鍵。無料枠のレート制限に当たりやすいので、
@@ -1497,12 +1515,15 @@ class AskTest(unittest.TestCase):
 
     def test_a_different_model_does_not_reuse_the_cache(self) -> None:
         # モデル名もスキーマも鍵に入れてある。差し替えたのに古い応答が返ると、
-        # 原因の分からない検証エラーになる。**モデル名が本文から URL に移った今
-        # こそ壊れやすい箇所**（request_body の docstring を参照）なので、実在する
-        # Gemini のモデル名（既定の gemini-3.6-flash とは別物）で確かめる。
+        # 原因の分からない検証エラーになる。Gemini 期は「本文の model を送信時に
+        # URL へ回す」仕掛けがあり壊れやすい箇所だったが、Groq では本文の
+        # "model" がそのまま送信されるだけになった。それでも**モデル名が
+        # キャッシュキーに効くこと**自体は変わらず重要なので（request_body の
+        # docstring を参照）、実在する Groq のモデル名（既定の
+        # openai/gpt-oss-120b とは別物）で確かめる。
         with self.fixture():
             self.run_ask(self.reply(self.group()))
-            _, _, again = self.run_ask(self.reply(self.group()), model="gemini-2.5-flash")
+            _, _, again = self.run_ask(self.reply(self.group()), model="openai/gpt-oss-20b")
         self.assertEqual(again.call_count, 1)
 
     def test_the_cache_lands_outside_the_repository(self) -> None:
@@ -1718,9 +1739,9 @@ class AskTest(unittest.TestCase):
 
         名前は GitHub Models の無料枠（入力 4000tok）由来だが、ここが実際に
         見ているのは「artist の一番大きいクラスタでも SAFE_INPUT_TOKENS に
-        収まる」ことで、特定プロバイダの無料枠の話ではない
-        （Gemini にも無料枠はあるが、レート制限の具体値は公式が載せていない
-        ので、そちらに寄せた名前は付けない）。
+        収まる」ことで、特定プロバイダの無料枠の話ではない（今は Groq の
+        TPM 8,000 が効いているが、バックエンドはこれまで3回移っており、
+        次に移ってもこの名前のまま使えるようにしてある）。
 
         artist はクラスタ数が work の 7 割なのにリクエストは多い（実データで
         105 クラスタ / 34 リクエスト）。1つの生表記が長く
@@ -1769,20 +1790,23 @@ class AskTest(unittest.TestCase):
         # 両方見る（片方だけ直して approved を足せてしまう、が一番困る壊れ方）。
         for field in ("work", "artist"):
             with self.subTest(field=field):
-                schema = llm.response_schema(field)
+                schema = llm.response_format(field)["json_schema"]["schema"]
                 items = schema["properties"]["groups"]["items"]
                 self.assertNotIn("approved", items["properties"])
-                # OpenAI 時代の strict モード相当の縛り（required が properties と
-                # 一致していないと欠落が起きうる）は、ラッパーが無くなった今も
-                # 自前で維持しておく。
+                # strict モード（strict: true）の要件は「required が properties
+                # と一致していること」「additionalProperties: false を置くこと」
+                # の2つで、どちらか片方でも欠けると 400 になる
+                # （response_format() の docstring を参照）。
                 self.assertEqual(items["required"], list(items["properties"]))
-                # **additionalProperties を足し直さないこと。** Gemini の
-                # responseSchema は OpenAPI のサブセットで、これを送ると
-                # 全リクエストが 400 で落ちる（実際に踏んだ。llm.response_schema
-                # の docstring にエラー本文がある）。余計な項目を書かせない担保は
-                # スキーマではなく to_entry() と store.write_proposals() 側にある。
-                self.assertNotIn("additionalProperties", schema)
-                self.assertNotIn("additionalProperties", items)
+                # **additionalProperties は外さないこと。** Gemini 期は逆に
+                # 「additionalProperties を足すと 400」だったが、Groq の strict
+                # モードでは要求される側に反転している（2か所要る）。余計な
+                # 項目を書かせない担保はスキーマだけでなく to_entry() と
+                # store.write_proposals() 側にもあるが、スキーマ側の縛りを
+                # 薄めると strict モードそのものが効かなくなり、全リクエストが
+                # 400 で落ちる。
+                self.assertFalse(schema["additionalProperties"])
+                self.assertFalse(items["additionalProperties"])
 
     def test_the_response_schema_drops_series_and_kind_for_artists(self) -> None:
         """artist には series / kind を訊かないこと。
@@ -1795,8 +1819,8 @@ class AskTest(unittest.TestCase):
         レビュー GUI（ClusterCard.tsx）も field === 'work' のときしか kind を
         送らないので、訊かないほうが人間の判断と食い違わない。
         """
-        work = llm.response_schema("work")
-        artist = llm.response_schema("artist")
+        work = llm.response_format("work")["json_schema"]["schema"]
+        artist = llm.response_format("artist")["json_schema"]["schema"]
         work_props = work["properties"]["groups"]["items"]["properties"]
         artist_props = artist["properties"]["groups"]["items"]["properties"]
         self.assertIn("series", work_props)
@@ -1816,7 +1840,7 @@ class AskTest(unittest.TestCase):
         self.assertNotEqual(llm.cache_key(work), llm.cache_key(artist))
 
     def test_dry_run_never_touches_the_network(self) -> None:
-        # --dry-run は GEMINI_API_KEY が無くても通ること（CI 前の確認に使う）
+        # --dry-run は GROQ_API_KEY が無くても通ること（CI 前の確認に使う）
         buf = io.StringIO()
         with self.fixture(), mock.patch.dict("os.environ", {}, clear=True):
             with mock.patch.object(llm, "post", side_effect=AssertionError("送信した")):
@@ -1832,32 +1856,36 @@ class AskTest(unittest.TestCase):
         with self.fixture(), mock.patch.dict("os.environ", {}, clear=True):
             with self.assertRaises(store.AliasError) as caught:
                 llm.ask("work")
-        self.assertIn("GEMINI_API_KEY", str(caught.exception))
+        self.assertIn("GROQ_API_KEY", str(caught.exception))
 
     def test_ask_ignores_leftover_environment_variables_from_earlier_migrations(self) -> None:
-        """GITHUB_TOKEN・OPENAI_API_KEY が残っていても読まれないこと。
+        """GITHUB_TOKEN・OPENAI_API_KEY・GEMINI_API_KEY が残っていても読まれないこと。
 
-        バックエンドは GitHub Models → OpenAI → Gemini と2回移っており、
-        どちらの移行でも前のプロバイダの環境変数名が CI の secrets や
-        ローカルの .env に残っていておかしくない。**古い名前がたまたま
-        設定されていることを「トークンあり」と誤認しない**ことを、
-        両方いっぺんに置いた状態で確かめる（片方ずつ確認すると、直した側は
-        通っても直し忘れた側が見逃される）。
+        バックエンドは GitHub Models → OpenAI → Gemini → Groq と3回移っており、
+        どの移行でも前のプロバイダの環境変数名が CI の secrets やローカルの
+        .env に残っていておかしくない。**古い名前がたまたま設定されている
+        ことを「トークンあり」と誤認しない**ことを、3つまとめて置いた状態で
+        確かめる（1つずつ確認すると、直した側は通っても直し忘れた側が
+        見逃される）。
         """
         with self.fixture(), mock.patch.dict(
             "os.environ",
-            {"GITHUB_TOKEN": "leftover", "OPENAI_API_KEY": "also-leftover"},
+            {
+                "GITHUB_TOKEN": "leftover",
+                "OPENAI_API_KEY": "also-leftover",
+                "GEMINI_API_KEY": "also-also-leftover",
+            },
             clear=True,
         ):
             with self.assertRaises(store.AliasError) as caught:
                 llm.ask("work")
-        self.assertIn("GEMINI_API_KEY", str(caught.exception))
+        self.assertIn("GROQ_API_KEY", str(caught.exception))
 
     @staticmethod
     def _http_error(code: int) -> mock.Mock:
         return mock.Mock(
             side_effect=urllib.error.HTTPError(
-                llm.endpoint_for(llm.DEFAULT_MODEL), code, "boom", {},  # type: ignore[arg-type]
+                llm.ENDPOINT, code, "boom", {},  # type: ignore[arg-type]
                 io.BytesIO(b'{"error":"..."}'),
             )
         )
@@ -1875,13 +1903,11 @@ class AskTest(unittest.TestCase):
         self.assertEqual((opened.call_count, slept.call_count), (1, 0))
 
     def test_a_rate_limit_is_retried_with_a_wait(self) -> None:
-        # Gemini の 429（RESOURCE_EXHAUSTED）は「1分あたりの上限に当たった」
-        # （待てば回復する。無料枠では普通に当たる）でも「1日あたりの上限を
-        # 使い切った」（待っても回復しない）でも同じ code / status で返り、
-        # **本文から機械的に区別できない**。OpenAI 用に持っていた
-        # insufficient_quota の即時打ち切り分岐は削除され、429 は種類を問わず
-        # 全部リトライする方針に統一されている（llm.post() の docstring 参照）。
-        # 最後の1回のあとは待たずに諦める。
+        # Groq の 429 は RPM / TPM / RPD / TPD の4種類あり、分あたり
+        # （RPM / TPM）は待てば回復するが、日あたり（RPD / TPD）はその日の
+        # うちは回復しない。**本文から機械的に区別できない**ので、種類を
+        # 問わず全部リトライする方針に統一されている（llm.post() の
+        # docstring 参照）。最後の1回のあとは待たずに諦める。
         opened = self._http_error(429)
         with mock.patch("urllib.request.urlopen", opened):
             with mock.patch("time.sleep") as slept:
@@ -1894,112 +1920,89 @@ class AskTest(unittest.TestCase):
 
         post() の引数に model は無いので body から取る必要がある。直に
         model と書くと NameError になり、**本来の API エラー本文まで消える**。
-        Gemini はモデル ID が URL パスに入るので、存在しないモデルやこの API
-        キーでは使えないモデルを指定すると 404 / status=NOT_FOUND が返る
+        Groq は綴り間違いも権限不足も同じ 404 / code=model_not_found で返す
         （llm.post() の該当分岐を参照）。
         """
         opened = mock.Mock(
             side_effect=urllib.error.HTTPError(
-                llm.endpoint_for("gemini-9-ultra"),
+                llm.ENDPOINT,
                 404,
                 "boom",
                 {},  # type: ignore[arg-type]
                 io.BytesIO(
-                    b'{"error":{"code":404,'
-                    b'"message":"models/gemini-9-ultra is not found",'
-                    b'"status":"NOT_FOUND"}}'
+                    b'{"error":{"message":'
+                    b'"The model `openai/gpt-oss-9000b` does not exist or you '
+                    b'do not have access to it.","type":"invalid_request_error",'
+                    b'"code":"model_not_found"}}'
                 ),
             )
         )
         with mock.patch("urllib.request.urlopen", opened):
             with self.assertRaises(store.AliasError) as caught:
-                llm.post({"model": "gemini-9-ultra"}, "tok")
+                llm.post({"model": "openai/gpt-oss-9000b"}, "tok")
         message = str(caught.exception)
-        self.assertIn("gemini-9-ultra", message)
-        self.assertIn("NOT_FOUND", message)  # API の本文が消えていない
+        self.assertIn("openai/gpt-oss-9000b", message)
+        self.assertIn("model_not_found", message)  # API の本文が消えていない
 
-    def test_the_request_body_matches_what_gemini_api_accepts(self) -> None:
-        # OpenAI 互換の messages/response_format ではなく、Gemini ネイティブの
-        # systemInstruction/contents/generationConfig の形であること。
-        # temperature を送らない理由（既定値以外を受け付けないモデルがある）は
-        # 変わっていないので、そちらも合わせて見ておく。
+    def test_the_request_body_matches_what_groq_api_accepts(self) -> None:
+        # Gemini ネイティブの systemInstruction/contents/generationConfig では
+        # なく、OpenAI 互換の messages/response_format/max_completion_tokens の
+        # 形であること。temperature を送らない理由（既定値以外を受け付けない
+        # モデルがある）は変わっていないので、そちらも合わせて見ておく。
         body = llm.request_body(llm.DEFAULT_MODEL, "sys", "user", field="work")
         self.assertNotIn("temperature", body)
-        self.assertEqual(body["systemInstruction"], {"parts": [{"text": "sys"}]})
-        self.assertEqual(body["contents"], [{"role": "user", "parts": [{"text": "user"}]}])
-        config = body["generationConfig"]
-        self.assertEqual(config["responseMimeType"], "application/json")
-        self.assertEqual(config["responseSchema"], llm.response_schema("work"))
-        self.assertEqual(config["maxOutputTokens"], llm.MAX_OUTPUT_TOKENS)
-        # "model" はキャッシュキー用にここへ残る（request_body の docstring
-        # 参照）。実際にネットワークへ出るときに外れることは
-        # test_model_is_moved_from_the_body_to_the_url_when_sent が見る。
+        self.assertEqual(
+            body["messages"],
+            [
+                {"role": "system", "content": "sys"},
+                {"role": "user", "content": "user"},
+            ],
+        )
+        self.assertEqual(body["response_format"], llm.response_format("work"))
+        self.assertEqual(body["max_completion_tokens"], llm.MAX_OUTPUT_TOKENS)
+        # "model" は本文にそのまま乗る（Gemini 期のように送信直前に外して
+        # URL へ回す仕掛けはもう無い）。cache_key() の SHA256 にモデル名を
+        # 含めるための値であると同時に、Groq に実際に送る値そのものでもある。
         self.assertEqual(body["model"], llm.DEFAULT_MODEL)
 
     def test_response_mime_type_and_schema_are_always_paired(self) -> None:
-        """responseMimeType と responseSchema は必ず対で書くこと。
+        """response_format が json_schema で、strict と additionalProperties が
+        確実に効く形で送られること。
 
-        request_body() の docstring にある通り、片方だけ書くと responseSchema が
-        効かず、素の文章が返って parse_groups がバッチを丸ごと捨てる。これは
-        「reasoning モデルを選んでいないか」という当て推量より、実際に出力切れ・
-        構造崩れを防いでいる仕組みそのものなので、削除した
-        test_the_default_model_is_not_a_reasoning_model の代わりにここを固定する
-        （Gemini はモデル名から reasoning/thinking 系かどうかを機械的に
-        判定できる命名規則を確認できていないため、名前の当て推量はしない）。
+        Gemini 期はここで responseMimeType/responseSchema が対で書かれている
+        ことを見ていたが、Groq の response_format にその区別は無い。代わりに
+        効いてくるのが Groq/OpenAI の strict モードの2条件（required が
+        properties と一致していること・additionalProperties: false を置く
+        こと）で、**どちらか片方でも欠けると 400 になる**
+        （response_format() の docstring 参照）。「reasoning モデルを選んで
+        いないか」という当て推量より、実際に出力切れ・構造崩れを防いでいる
+        仕組みそのものを固定したいという元のテストの意図はそのまま引き継ぐ。
         """
-        config = llm.request_body("m", "sys", "user", field="work")["generationConfig"]
-        self.assertEqual(config["responseMimeType"], "application/json")
-        self.assertIn("responseSchema", config)
+        config = llm.request_body("m", "sys", "user", field="work")["response_format"]
+        self.assertEqual(config["type"], "json_schema")
+        schema = config["json_schema"]
+        self.assertTrue(schema["strict"])
+        self.assertFalse(schema["schema"]["additionalProperties"])
+        # 配列の要素（1グループぶんのオブジェクト）側にも同じ縛りが要る。
+        # トップレベルだけに付けても items 側が緩いと strict の要件を満たせず
+        # 400 になる。
+        items = schema["schema"]["properties"]["groups"]["items"]
+        self.assertFalse(items["additionalProperties"])
 
-    def test_model_is_moved_from_the_body_to_the_url_when_sent(self) -> None:
-        """request_body() の "model" はキャッシュキー用の値で、実際に送信される
-        本文には含まれず、URL パスとヘッダに移ること。
-
-        post() を実際に呼び、urlopen に渡る Request を検分する
-        （llm.post の docstring・request_body の docstring を参照）。
-        """
-        body = llm.request_body("gemini-2.5-flash", "sys", "user", field="work")
-        captured: dict = {}
-
-        def fake_urlopen(req, timeout=None):
-            captured["url"] = req.full_url
-            captured["header"] = req.get_header("X-goog-api-key")
-            captured["data"] = json.loads(req.data)
-            return _FakeResponse(
-                json.dumps({"candidates": [{
-                    "content": {"parts": [{"text": '{"groups": []}'}]},
-                    "finishReason": "STOP",
-                }]}).encode("utf-8")
-            )
-
-        with mock.patch("urllib.request.urlopen", fake_urlopen):
-            llm.post(body, "s3cr3t")
-        self.assertNotIn("model", captured["data"])
-        self.assertEqual(
-            captured["url"],
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            "gemini-2.5-flash:generateContent",
-        )
-        self.assertNotIn("s3cr3t", captured["url"])  # クエリ ?key= には入れない
-        self.assertEqual(captured["header"], "s3cr3t")
-
-    def test_the_endpoint_and_model_are_both_for_gemini(self) -> None:
+    def test_the_endpoint_and_model_are_both_for_groq(self) -> None:
         """エンドポイントとモデル ID がプロバイダとして食い違わないこと。
 
-        OpenAI 直叩き時代は "gpt-4.1" のようにプロバイダ接頭辞の無いモデル ID を
-        本文の "model" に書けばよかったが、Gemini はモデル ID がそのまま URL
-        パスに入る。**"openai/gpt-4.1" のような接頭辞つきの値を入れると、
-        別のパスを叩きにいって 404 になる**（llm.py の DEFAULT_MODEL 直上の
-        コメントを参照）。
+        **Gemini 期はここで逆のことを検査していた** — モデル ID がそのまま
+        URL パスに入るため、"openai/gpt-4.1" のようなプロバイダ接頭辞つきの
+        値を入れると別のパスを叩いて 404 になるので、"/" を含まないことを
+        見ていた。Groq は OpenAI 互換で "model" が本文に入るため制約が
+        反転し、**"openai/" 接頭辞が無いと存在しないモデル名になって 404 に
+        なる**（DEFAULT_MODEL 直上のコメントを参照）。そのまま残すと今の
+        正しい値（"openai/gpt-oss-120b"）で確実に落ちるテストだったので、
+        検査内容ごと反転させた。
         """
-        self.assertEqual(
-            llm.endpoint_for(llm.DEFAULT_MODEL),
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{llm.DEFAULT_MODEL}:generateContent",
-        )
-        self.assertIn("generativelanguage.googleapis.com", llm.endpoint_for(llm.DEFAULT_MODEL))
-        self.assertTrue(llm.endpoint_for(llm.DEFAULT_MODEL).endswith(":generateContent"))
-        self.assertNotIn("/", llm.DEFAULT_MODEL)
+        self.assertEqual(llm.ENDPOINT, "https://api.groq.com/openai/v1/chat/completions")
+        self.assertIn("openai/", llm.DEFAULT_MODEL)
 
 
 class SandboxTest(unittest.TestCase):

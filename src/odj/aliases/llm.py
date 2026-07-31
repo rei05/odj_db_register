@@ -29,10 +29,12 @@ bigram でも編集距離でも部分一致でも一度も同じクラスタに�
 
 クラスタは1件ずつではなく、SAFE_INPUT_TOKENS まで詰めてバッチで投げる。
 1リクエストごとに system_prompt の固定費が丸ごと乗るため、1件ずつ投げると
-固定費をクラスタ数ぶん払うことになる。Gemini API には無料枠があるが、
-**レート制限はモデルとティアで変わり、公式ドキュメントも具体値を載せずに
-AI Studio で確認せよとしている**（なのでここにも数字は書かない）。
-リクエスト数を減らしておけば、どのティアでも 429 待ちに当たりにくい。
+固定費をクラスタ数ぶん払うことになる。Groq は無料枠の具体値を公式ドキュメントに
+載せていて、既定の openai/gpt-oss-120b は **RPD 1,000 / TPM 8,000 /
+TPD 200,000**（ドキュメント記載時点の値。モデルとティアで変わるので、
+429 が続くようになったら公式のレート制限表を引き直すこと）。
+**効いてくるのはリクエスト数ではなく TPM 8,000 のほう**で、バッチの刻みは
+そちらに合わせてある（INPUT_TOKEN_LIMIT の説明を参照）。
 実測（--dry-run）で work の 151 クラスタが 29 リクエスト、
 artist の 105 クラスタが 34 リクエスト（work は「ブランド単位でまとめる」方針転換で
 keep_apart の組を消した結果クラスタが繋がり、152 → 151 に減っている）。
@@ -62,65 +64,63 @@ from odj.aliases import block, rules, store
 from odj.aliases.store import AliasError
 
 # ---------------------------------------------------------------------------
-# Gemini API（generateContent）
+# Groq API（OpenAI 互換の chat/completions）
 # ---------------------------------------------------------------------------
 
-# 経緯: GitHub Models の無料枠 → 2026-07-30 に廃止（410）→ OpenAI 直叩き →
-# OpenAI アカウントが insufficient_quota で叩けず Gemini へ。
+# 経緯: GitHub Models の無料枠 → 2026-07-30 に廃止（410）→ OpenAI 直叩き
+# （アカウントが insufficient_quota で叩けず）→ Gemini ネイティブの
+# generateContent（無料枠が 1日 20 リクエストしかなく完走できない）→ Groq。
 #
-# **定数ではなくテンプレートなのは、Gemini がモデル ID を URL パスに置くため。**
-# OpenAI 互換の chat/completions（本文の "model" でモデルを指定する）と構造が
-# 一番違うのがここ。組み立ては endpoint_for() が持つ。
+# **Groq は OpenAI 互換**なので、リクエスト本文も応答の形も OpenAI 時代
+# （d5a42ea）のものがそのまま通る。Gemini はモデル ID を URL パスに置くため
+# ENDPOINT_TEMPLATE + endpoint_for() でパスを組み立てていたが、Groq は本文の
+# "model" で指定するので URL は固定に戻る。
+ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
+
+# **プロバイダ接頭辞 "openai/" を必ず付ける。** Gemini 期はモデル ID が URL パスに
+# 入るせいで「"/" を混ぜると別のパスを叩いて 404」だったが、**Groq では本文に入る
+# ので制約が反転する** — 接頭辞を落とした "gpt-oss-120b" は存在しないモデル名に
+# なり、そちらが 404 になる。前のコメントの癖のまま外さないこと。
 #
-# Gemini の OpenAI 互換エンドポイント（/v1beta/openai/）を選ばなかった理由:
-# あちらは beta で「**リストにないパラメータは黙って無視する**」と公式に
-# 書かれている。responseSchema が無視されて素の文章が返ると parse_groups は
-# JSON として読めずバッチを丸ごと捨てるので、黙って落ちる形になる。
-ENDPOINT_TEMPLATE = (
-    "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-)
-
-
-def endpoint_for(model: str) -> str:
-    """そのモデルの generateContent の URL。
-
-    API キーはクエリ ?key= でも渡せるが、**URL に鍵が入るとシェルの履歴や
-    プロキシのログに残る**ので、post() は x-goog-api-key ヘッダで渡す。
-    ここに鍵を足さないこと。
-    """
-    return ENDPOINT_TEMPLATE.format(model=model)
-
-
-# プロバイダ接頭辞は付けない（URL パスにそのまま入るため、余計な "/" が混ざると
-# 別のパスを叩きにいって 404 になる）。
-#
-# 出力が途中で切れることを一番警戒して選んでいる。ここは responseSchema で
-# 構造化 JSON を強制しており、maxOutputTokens に当たって切れる
-# （finishReason="MAX_TOKENS"）と parse_groups がバッチまるごと諦める。
-# 出力トークンを思考にも使うモデルを既定に置くとその枠を思考が食うので、
-# 素直に出し切るほうに寄せて flash 系を既定にしてある。
-# --model で差し替えられるので、試すときはそちらで。
-DEFAULT_MODEL = "gemini-3.6-flash"
+# gpt-oss を既定に置いている理由は、**strict モード（strict: true のスキーマ強制）に
+# 対応するのが openai/gpt-oss-120b と openai/gpt-oss-20b だけ**だから。他のモデルは
+# json_object しか受けず、キー名も型も強制できない。スキーマが効かずに素の文章が
+# 返ると parse_groups は JSON として読めずバッチを丸ごと捨てるので、黙って提案が
+# 減る形になる。--model で差し替えられるので、試すときはそちらで。
+DEFAULT_MODEL = "openai/gpt-oss-120b"
 
 # 1リクエストに詰める入力量の上限。**API が強制する上限ではなく、こちらが選んで
-# いる保守的なバッチサイズ**（Gemini のコンテキスト長はこれよりはるかに大きい）。
-# 由来は GitHub Models の無料枠が入力 4000tok だったこと。
+# いる値**（gpt-oss-120b のコンテキスト長はこれよりはるかに大きい）。
 #
-# 上げれば1リクエストあたりのクラスタ数が増えてリクエスト数を減らせるが、
-# **MAX_CLUSTERS_PER_CALL と MAX_OUTPUT_TOKENS も一緒に見ないと出力側で答えが
-# 切れる**（1クラスタ ≒ 出力 200tok なので、入力だけ倍にすると出力が足りない）。
-# もう1つ、**上げるとプロンプト全文の SHA256 が変わってキャッシュ
-# （data/raw/llm/）が全部無効になる**。動かす価値があるときだけ動かすこと。
+# **効いてくる制約はプロバイダごとに種類が違う**ので、移るたびにここを見直している。
+#   - GitHub Models … 無料枠の入力上限が 4000tok だった。4000 刻みの由来はこれ
+#   - Gemini … 制限が1日あたりのリクエスト数（実際に踏んだ: Quota exceeded for
+#     metric: …/generate_content_free_tier_requests, limit: 20）。4000 刻みでは
+#     work 29 回 / artist 34 回に割れて 19 件目で必ず落ちるので、刻みを倍
+#     （8000 / 7200 / 8000 / 24）に広げて work 10 回 / artist 9 回に落としていた
+#   - Groq … 制限は **TPM 8,000**（openai/gpt-oss-120b の無料枠）。広げたままだと
+#     入力 7,200 + 出力 8,000 = 15K で、**1リクエストだけで分あたり上限を超える**。
+#     3,600 + 4,000 = 7,600 なら収まるので 4000 刻みに戻した。RPD は 1,000 あるので
+#     work 29 回 / artist 34 回に戻ってもリクエスト数は問題にならない
+#
+# 動かすときは **MAX_CLUSTERS_PER_CALL と MAX_OUTPUT_TOKENS も一緒に見ること**。
+# 1クラスタ ≒ 出力 200tok なので、入力だけ増やすと出力が足りずに答えが切れる。
+# もう1つ、**動かすとプロンプト全文の SHA256 が変わってキャッシュが全部無効**。
 INPUT_TOKEN_LIMIT = 4000
 
 # 実際に詰めてよい量。上限ちょうどを狙うと、推定の誤差ぶんだけリクエストが
 # まるごと無駄になる。1割の余裕を持たせてある。
 SAFE_INPUT_TOKENS = 3600
 
+# 1クラスタ ≒ 出力 200tok なので MAX_CLUSTERS_PER_CALL ぶんで 3600tok 要る。
+# ここが足りないと finish_reason="length" で JSON が途中で切れ、**そのバッチの
+# クラスタが丸ごと提案なしになる**。SAFE_INPUT_TOKENS との合計 7,600 が
+# Groq の TPM 8,000 に収まる上限でもあるので、上げるなら入力側を削ること。
 MAX_OUTPUT_TOKENS = 4000
 
 # 1リクエストに詰めるクラスタ数の上限。入力に収まっても、1クラスタ ≒ 出力 200tok
 # なので、これを超えると出力側の 4000tok を超えて答えが途中で切れる。
+# **大きくするほど、1リクエストが失敗したときに巻き添えで失うクラスタが増える。**
 MAX_CLUSTERS_PER_CALL = 18
 
 # pack_batches が入る限り詰めるので、この値は --batch-size の既定でしかない。
@@ -170,28 +170,26 @@ _WORK_ONLY_PROPERTIES: dict[str, Any] = {
 }
 
 
-def response_schema(field: str) -> dict[str, Any]:
-    """LLM に強制する出力スキーマ。generationConfig.responseSchema にそのまま入る。
+def response_format(field: str) -> dict[str, Any]:
+    """LLM に強制する出力スキーマ。OpenAI 互換の response_format にそのまま入る。
 
     **approved はここに無い。** LLM が承認済みを書く手段が存在しないことが、
     「未承認のものが公開データに出ない」の一番外側の担保になっている。
+    仮にスキーマから漏れても to_entry() は既知のキーだけを明示的に組み立てて
+    未知のキーを写さず、store.write_proposals() が approved を含む提案を例外で
+    弾く。スキーマは3枚あるうちの1枚でしかないが、一番手前で効く。
 
-    OpenAI 時代の {"type":"json_schema","json_schema":{"name":…,"strict":True,
-    "schema":…}} というラッパーは Gemini には無い。**スキーマ本体だけ**を返す
-    （名前を response_format から改めたのはこのため。返すものが別物になった）。
-    strict に当たる指定も無く、**additionalProperties も使えない**。実際に投げて
-    400 が返って分かった:
-        Unknown name "additionalProperties" at 'generation_config.response_schema':
-        Cannot find field.
-    generateContent の responseSchema は OpenAPI のサブセットで、JSON Schema の
-    全部が通るわけではない（type / properties / required / items / enum は通る）。
-    **ここに additionalProperties を足し直すと全リクエストが 400 で落ちる。**
-
-    外しても「LLM が approved を書けない」担保は変わらない。to_entry() が既知の
-    キーだけを明示的に組み立てていて未知のキーを写さないうえ、
-    store.write_proposals() が approved を含む提案を例外で弾く。スキーマは
-    3枚あるうちの1枚でしかなく、それも一番外側ではない。
-    required は通るので「全項目を必ず埋めさせる」ほうは維持できている。
+    **strict と additionalProperties の要否はプロバイダで逆になる。** 両方
+    書き残しておく（戻すときに再び踏むため）:
+      - Groq / OpenAI … strict モードの要件が「全フィールドを required に入れる」
+        「オブジェクトに additionalProperties: false を置く」。**どちらも省くと
+        400**。strict に対応するモデルの縛りは DEFAULT_MODEL の説明を参照
+      - Gemini（generateContent、75e4854 まで）… 逆で、json_schema のラッパーも
+        strict も無く**スキーマ本体だけ**を渡す。responseSchema は OpenAPI の
+        サブセットで additionalProperties を受け付けず、足すと全リクエストが
+        400 で落ちた:
+            Unknown name "additionalProperties" at
+            'generation_config.response_schema': Cannot find field.
 
     field で分けているのは series / kind の2項目だけ（_WORK_ONLY_PROPERTIES の
     説明を参照）。スキーマは cache_key に含まれるので、ここを変えると
@@ -206,20 +204,30 @@ def response_schema(field: str) -> dict[str, Any]:
         "reason": {"type": "string"},
     }
     return {
-        "type": "object",
-        "required": ["groups"],
-        "properties": {
-            "groups": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    # required は properties と揃える。省略されうる項目を作ると、
-                    # 「series が無い提案」が work 側に混ざって to_entry が
-                    # 空文字で埋めることになる。並びも properties のまま。
-                    "required": list(properties),
-                    "properties": properties,
+        "type": "json_schema",
+        "json_schema": {
+            "name": "alias_groups",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["groups"],
+                "properties": {
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            # strict モードは properties と required が一致して
+                            # いないと 400 を返す。省略されうる項目を作ると
+                            # 「series が無い提案」が work 側に混ざって to_entry が
+                            # 空文字で埋めることにもなる。並びも properties のまま。
+                            "required": list(properties),
+                            "properties": properties,
+                        },
+                    }
                 },
-            }
+            },
         },
     }
 
@@ -512,7 +520,7 @@ _FIELD_TEXT: dict[str, dict[str, str]] = {
   artist-as-work=元ネタ欄にアーティスト名""",
         "api": """外部 API の裏取り。**空配列は「引いたが記事が無かった」**で
   タイポか通称のシグナル。キーごと無い値は引いていないだけなので根拠にしない""",
-        # 出力の series / kind。artist では response_schema() のスキーマから
+        # 出力の series / kind。artist では response_format() のスキーマから
         # 落としてあるので、ここで説明すると書けない項目を求めることになる。
         #
         # series の使われ方は1つだけで、**検索の的を広げること**である。
@@ -715,41 +723,32 @@ def estimate_tokens(text: str) -> int:
 
 
 def request_body(model: str, system: str, user: str, *, field: str) -> dict[str, Any]:
-    """generateContent のリクエスト本文（+ キャッシュ用の "model"）。
+    """OpenAI 互換のリクエスト本文。Groq にはこのまま送れる。
 
-    **"model" は Gemini の本文には存在しないキー。** そのまま送ると
-    400 INVALID_ARGUMENT になるので、post() が送信直前に外して URL 側
-    （endpoint_for）に回す。それでもここに入れてあるのは cache_key() が
-    **リクエスト本文全体の SHA256** だからで、モデル名が本文から消えると
-    キャッシュキーからも消える。そうなると `--model A` で1回回したあと
-    `--model B` に変えても data/raw/llm/ の同じファイルに当たり、**Aで生成した
+    **"model" が本文にある**ので、cache_key()（リクエスト本文全体の SHA256）に
+    モデル名が自然に含まれる。Gemini 期はモデルが URL パスに移るため、本文に
+    "model" を残して post() が送信直前に外す、という仕掛けをわざわざ置いていた
+    — 本文から消えるとキャッシュキーからも消え、`--model A` で回したあと
+    `--model B` に変えても data/raw/llm/ の同じファイルに当たって**Aで生成した
     古い応答が黙って返る**（tests/test_aliases.py の
-    test_a_different_model_does_not_reuse_the_cache がこれを見張っている）。
-    「本文に入っているがネットワークには出ないキー」はこの1つだけ。
+    test_a_different_model_does_not_reuse_the_cache が見張っている）。
 
     temperature は送らない。既定値以外を受け付けないモデルがあり、--model で
     差し替えられる以上、どれでも通る形にしておきたい。再現性はプロンプトの
-    SHA256 キャッシュで担保しているので実害は無い。
+    SHA256 キャッシュで担保しているので実害は無い。max_tokens ではなく
+    max_completion_tokens なのも同じ理由。
 
-    responseSchema を効かせるには responseMimeType が "application/json" で
-    ある必要がある。片方だけ書くとスキーマが効かず、素の文章が返って
-    parse_groups がバッチを丸ごと捨てる。**必ず対で書くこと。**
-
-    system は messages ではなく systemInstruction に置く（Gemini では
-    role="system" の contents は受け付けない）。
-
-    field は response_schema のためだけに要る（既定値を置いていないのは、
+    field は response_format のためだけに要る（既定値を置いていないのは、
     呼ぶ側が work を暗黙に選んでしまうのを防ぐため）。
     """
     return {
         "model": model,
-        "systemInstruction": {"parts": [{"text": system}]},
-        "contents": [{"role": "user", "parts": [{"text": user}]}],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "responseSchema": response_schema(field),
-            "maxOutputTokens": MAX_OUTPUT_TOKENS,
-        },
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "response_format": response_format(field),
+        "max_completion_tokens": MAX_OUTPUT_TOKENS,
     }
 
 
@@ -761,10 +760,8 @@ def cache_dir() -> Path:
 def cache_key(body: dict) -> str:
     """リクエスト本文全体の SHA256。
 
-    プロンプトだけでなくモデル名と responseSchema も含める。スキーマを直したのに
-    古い応答が返ってくると、原因の分からない検証エラーになるため。モデル名が
-    Gemini の本文には無いキーであるのにここまで届いている理由は request_body の
-    docstring を参照。
+    プロンプトだけでなくモデル名と response_format も含める。スキーマを直したのに
+    古い応答が返ってくると、原因の分からない検証エラーになるため。
     """
     canonical = json.dumps(body, ensure_ascii=False, sort_keys=True)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -796,30 +793,21 @@ _UA = "odj-db-register/0.1 ( hasegawa0kn@gmail.com )"
 def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dict:
     """POST 1回。drive.py の _get() と同じくリトライ + バックオフを持つ。
 
-    **429（status=RESOURCE_EXHAUSTED）は区別せず全部リトライする。** Gemini の
-    429 は「1分あたりの上限に当たった」（待てば回復する。無料枠では普通に
-    当たる）でも「1日あたりの上限を使い切った」（待っても回復しない）でも
-    同じ code / status で返り、**本文から機械的に区別できない**。区別を諦めて
-    素直に待つほうを採った。どちらだったかは、メッセージに載せた応答本文
-    （error.message）を人が読めば分かる — GitHub Models 時代からの方針。
-    OpenAI 用に足した insufficient_quota による即時打ち切りは、Gemini に
-    その文字列が無いので落としてある。
+    **429 は区別せず全部リトライする。** Groq の制限は RPM / TPM / RPD / TPD の
+    4種類あり、分あたり（RPM / TPM）は待てば回復するが、日あたり（RPD / TPD）は
+    その日のうちは回復しない。どれに当たったかで打ち切るかどうかを機械的に
+    振り分けることはせず、素直に待つほうを採ってある（待っても回復しない場合は
+    retries を使い切って落ちる）。どれだったかは、メッセージに載せた応答本文を
+    人が読めば分かる — GitHub Models 時代からの方針。
     """
-    # モデル名は本文から取り出して URL に回す。**Gemini は本文に "model" を
-    # 持たない**ので、付けたまま投げると 400 INVALID_ARGUMENT になる
-    # （なぜ本文に入っているかは request_body の docstring を参照）。
-    model = str(body.get("model") or DEFAULT_MODEL)
-    url = endpoint_for(model)
-    payload = {k: v for k, v in body.items() if k != "model"}
-    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    data = json.dumps(body, ensure_ascii=False).encode("utf-8")
     last: Exception | None = None
     for attempt in range(retries):
         req = urllib.request.Request(
-            url,
+            ENDPOINT,
             data=data,
             headers={
-                # クエリ ?key= ではなくヘッダ。URL に鍵が入ると履歴やログに残る。
-                "x-goog-api-key": token,
+                "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "User-Agent": _UA,
@@ -832,27 +820,27 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
         except urllib.error.HTTPError as exc:  # noqa: PERF203
             detail = exc.read().decode("utf-8", "replace")[:500]
             hint = ""
-            if exc.code == 404 or "NOT_FOUND" in detail:
+            if exc.code == 404 or "model_not_found" in detail:
                 # 存在しないモデル ID か、この API キーで使えないモデルを指定すると
-                # 404 / status=NOT_FOUND が返る。**Gemini はモデル ID が URL パスに
-                # 入る**ので、綴りを間違えるとエンドポイントごと存在しないことに
-                # なり、本文のバリデーション（400）ではなく 404 で落ちる。
-                # **綴り間違いと権限不足が同じエラーになる**ので、まず一覧を引いて
-                # もらうのが早い。
+                # 404 が返る。**綴り間違いと権限不足が同じエラーになる**ので、
+                # まず一覧を引いてもらうのが早い。一番ありがちなのは "openai/" の
+                # 接頭辞を落とすこと（DEFAULT_MODEL の説明を参照）なので、それも
+                # 書いておく。
                 #
-                # ここで使う model は、上で body から取り出しておいた変数。
-                # post() の引数には model が無く、直に model と書くと NameError で
-                # 本来のエラー本文まで消える、という失敗を一度やっている。
+                # モデル名は body から取る。post() の引数には無いので、ここで
+                # model を直に参照すると NameError になって本来のエラー本文まで
+                # 消える、という失敗を一度やっている。
                 hint = (
-                    f"\n  モデル {model!r} が見つからないか、"
+                    f"\n  モデル {body.get('model')!r} が見つからないか、"
                     "この API キーでは使えません。"
+                    "\n  Groq のモデル ID は openai/gpt-oss-120b のように"
+                    "プロバイダ接頭辞まで含めた形です（落とすと 404）。"
                     "\n  使えるモデルの一覧はこれで引けます:"
-                    '\n    curl -s "https://generativelanguage.googleapis.com'
-                    '/v1beta/models"'
-                    ' -H "x-goog-api-key: $GEMINI_API_KEY"'
+                    "\n    curl -s https://api.groq.com/openai/v1/models"
+                    ' -H "Authorization: Bearer $GROQ_API_KEY"'
                     "\n  --model で切り替えられます。"
                 )
-            last = AliasError(f"Gemini API が {exc.code} を返しました: {detail}{hint}")
+            last = AliasError(f"Groq API が {exc.code} を返しました: {detail}{hint}")
             # 400（プロンプトが長すぎる等）や 401 / 403 は待っても直らないので
             # 即座に上げる。429 はここに含めない（上の docstring を参照）。
             if exc.code not in (429, 500, 502, 503, 504):
@@ -863,46 +851,35 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
             wait = 3 * (attempt + 1)
         if attempt < retries - 1:  # 最後の1回のあとは待たずに諦める
             time.sleep(wait)
-    raise AliasError(f"Gemini API の呼び出しに失敗しました: {last}")
+    raise AliasError(f"Groq API の呼び出しに失敗しました: {last}")
 
 
 def parse_groups(response: dict) -> list[dict]:
-    """応答から groups を取り出す。本文は candidates[0].content.parts[].text。
+    """応答から groups を取り出す。本文は choices[0].message.content。
 
-    responseSchema で強制しているので普通は素直に JSON だが、**読めない応答が
-    3通りある。どれも例外にせず、そのバッチだけ諦めて空を返す**（1バッチ落ちても
+    response_format で強制しているので普通は素直に JSON だが、**読めない応答が
+    ある。どれも例外にせず、そのバッチだけ諦めて空を返す**（1バッチ落ちても
     他のバッチの提案は書けるので、ここで落とすほうが損が大きい）。
 
-      - 出力上限で切れる（finishReason="MAX_TOKENS"）。JSON が途中で終わる。
-        OpenAI 時代の finish_reason="length" に当たるもの
-      - 安全性フィルタで止まる（"SAFETY" / "BLOCKED"）。このとき
-        **candidates[0] に content ごと無いことがある**ので、parts を無条件に
-        添字アクセスすると IndexError / KeyError で落ちる
-      - プロンプト自体がブロックされる。candidates が空で、理由は
-        promptFeedback.blockReason にだけ入る
+      - 出力上限に当たって切れる（finish_reason="length"）。JSON が途中で終わる
+      - モデルが答えを拒否する（message.refusal が入り content は null）
+      - choices が空、content が空文字、content が JSON として読めない
 
     黙って捨てるのは避けたいので、止まった理由は no_groups_reason() が組み立て、
-    ask() がログに流す。
-
-    text は parts を連結して読む。1パートで返るのが普通だが、分割されたときに
-    先頭だけ読むと JSON が途中で切れたのと同じ壊れ方をするため。
+    ask() がログに流す（Gemini 期に足した仕組み。プロバイダが変わっても、0件の
+    内訳が分からないと 29 リクエストのうち何本が捨てられたのか追えない）。
     """
-    candidates = response.get("candidates") or []
-    if not candidates:
+    choices = response.get("choices") or []
+    if not choices:
         return []
-    content = candidates[0].get("content")
-    if not isinstance(content, dict):
+    message = choices[0].get("message") or {}
+    if message.get("refusal"):
         return []
-    parts = content.get("parts")
-    if not isinstance(parts, list):
-        return []
-    text = "".join(
-        p["text"] for p in parts if isinstance(p, dict) and isinstance(p.get("text"), str)
-    )
-    if not text.strip():
+    content = message.get("content")
+    if not isinstance(content, str) or not content.strip():
         return []
     try:
-        parsed = json.loads(text)
+        parsed = json.loads(content)
     except json.JSONDecodeError:
         return []
     groups = parsed.get("groups") if isinstance(parsed, dict) else None
@@ -913,26 +890,52 @@ def no_groups_reason(response: dict) -> str:
     """提案が0件だったときに、応答のどこで止まったのかを一言で返す。
 
     parse_groups が空を返す事情は「モデルがまとめる根拠を見つけなかった」
-    （正常）から「安全性フィルタで落ちた」まで幅があり、**どれも同じ空配列に
-    なってしまう**。ログに出す文面だけでも分けておかないと、29 リクエストの
-    うち何本が本当に静かに捨てられたのか後から分からない。
+    （正常）から「出力が途中で切れてバッチを丸ごと捨てた」まで幅があり、
+    **どれも同じ空配列になってしまう**。ログに出す文面だけでも分けておかないと、
+    29 リクエストのうち何本が本当に静かに捨てられたのか後から分からない。
+
+    **どの分岐にも当てはまらないときに「理由不明」で潰さない。** 知らない
+    finish_reason が増えても、その値がそのままログに出るようにしてある
+    （潰すと、原因の分からない「提案なし」が黙って積み上がる）。
     """
-    candidates = response.get("candidates") or []
-    if not candidates:
-        blocked = (response.get("promptFeedback") or {}).get("blockReason")
-        if blocked:
-            return f"プロンプトがブロックされました（blockReason={blocked}）"
-        return "応答に candidates がありません"
-    finish = str(candidates[0].get("finishReason") or "")
-    if finish == "MAX_TOKENS":
-        return "出力上限（maxOutputTokens）で切れました。JSON が途中で終わっています"
-    if finish in ("SAFETY", "BLOCKED"):
-        return f"安全性フィルタで止まりました（finishReason={finish}）"
-    if not isinstance(candidates[0].get("content"), dict):
-        return f"応答に content がありません（finishReason={finish or '不明'}）"
-    if finish and finish != "STOP":
-        return f"finishReason={finish}"
-    return "モデルがグループを1つも出しませんでした（まとめる根拠が無いという判断）"
+    choices = response.get("choices") or []
+    if not choices:
+        # post() が 400 系を例外にしているのでここには来ないはずだが、
+        # 応答の形が想定と違うときのために error も見ておく。
+        error = response.get("error")
+        if isinstance(error, dict) and error.get("message"):
+            return f"応答がエラーでした（{str(error.get('message'))[:200]}）"
+        return "応答に choices がありません"
+    choice = choices[0] if isinstance(choices[0], dict) else {}
+    message = choice.get("message")
+    if not isinstance(message, dict):
+        message = {}
+    finish = str(choice.get("finish_reason") or "")
+    if finish == "length":
+        return (
+            "出力上限（max_completion_tokens）で切れました。JSON が途中で終わっています"
+        )
+    if message.get("refusal"):
+        return f"モデルが回答を拒否しました（refusal: {str(message['refusal'])[:100]}）"
+    if finish == "content_filter":
+        return "コンテンツフィルタで止まりました（finish_reason=content_filter）"
+    content = message.get("content")
+    if not isinstance(content, str) or not content.strip():
+        return f"応答に content がありません（finish_reason={finish or '不明'}）"
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError as exc:
+        # response_format が効かずに素の文章が返ったときがこれ。strict を
+        # 受けないモデルに --model で切り替えると起きる（DEFAULT_MODEL の説明）。
+        return f"content が JSON として読めませんでした（{exc}）"
+    if not isinstance(parsed, dict):
+        return "content の JSON がオブジェクトではありません"
+    if not parsed.get("groups"):
+        if finish and finish != "stop":
+            return f"finish_reason={finish}"
+        return "モデルがグループを1つも出しませんでした（まとめる根拠が無いという判断）"
+    # groups はあるのに parse_groups が空を返した = 中身が dict でない。
+    return f"groups の中身が想定の形ではありません（finish_reason={finish or '不明'}）"
 
 
 # ---------------------------------------------------------------------------
@@ -1109,7 +1112,7 @@ def ask(
         if log is not None:
             log(text)
 
-    token = token or os.environ.get("GEMINI_API_KEY") or ""
+    token = token or os.environ.get("GROQ_API_KEY") or ""
     prepared = plan(field, limit=limit, size=size)
     evidence = prepared["evidence"]
     keep_apart = block.load_keep_apart()
@@ -1126,9 +1129,9 @@ def ask(
         if response is None:
             if not token:
                 raise AliasError(
-                    "GEMINI_API_KEY がありません（--dry-run なら不要です）。"
-                    "GitHub Actions ではリポジトリの secrets に GEMINI_API_KEY を"
-                    "登録し、env で渡してください"
+                    "GROQ_API_KEY がありません（--dry-run なら不要です）。"
+                    "GitHub Actions ではリポジトリの secrets に GROQ_API_KEY を"
+                    "手で登録し、env で渡してください"
                 )
             say(f"  [{i}/{len(prepared['batches'])}] 送信中… 推定 {batch['tokens']} tok")
             response = post(body, token)
