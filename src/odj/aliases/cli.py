@@ -501,7 +501,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_ask.add_argument(
         "--model", default=llm.DEFAULT_MODEL,
-        help=f"OpenAI のモデル名（既定: {llm.DEFAULT_MODEL}）",
+        help=f"Gemini のモデル名（既定: {llm.DEFAULT_MODEL}）",
     )
     p_ask.set_defaults(func=_cmd_ask)
 
