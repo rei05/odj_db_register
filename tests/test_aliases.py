@@ -1989,17 +1989,72 @@ class AskTest(unittest.TestCase):
         self.assertEqual((opened.call_count, slept.call_count), (1, 0))
 
     def test_a_rate_limit_is_retried_with_a_wait(self) -> None:
-        # Groq の 429 は RPM / TPM / RPD / TPD の4種類あり、分あたり
-        # （RPM / TPM）は待てば回復するが、日あたり（RPD / TPD）はその日の
-        # うちは回復しない。**本文から機械的に区別できない**ので、種類を
-        # 問わず全部リトライする方針に統一されている（llm.post() の
-        # docstring 参照）。最後の1回のあとは待たずに諦める。
+        # 待ち時間が読み取れない 429 は、従来どおり 20 / 40 秒のバックオフで
+        # 引き直す。最後の1回のあとは待たずに諦める。
         opened = self._http_error(429)
         with mock.patch("urllib.request.urlopen", opened):
             with mock.patch("time.sleep") as slept:
                 with self.assertRaises(store.AliasError):
                     llm.post({"model": "m"}, "tok", retries=3)
         self.assertEqual((opened.call_count, slept.call_count), (3, 2))
+
+    @staticmethod
+    def _rate_limited(message: str) -> mock.Mock:
+        """429 を返すモック。**呼ばれるたびに新しい HTTPError を作る。**
+
+        1つの例外を使い回すと、2回目以降は exc.read() が空を返す（BytesIO を
+        読み切っているため）。実際の通信ではリトライごとに新しい応答が来るので、
+        使い回すとリトライ側のコードが「本文が読めない」経路に落ちて、
+        検査したい挙動と違うものを見ることになる。
+        """
+        body = json.dumps({"error": {"message": message}}).encode()
+        return mock.Mock(
+            side_effect=lambda *a, **kw: (_ for _ in ()).throw(
+                urllib.error.HTTPError(
+                    llm.ENDPOINT, 429, "Too Many Requests", {}, io.BytesIO(body)  # type: ignore[arg-type]
+                )
+            )
+        )
+
+    def test_a_short_rate_limit_wait_is_honoured(self) -> None:
+        """分あたりの詰まりは、**教えられた時間だけ**待って引き直すこと。
+
+        固定 20 秒だと、8 秒で回復するときに 12 秒余計に止まり、逆に足りない
+        ときは無駄撃ちになる。Groq は回復までの時間を本文で教えてくれる。
+        """
+        opened = self._rate_limited(
+            "Rate limit reached ... on tokens per minute (TPM). "
+            "Please try again in 8.5s."
+        )
+        with mock.patch("urllib.request.urlopen", opened):
+            with mock.patch("time.sleep") as slept:
+                with self.assertRaises(store.AliasError):
+                    llm.post({"model": "m"}, "tok", retries=3)
+        self.assertEqual(opened.call_count, 3)
+        # 8.5 秒 + 1 秒。20 / 40 のバックオフではないこと
+        self.assertEqual([c.args[0] for c in slept.call_args_list], [9.5, 9.5])
+
+    def test_a_long_rate_limit_wait_aborts_without_sleeping(self) -> None:
+        """日あたりの枠が枯れたら、**待たずに上げること**。
+
+        実際に踏んだ TPD 枯渇では "try again in 19m2.208s" が返っていた。
+        固定 20 秒のバックオフでは3回とも無駄撃ちして落ちるだけで、19 分は
+        待つには長すぎる。回復までの時間と、work と artist を同じ日に回すと
+        超えることをメッセージに出す。
+        """
+        opened = self._rate_limited(
+            "Rate limit reached ... on tokens per day (TPD): Limit 200000, "
+            "Used 198249, Requested 4395. Please try again in 19m2.208s."
+        )
+        with mock.patch("urllib.request.urlopen", opened):
+            with mock.patch("time.sleep") as slept:
+                with self.assertRaises(store.AliasError) as caught:
+                    llm.post({"model": "m"}, "tok", retries=3)
+        # 1回だけ試して、1秒も待たない
+        self.assertEqual((opened.call_count, slept.call_count), (1, 0))
+        message = str(caught.exception)
+        self.assertIn("19 分", message)
+        self.assertIn("同じ日", message)
 
     def test_a_not_found_model_is_named_in_the_message(self) -> None:
         """存在しない/使えないモデルを指定したときのヒントにモデル名が入ること。

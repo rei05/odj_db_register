@@ -49,6 +49,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -818,15 +819,43 @@ def store_response(body: dict, response: dict) -> Path:
 _UA = "odj-db-register/0.1 ( hasegawa0kn@gmail.com )"
 
 
+# 429 で待つ上限。Groq は「あとどれだけ待てば回復するか」を教えてくれるので
+# （retry-after ヘッダか本文の "Please try again in 19m2.208s"）、それに従う。
+# ただし**分あたりの詰まり（TPM / RPM）と日あたりの枯渇（TPD / RPD）で桁が違う**。
+# 前者は数秒〜数十秒で回復するので待つ価値があるが、後者は十数分〜数時間になり、
+# その間ジョブを空回しさせるのは無駄なので打ち切る。実際に踏んだ TPD 枯渇では
+# "try again in 19m2.208s" が返っていて、固定 20 秒のバックオフでは3回とも
+# 無駄撃ちして落ちていた。
+MAX_RETRY_WAIT = 120
+
+
+def retry_after_seconds(exc: urllib.error.HTTPError, detail: str) -> float | None:
+    """あとどれだけ待てば回復するか。読み取れなければ None。
+
+    retry-after ヘッダを優先し、無ければ本文の文言から拾う。Groq は
+    "Please try again in 19m2.208s" のように分と秒で書いてくる。
+    """
+    header = exc.headers.get("retry-after") if exc.headers else None
+    if header:
+        try:
+            return float(header)
+        except ValueError:
+            pass
+    m = re.search(r"try again in (?:(\d+)m)?([\d.]+)s", detail)
+    if m:
+        return int(m.group(1) or 0) * 60 + float(m.group(2))
+    return None
+
+
 def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dict:
     """POST 1回。drive.py の _get() と同じくリトライ + バックオフを持つ。
 
-    **429 は区別せず全部リトライする。** Groq の制限は RPM / TPM / RPD / TPD の
-    4種類あり、分あたり（RPM / TPM）は待てば回復するが、日あたり（RPD / TPD）は
-    その日のうちは回復しない。どれに当たったかで打ち切るかどうかを機械的に
-    振り分けることはせず、素直に待つほうを採ってある（待っても回復しない場合は
-    retries を使い切って落ちる）。どれだったかは、メッセージに載せた応答本文を
-    人が読めば分かる — GitHub Models 時代からの方針。
+    **429 は待ち時間を読み取って従う。** Groq の制限は RPM / TPM / RPD / TPD の
+    4種類あり、分あたり（RPM / TPM）は数秒〜数十秒で回復するが、日あたり
+    （RPD / TPD）は十数分〜数時間かかる。どちらなのかは応答が教えてくれるので
+    （retry_after_seconds を参照）、MAX_RETRY_WAIT に収まるなら待って引き直し、
+    超えるなら**待たずに上げる**。以前は一律 20 秒のバックオフで、日あたりの
+    枯渇に当たったときに3回とも無駄撃ちしていた。
     """
     data = json.dumps(body, ensure_ascii=False).encode("utf-8")
     last: Exception | None = None
@@ -882,6 +911,22 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
                     f"\n  llm.py の SAFE_INPUT_TOKENS（現在 {SAFE_INPUT_TOKENS}）を下げるか、"
                     f"TOKEN_ESTIMATE_SLACK（現在 {TOKEN_ESTIMATE_SLACK}）を上げてください。"
                 )
+            if exc.code == 429:
+                # あとどれだけ待てば回復するかを応答が教えてくれる。長すぎるなら
+                # 待たずに上げる（日あたりの枠が枯れたときは十数分〜数時間かかる）。
+                after = retry_after_seconds(exc, detail)
+                if after is not None and after > MAX_RETRY_WAIT:
+                    hint = (
+                        f"\n  回復まで約 {after / 60:.0f} 分と返ってきました"
+                        f"（{MAX_RETRY_WAIT} 秒を超えるので待たずに上げます）。"
+                        "\n  TPD / RPD なら1日ぶんの枠を使い切っています。"
+                        "work と artist を同じ日に回すと超えます。"
+                        "\n  成功したぶんは data/raw/llm/ にキャッシュされているので、"
+                        "**ローカルなら**回復後に同じコマンドで続きから進みます。"
+                    )
+                    raise AliasError(
+                        f"Groq API が {exc.code} を返しました: {detail}{hint}"
+                    ) from exc
             last = AliasError(f"Groq API が {exc.code} を返しました: {detail}{hint}")
             # json_validate_failed は 400 だが**確率的**で、同じ本文でも投げ直すと
             # 通ることが多い（strict の制約付きデコードが組み立て切れなかった
@@ -894,7 +939,13 @@ def post(body: dict, token: str, *, retries: int = 3, timeout: int = 180) -> dic
             # 401 / 403 / 413 や、モデル名の間違いは待っても直らないので即座に上げる。
             if not retryable:
                 raise last from exc
-            wait = 20 * (attempt + 1) if exc.code == 429 else 3 * (attempt + 1)
+            if exc.code == 429:
+                # 教えられた時間に少しだけ足して待つ。読み取れなければ従来の
+                # 20 / 40 秒のバックオフに落とす。
+                after = retry_after_seconds(exc, detail)
+                wait = after + 1 if after is not None else 20 * (attempt + 1)
+            else:
+                wait = 3 * (attempt + 1)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             last = exc
             wait = 3 * (attempt + 1)
@@ -1203,6 +1254,15 @@ def ask(
                 # 他のエラー（401 / 413 / クォータ切れなど）は systematic で、
                 # 続けても同じところで落ちるだけなので従来どおり上げる。
                 if "json_validate_failed" not in str(exc):
+                    # 途中で落ちたことと、どこまで進んだかを出してから上げる。
+                    # **提案ファイルは書かない。** 途中までの結果で write_proposals
+                    # を呼ぶと、前回まとめて作った提案を部分的な結果で上書きして
+                    # しまう（あれは追記ではなく毎回の書き直し）。
+                    say(
+                        f"  ✗ {i - 1}/{len(prepared['batches'])} バッチまで成功した"
+                        f"ところで中断しました（提案 {len(entries)} 件は"
+                        "**書き出しません**。途中の結果で既存の提案を潰さないため）"
+                    )
                     raise
                 skipped.append(f"[{i}] {exc}")
                 say(f"  [{i}] スキップ: JSON の生成に失敗（json_validate_failed）")
