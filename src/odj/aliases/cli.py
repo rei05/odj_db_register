@@ -109,23 +109,25 @@ def _print_plan(prepared: dict, model: str, dry_run: bool) -> None:
     tokens = [b["tokens"] for b in plans] or [0]
     ev = prepared["evidence"]
     print(f"[{field}] {prepared['total']} クラスタ → {len(plans)} リクエスト")
-    print(f"  モデル: {model}（1リクエスト 入力 {llm.SAFE_INPUT_TOKENS} + "
-          f"出力 {llm.MAX_OUTPUT_TOKENS} tok / Groq の TPM {llm.TPM_LIMIT} 以内）")
+    print(f"  モデル: {model}（1リクエスト 入力 {llm.SAFE_INPUT_TOKENS}×"
+          f"{llm.TOKEN_ESTIMATE_SLACK} + 出力 {llm.MAX_OUTPUT_TOKENS} tok / "
+          f"Groq の TPM {llm.TPM_LIMIT} 以内）")
     print(f"  裏取り: {'evidence ' + str(len(ev)) + ' 値' if ev else 'evidence 無し（省略して続行）'}")
     print(f"  システムプロンプト: 推定 {prepared['systemTokens']} tok")
     print(f"  推定トークン: 合計 {sum(tokens)} / 1回あたり最大 {max(tokens)}")
     sizes = [len(b["clusters"]) for b in plans] or [0]
     print(f"  1回あたりのクラスタ数: {min(sizes)}〜{max(sizes)}")
     # 入力と出力の合計が TPM を超えるバッチは、どの1分にも収まらないので必ず
-    # 429 になる。1クラスタだけで超えているならプロンプトを削るしかない。
+    # 413 になる。**推定は下振れする**ので、判定には TOKEN_ESTIMATE_SLACK を
+    # 掛けた値を使う（実際に推定 4,167 が実測 4,637 だった例がある）。
     over = [
         i
         for i, b in enumerate(plans, start=1)
-        if b["tokens"] + llm.MAX_OUTPUT_TOKENS > llm.TPM_LIMIT
+        if b["tokens"] * llm.TOKEN_ESTIMATE_SLACK + llm.MAX_OUTPUT_TOKENS > llm.TPM_LIMIT
     ]
     if over:
-        print(f"  ⚠ 出力と合わせて TPM {llm.TPM_LIMIT} を超えるバッチ: {over}"
-              "（必ず 429 になります。プロンプトを削るしかありません）")
+        print(f"  ⚠ 出力と合わせて TPM {llm.TPM_LIMIT} を超える見込みのバッチ: {over}"
+              "（413 で落ちます。プロンプトを削るしかありません）")
     if not dry_run:
         return
     print(f"\n===== システムプロンプト（{prepared['systemTokens']} tok） =====")

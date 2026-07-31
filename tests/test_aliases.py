@@ -1468,10 +1468,16 @@ class AskTest(unittest.TestCase):
                 self.assertLessEqual(batch["tokens"], llm.SAFE_INPUT_TOKENS)
                 self.assertLessEqual(len(batch["clusters"]), llm.MAX_CLUSTERS_PER_CALL)
                 # **入力と出力の合計が TPM に収まること。** 超えるバッチは
-                # どの1分にも収まらないので必ず 429 になり、リトライしても
-                # 回復しない。刻みを動かしたときにここが破れるのが一番痛い。
+                # どの1分にも収まらないので必ず 413 になり、リトライしても
+                # 回復しない。
+                #
+                # **推定にそのまま足してはいけない。** estimate_tokens は
+                # 下振れする（推定 4,167 に対し Groq の数えが 4,637 で 413 を
+                # 踏んだ）ので、TOKEN_ESTIMATE_SLACK を掛けてから比べる。
+                # 係数を掛け忘れていたのが、その事故そのものだった。
                 self.assertLessEqual(
-                    batch["tokens"] + llm.MAX_OUTPUT_TOKENS, llm.TPM_LIMIT
+                    batch["tokens"] * llm.TOKEN_ESTIMATE_SLACK + llm.MAX_OUTPUT_TOKENS,
+                    llm.TPM_LIMIT,
                 )
 
     def test_a_tight_limit_forces_one_cluster_per_call(self) -> None:
@@ -1490,9 +1496,13 @@ class AskTest(unittest.TestCase):
         """
         # **1リクエストが TPM に収まること。** 入力と出力はトレードオフで、
         # 入力を増やすと1回に詰まるクラスタが増えて必要な出力も増える。
-        # 合計が TPM を超えると、そのリクエストは何度投げても 429 になる。
+        # 合計が TPM を超えると、そのリクエストは何度投げても 413 になる。
+        # 入力は推定値なので TOKEN_ESTIMATE_SLACK を掛けてから比べる
+        # （掛け忘れて 413 を踏んだことがある。その説明は llm.py にある）。
+        self.assertGreater(llm.TOKEN_ESTIMATE_SLACK, 1.0)
         self.assertLessEqual(
-            llm.SAFE_INPUT_TOKENS + llm.MAX_OUTPUT_TOKENS, llm.TPM_LIMIT
+            llm.SAFE_INPUT_TOKENS * llm.TOKEN_ESTIMATE_SLACK + llm.MAX_OUTPUT_TOKENS,
+            llm.TPM_LIMIT,
         )
         # **出力枠が1リクエスト分のクラスタに足りていること。** 1クラスタ ≒
         # 出力 200tok で、足りないと finish_reason="length" で JSON が途中で
