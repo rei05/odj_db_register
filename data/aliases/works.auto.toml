@@ -1,0 +1,892 @@
+# 元ネタ名の同値クラスのうち、odj.aliases auto が規則で自動承認したぶん。
+#
+# **これは機械が作るファイル。人が直すのは works.toml のほう。**
+# 実行のたび丸ごと書き直すので、ここに手で足した行やコメントは次回で消える。
+# 取り消しは `PYTHONPATH=src python3 -m odj.aliases auto --field work --undo`
+# （このファイルを空にする。取り消した値は再び候補に戻る）。
+#
+# source = "auto:v1" が自動承認の目印。人間が1件ずつ見たものは "human"。
+# reason は LLM の提案の理由に前置きを付けたもので、承認の規則そのものは
+# src/odj/aliases/auto.py に書いてある。
+
+[[work]]
+id = "work-94ae6dc3"
+canonical = "けいおん!"
+kind = "work"
+variants = [
+    "TVアニメ「けいおん!!」挿入歌",
+    "【MAD】 けいおん! 『ハリケーン!! たくあん!!』",
+    "けいおん",
+    "けいおん!",
+    "けいおん!!",
+    "映画けいおん!",
+]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第13回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: 「けいおん」系の表記はすべて同一メディアミックス作品（アニメ・映画）に属し、api_results に \"けいおん!\" が正式名称として登録されている。edgeKinds に agg・bigram・redirect・substr があるため、同一ブランドと判断した。"
+
+[[work]]
+id = "work-9f06271d"
+canonical = "響け! ユーフォニアム"
+kind = "work"
+variants = [
+    "ユーフォ",
+    "劇場版 響け! ユーフォニアム~誓いのフィナーレ~",
+    "特別編 響け!ユーフォニアム~アンサンブルコンテスト~』主題歌",
+    "響け! ユーフォニアム",
+    "響け!ユーフォニアム",
+    "響け!ユーフォニアム2",
+    "響け!ユーフォニアム3 OP",
+    "響けユーフォニアム",
+]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第12回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: API の wikipedia-ja 結果で \"響け! ユーフォニアム\" が正式タイトルとして取得されている (\"響け!ユーフォニアム\" と \"響けユーフォニアム\" も同じリダイレクト) し、各候補は同一ブランド \"響け! ユーフォニアム\" 系列の曲名・アーティスト (TRUE など) が共通し、DJ が重複している (例: tri, あぴす, ふっちー が \"ユーフォ\" と \"響け!ユーフォニアム\" 両方で使用) から同一作品と判断できる。"
+
+[[work]]
+id = "work-187b8212"
+canonical = "ぼっち・ざ・ろっく!"
+kind = "work"
+variants = ["ぼっちざろっく!", "ぼっち・ざ・ろっく", "ぼっち・ざ・ろっく ED", "ぼっち・ざ・ろっく!", "ぼっち・ざ・ろっく! Re: ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第5回〜第13回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: wikipedia-ja のリダイレクトと wikidata の検索結果で \"ぼっち・ざ・ろっく!\" が正式名称と確認でき、エッジには agg・bigram・redirect など強い結びつきが多数あり、DJ・曲タイトル・アーティストが重複しているため同一ブランドの表記揺れと判定した。"
+
+[[work]]
+id = "work-a234f839"
+canonical = "涼宮ハルヒの憂鬱"
+kind = "work"
+variants = ["TVアニメ「涼宮ハルヒの憂鬱」 OP", "涼宮ハルヒの憂鬱", "涼宮ハルヒの憂鬱 楽曲"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: 全表記は同一アニメ『涼宮ハルヒの憂鬱』に関わる作品で、edges が agg/bigram で結びつき、api_results では「涼宮ハルヒシリーズ」へのリダイレクトが確認できる。ブランドが一致するため一括。"
+
+[[work]]
+id = "work-6ff1cccd"
+canonical = "ガールズバンドクライ"
+kind = "work"
+variants = ["ガールズバンドクライ", "ガールズバンドクライ OP", "ガールズバンドクライ 劇中歌"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第10回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: edges で \"ガールズバンドクライ\" と \"ガールズバンドクライ OP\" が agg,bigram、また \"ガールズバンドクライ\" と \"ガールズバンドクライ 劇中歌\" が substr と記載。API では \"ガールズバンドクライ\" が正式タイトル（wikidata）。同一作品の別表記（OP・劇中歌）なので高い確信度。"
+
+[[work]]
+id = "work-23d46022"
+canonical = "リコリス・リコイル"
+kind = "work"
+variants = ["TVアニメ「リコリス・リコイル」 ED", "リコリス・リコイル"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第12回 おかりん ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: edge \"TVアニメ「リコリス・リコイル」 ED\" → \"リコリス・リコイル\" が agg,bigram。API で \"リコリス・リコイル\" が正式タイトル（wikidata）。ED 表記は同作品の一部なので同一ブランドと判断。"
+
+[[work]]
+id = "work-c242c502"
+canonical = "【推しの子】"
+kind = "work"
+variants = ["【推しの子】", "【推しの子】 第2期", "推しの子"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第6回〜第12回 tri ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: 「【推しの子】」と「推しの子」は edges に agg,bigram,redirect があり、API の wikipedia-ja 結果で title が「【推しの子】」と確認できる。さらに「【推しの子】 第2期」も agg,bigram で「【推しの子】」と結びつき、同一ブランド（同作シリーズ）として扱える根拠が揃っている。行数 (rows) や DJ が重複している点も同一作品の表記揺れを示す。"
+
+[[work]]
+id = "work-2e6250fb"
+canonical = "ウマ娘 プリティーダービー"
+kind = "work"
+variants = [
+    "ウマ娘",
+    "ウマ娘 シンデレラグレイ 1期",
+    "ウマ娘 シンデレラグレイ OP",
+    "ウマ娘 プリティーダービー",
+    "ウマ娘 プリティーダービー season2",
+    "ウマ娘プリティダービー",
+]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: 「ウマ娘」から「ウマ娘 プリティーダービー」への edge に redirect があり、API 結果でも \"ウマ娘 プリティーダービー\" が正式タイトルとして取得されています。各表記は同一ブランドで、行数 (例: ウマ娘 4 行、ウマ娘 プリティーダービー 2 行) と DJ の重複も確認できるため、同一作品と判断しました。"
+
+[[work]]
+id = "work-4459ca6b"
+canonical = "とらドラ!"
+kind = "work"
+variants = ["とらドラ", "とらドラ!"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第13回 あぴす ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: edges が agg,bigram で結ばれ、同一作品の表記揺れと判断できる。api_results に \"とらドラ!\" が正式タイトル (wikidata) がある。候補の rows は 1 と 8、DJ が重複して使用している点も裏付けになる。"
+
+[[work]]
+id = "work-9fc55d3c"
+canonical = "STEINS;GATE"
+kind = "work"
+variants = [
+    "STEINS;GATE",
+    "Steins;Gate 比翼恋理のだーりん",
+    "シュタインズ・ゲート",
+    "シュタインズ・ゲート ゼロ",
+    "シュタゲ",
+    "シュタゲゼロ",
+]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第12回 あぴす ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: edges に redirect が含まれ、\"STEINS;GATE\" と \"シュタインズ・ゲート\"、\"シュタゲ\" が同一作品と外部 API で明示されている（wikipedia-ja redirect）。\"ゼロ\" 系列は substr でつながっており、同ブランドの続編・スピンオフとして同一グループに含める。api_results の \"シュタインズ・ゲート\" がタイトル \"STEINS;GATE\" と同等と確認でき、行数・DJ の重複も表記揺れを裏付けている。"
+
+[[work]]
+id = "work-d2aae3d4"
+canonical = "マクロスF"
+kind = "work"
+variants = ["TVアニメ「マクロスF」 挿入歌", "マクロスF"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第11回 あちょ ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: 両方とも \"マクロスF\" に関する表記で、edges に \"agg,bigram\" があり、api_results に \"マクロスF\" が wikidata のタイトルとして存在する（rows: 1 と 8、djs: ふっちー / あちょ, せーや, ましゅー）。同一ブランドなので同一グループと判断。"
+
+[[work]]
+id = "work-7743282a"
+canonical = "ゼロの使い魔"
+kind = "work"
+variants = ["ゼロの使い魔", "ゼロの使い魔 〜双月の騎士〜"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第12回 あぴす ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: edges に \"redirect,substr\" があり、api_results でも両方とも \"ゼロの使い魔\" へリダイレクトされている。行数 (5,2) と DJ 情報も重複しているため同一作品と判断。"
+
+[[work]]
+id = "work-9a698daa"
+canonical = "ゆるキャン△"
+kind = "work"
+variants = ["ゆるキャン", "ゆるキャン△", "ゆるキャン△ SEASON2", "ゆるキャン△ SEASON3 OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第10回 ha ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: api_results に \"ゆるキャン△\" が正式名称として存在し、全候補は agg/bigram の強いエッジで結ばれている。rows: ゆるキャン (1 行)、ゆるキャン△ (4 行) など複数 DJ が同一作品名を使用している。"
+
+[[work]]
+id = "work-b97a6c24"
+canonical = "ギルティクラウン"
+kind = "work"
+variants = ["ギルティクラウン", "ギルティクラウン OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第9回 あちょ ほか"
+decided_at = "2026-08-02T07:00:07+09:00"
+reason = "自動承認（規則 v1）: api_results に \"ギルティクラウン\" が正式名称としてある。候補は agg,bigram のエッジで結ばれ、同一ブランドのテレビアニメ作品であることが明示されている。rows: \"ギルティクラウン\" が 6 行、OP が 1 行。"
+
+[[work]]
+id = "work-bae592aa"
+canonical = "エロマンガ先生"
+kind = "work"
+variants = ["TVアニメ「エロマンガ先生」 OP", "エロマンガ先生"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第15回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: api_results に \"エロマンガ先生\" が正式名称として存在。\"TVアニメ「エロマンガ先生」 OP\" と \"エロマンガ先生\" は agg,bigram のエッジで結ばれ、同一ブランドのライトノベル・アニメ作品である。"
+
+[[work]]
+id = "work-c3df696c"
+canonical = "明日ちゃんのセーラー服"
+kind = "work"
+variants = ["『明日ちゃんのセーラー服』OP", "明日ちゃん", "明日ちゃんのセーラー服", "明日ちゃんのセーラー服 OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: API結果に「明日ちゃんのセーラー服」（日本の漫画作品）あり、各表記は rows が 1〜4 と出現し、DJ が重複するほか、edges で substr・agg・bigram が確認されているため同一作品と判断できる。"
+
+[[work]]
+id = "work-d0cea2f8"
+canonical = "魔法少女まどか☆マギカ"
+kind = "work"
+variants = ["まどマギ", "魔法少女まどか☆マギカ", "劇場版 魔法少女まどか☆マギカ [新編] 叛逆の物語", "魔法少女まどか☆マギカ 叛逆の物語"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第13回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: API結果に「魔法少女まどか☆マギカ」（テレビアニメ・メディアミックス作品）があり、edges に redirect・bigram・substr があり、全表記が同一シリーズの本編・劇場版であることが示唆される。"
+
+[[work]]
+id = "work-10820d44"
+canonical = "ヴァイオレット・エヴァーガーデン"
+kind = "work"
+variants = ["ヴァイオレットエヴァーガーデン", "ヴァイオレット・エヴァーガーデン", "ヴァイオレット・エヴァーガーデン 外伝"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第13回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: API結果に「ヴァイオレット・エヴァーガーデン」（日本の小説）があり、edges で agg/bigram と substr が確認され、外伝も同ブランドの派生作品として統合できる。"
+
+[[work]]
+id = "work-7acfe4af"
+canonical = "Re:ゼロから始める異世界生活"
+kind = "work"
+variants = ["Re:ゼロから始める異世界生活", "Re:ゼロから始める異世界生活(リゼロ)", "リゼロ"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第13回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に redirect があり、\"リゼロ\" は \"Re:ゼロから始める異世界生活\" へのリダイレクトが api_results で確認できる。各表記の rows は 3,1,2 で DJ が重複し、同一作品の別表記と確定できる。"
+
+[[work]]
+id = "work-2f38b88e"
+canonical = "あんハピ♪"
+kind = "work"
+variants = ["あんハピ", "あんハピ♪"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第12回 おかりん ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に redirect があり、api_results の \"あんハピ\" が \"あんハピ♪\" へリダイレクト、さらに \"あんハピ♪\" が wikidata の正式タイトルとして存在する（日本の漫画作品）。"
+
+[[work]]
+id = "work-520fc434"
+canonical = "僕のヒーローアカデミア"
+kind = "work"
+variants = ["僕のヒーローアカデミア", "僕のヒーローアカデミア ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第9回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg・bigram があり、両表記は同一ブランド『僕のヒーローアカデミア』。api_results で \"僕のヒーローアカデミア\" が wikidata の正式タイトルとして確認できる。"
+
+[[work]]
+id = "work-79bf99a9"
+canonical = "てーきゅう"
+kind = "work"
+variants = ["てーきゅう", "てーきゅう 2期", "てーきゅう 4期", "てーきゅう 6期 主題歌", "てーきゅう5期 主題歌"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第15回 ha"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg と bigram のエッジで全てが結びつき、同一ブランドの「てーきゅう」シリーズであることが明示されている。各表記は同一 DJ (ha) が使用し、行数はすべて 1。"
+
+[[work]]
+id = "work-e6420843"
+canonical = "宇宙よりも遠い場所"
+kind = "work"
+variants = ["よりもい", "宇宙よりも遠い場所"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第11回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に redirect があり、API では \"よりもい\" が \"宇宙よりも遠い場所\" へのリダイレクトとして確認できる（wikipedia-ja）。行数は 2 と 3、DJ が重複しているため同一作品と確定。"
+
+[[work]]
+id = "work-010387e1"
+canonical = "鋼の錬金術師"
+kind = "work"
+variants = ["鋼の錬金術師", "鋼の錬金術師 ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第5回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 候補は agg・bigram で結び付いており、API から正式タイトル \"鋼の錬金術師\" が取得できる。ED 版も同一作品の派生なので同一グループに統合。"
+
+[[work]]
+id = "work-01b166c6"
+canonical = "スタァライト"
+kind = "work"
+variants = ["スタァライト", "劇場版 レビュースタァライト ED", "劇場版スタァライト"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第10回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg・bigram・substr があり、すべて同一シリーズ \"スタァライト\" の本編・劇場版・ED であることが示唆されている。series‑risk はあるが、ブランドは共通なので統合。"
+
+[[work]]
+id = "work-077db534"
+canonical = "冴えない彼女の育てかた"
+kind = "work"
+variants = ["冴えない彼女の育てかた", "冴えない彼女の育てかた 劇中歌", "冴えない彼女の育てかた♭ OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第6回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg・bigram・substr のエッジで結び付いており、API で正式タイトル \"冴えない彼女の育てかた\" が確認できる。派生曲 (劇中歌、OP) も同一作品の一部として扱う。"
+
+[[work]]
+id = "work-1618a143"
+canonical = "TARI TARI"
+kind = "work"
+variants = ["TARI TARI", "TARITARI", "TARITARI ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第10回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 「TARI TARI」「TARITARI」「TARITARI ED」は all have agg/bigram edges (agg,bigram,caseonly etc.) and 同じDJが使用している例がある (e.g., おかりん/ましゅー vs レイクン/ha). wikidata の api_results で \"TARI TARI\" が正式タイトルとして確認できるため、これを canonical とした。"
+
+[[work]]
+id = "work-19e9dc66"
+canonical = "Turkey!"
+kind = "work"
+variants = ["Turkey!", "Turkey! ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第14回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 「Turkey!」と「Turkey! ED」は agg,bigram の強いエッジで結ばれ、rows が 3,1 と複数 DJ が共通して使用。wikidata の api_results に \"Turkey!\" が日本のテレビアニメシリーズとして掲載されているため、これを canonical とした。"
+
+[[work]]
+id = "work-29586cf0"
+canonical = "この美術部には問題がある!"
+kind = "work"
+variants = ["この美術部には問題がある", "この美術部には問題がある!", "この美術部には問題がある! OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第5回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg,bigram,redirect のエッジで強く結びつき、rows が合計 4 行、複数 DJ が重複使用。wikipedia-ja の api_results が \"この美術部には問題がある!\" としてリダイレクトされているため、これを canonical とした。"
+
+[[work]]
+id = "work-32759011"
+canonical = "超かぐや姫"
+kind = "work"
+variants = ["超かぐや姫", "超かぐや姫! ED", "超かぐや姫! 劇中曲"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第15回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 全て agg/bigram のエッジで結びつき、同一 DJ（ふっちー、ha）が複数行で使用。api_results が空だが、最も行数が多い \"超かぐや姫! 劇中曲\" は同じベース名を含むため、原形の \"超かぐや姫\" を canonical とした。"
+
+[[work]]
+id = "work-5029a21a"
+canonical = "俺の妹がこんなに可愛いわけがない"
+kind = "work"
+variants = ["俺の妹がこんなに可愛いわけがない", "俺の妹がこんなに可愛いわけがない。", "俺妹"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第8回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 3件の候補すべてが同一作品を指すと判断できる根拠は、edges に \"redirect\" があり、さらに API 結果で \"俺妹\" が正式タイトル \"俺の妹がこんなに可愛いわけがない\" へリダイレクトされている点（\"source\": \"wikipedia-ja\"）。各候補の rows はそれぞれ 1, 1, 2 行で、DJ が重複して使用されている点も表記揺れの証拠となっている。"
+
+[[work]]
+id = "work-83c93292"
+canonical = "未確認で進行形"
+kind = "work"
+variants = ["未確認で進行形", "未確認で進行形 ED", "未確認で進行形 OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第10回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges で \"agg,bigram\" や \"bigram\" が全ての候補間に存在し、同一作品の OP/ED と判定できる。API 結果に \"未確認で進行形\" が正式タイトルとして掲載されている（\"kind\": \"search\"）。各候補の rows は合計 4 行で、DJ が重複使用されている点も裏付けになる。"
+
+[[work]]
+id = "work-8413af55"
+canonical = "夜のクラゲは泳げない"
+kind = "work"
+variants = ["夜のクラゲは泳げない", "夜のクラゲは泳げない ED", "夜のクラゲは泳げない OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第10回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に \"agg,bigram\" と \"bigram\" が全ての組み合わせで示され、OP/ED 版であることが明示されている。API 結果に正式タイトル \"夜のクラゲは泳げない\" が存在し、候補の rows は計 4 行、DJ が重複しているため表記揺れと確定できる。"
+
+[[work]]
+id = "work-b239e3c9"
+canonical = "Fate/kaleid liner プリズマ☆イリヤ"
+kind = "work"
+variants = ["Fate/kaleid liner プリズマ☆イリヤ", "Fate/kaleid liner プリズマ☆イリヤ ツヴァイ ヘルツ!"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第13回 あちょ ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: API 結果で \"Fate/kaleid liner プリズマ☆イリヤ ツヴァイ ヘルツ!\" が \"Fate/kaleid liner プリズマ☆イリヤ\" への redirect として確認されている（wikpedia-ja）。エッジも \"redirect,substr\" で直接結びついているため、同一作品と確定できる。"
+
+[[work]]
+id = "work-f24b4134"
+canonical = "けものフレンズ"
+kind = "work"
+variants = ["けものフレンズ", "けものフレンズ OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 両方が \"けものフレンズ\" 系列で、edges に \"agg,bigram\" があり、api_results に \"けものフレンズ\" が正式名称として存在する (wikidata title: けものフレンズ)。同一ブランドとして統合できる。"
+
+[[work]]
+id = "work-2233dcb1"
+canonical = "WORKING"
+kind = "work"
+variants = ["WORKING", "WORKING!!", "working!!"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第10回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges で \"agg,bigram\" が全組み合わせに存在し、大小文字の差異は caseonly で補足されている。表記ゆれのみで同一ブランドと判断できる。"
+
+[[work]]
+id = "work-38569c9e"
+canonical = "デジモンアドベンチャー"
+kind = "work"
+variants = ["デジモンアドベンチャー", "デジモンアドベンチャー 挿入歌"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第6回〜第7回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges で \"agg,bigram\" が結び、両方が同一作品 \"デジモンアドベンチャー\" の本編・挿入歌という同ブランド内の区分。api_results に正式タイトルがある。"
+
+[[work]]
+id = "work-3e56dfa3"
+canonical = "トリコ"
+kind = "work"
+variants = ["トリコ", "トリコ ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第13回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に \"agg,bigram\" があり、\"トリコ\" 系列の本編と ED が同一ブランド。api_results に作品 \"トリコ\" が掲載されている。"
+
+[[work]]
+id = "work-438dbde9"
+canonical = "呪術廻戦"
+kind = "work"
+variants = ["劇場版 呪術廻戦 0", "呪術廻戦"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第13回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges が substr、'呪術廻戦' の wikidata 記事がある (title: 呪術廻戦)。両表記は同一メディアミックス作品のシリーズで、行数は 1 と 2。"
+
+[[work]]
+id = "work-66195d30"
+canonical = "真夜中ぱんチ"
+kind = "work"
+variants = ["真夜中ぱんチ", "真夜中ぱんチ OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第11回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges が agg,bigram で結び、'真夜中ぱんチ' の wikidata 記事が存在 (title: 真夜中ぱんチ)。OP 表記は同作品のオープニングであり、行数は 2 と 1。"
+
+[[work]]
+id = "work-6fd42854"
+canonical = "灼熱の卓球娘"
+kind = "work"
+variants = ["灼熱の卓球娘", "灼熱の卓球娘 ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第8回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges が agg,bigram、'灼熱の卓球娘' の wikidata 記事がある (title: 灼熱の卓球娘)。ED 表記は同作品のエンディングで、行数は 2 と 1。"
+
+[[work]]
+id = "work-8001237c"
+canonical = "アマガミ"
+kind = "work"
+variants = ["アマガミ", "ゲームアマガミED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第9回 ふっちー"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges が agg,bigram、'アマガミ' の wikidata 記事がある (title: アマガミ)。ED 表記は同作品のエンディングで、行数は 2 と 1。"
+
+[[work]]
+id = "work-c3ce0263"
+canonical = "魔法少女リリカルなのは"
+kind = "work"
+variants = ["魔法少女リリカルなのは", "魔法少女リリカルなのはA's", "魔法少女リリカルなのはStrikerS"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第8回〜第12回 マスオ ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 全て『魔法少女リリカルなのは』シリーズの異なるシーズン/スピンオフで、edges が substr で結ばれ、同一ブランドであることが明らか。シリーズ全体を表す名称 \"魔法少女リリカルなのは\" を canonical とし、rows は各1で同一作品と判断できる。"
+
+[[work]]
+id = "work-d51e7b67"
+canonical = "ONE PIECE"
+kind = "work"
+variants = ["ONE PIECE", "ONE PIECE FILM RED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第7回〜第11回 せーや ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 『ONE PIECE』本編と映画『ONE PIECE FILM RED』は同一ブランドであり、edges に substr がある。api_results に \"ONE PIECE\" が存在し、rows が 2 と 1。ブランドが一致するため同一グループにまとめる。"
+
+[[work]]
+id = "work-d58373fa"
+canonical = "色づく世界の明日から"
+kind = "work"
+variants = ["色づく世界の明日から", "色づく世界の明日から OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第7回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 本編と OP で表記が異なるが、edges に agg,bigram があり、api_results に \"色づく世界の明日から\" がある。rows は 2 と 1。ブランドが同一であるため同グループ。"
+
+[[work]]
+id = "work-d62a992b"
+canonical = "咲-Saki-"
+kind = "work"
+variants = ["咲 -saki- ED", "咲-Saki-"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第7回〜第10回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 両方とも \"咲-Saki-\" として wikidata に掲載されている（note: 小林立による日本の漫画作品およびそれを原作とするテレビアニメシリーズ）。エッジは agg,bigram で強い同一視が示され、行数は 1 と 2、DJ が重複していなくても同一ブランドと判断できる。"
+
+[[work]]
+id = "work-ece5572a"
+canonical = "薬屋のひとりごと"
+kind = "work"
+variants = ["薬屋のひとりごと", "薬屋のひとりごと OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第9回〜第13回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: API に \"薬屋のひとりごと\" が作品として存在（note: 日本のライトノベル、メディアミックス作品）。エッジは agg,bigram と強い同一性を示す。rows は 2 と 1。"
+
+[[work]]
+id = "work-211cce1c"
+canonical = "Dr.STONE"
+kind = "work"
+variants = ["Dr.STONE", "Dr.stone"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第10回〜第14回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: エッジは agg,bigram,caseonly と強く同一と判定。表記の違いは大小文字と句読点のみ。rows は 1 と 1。"
+
+[[work]]
+id = "work-2ea0c4ac"
+canonical = "チ"
+kind = "work"
+variants = ["チ", "チ。"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第12回〜第14回 tri ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、raw がほぼ同一（句点の有無だけ）。行数も 1 行ずつで、DJ が異なるが同一表記のバリエーションと見なせる。"
+
+[[work]]
+id = "work-343cb27e"
+canonical = "たまこまーけっと"
+kind = "work"
+variants = ["たまこまーけっと", "たまこまーけっと OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第8回〜第9回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、\"OP\" は同作品のオープニングを示す付加情報。rows はそれぞれ 1 行、DJ が異なるが同一シリーズと判定できる。"
+
+[[work]]
+id = "work-4a7b1835"
+canonical = "血界戦線"
+kind = "work"
+variants = ["血界戦線", "血界戦線 ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第8回 ha"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、\"ED\" はエンディング曲を示す付加情報。rows はそれぞれ 1 行、DJ が同じでも別曲であることから同一シリーズと判定。"
+
+[[work]]
+id = "work-58d721bd"
+canonical = "スキップとローファー"
+kind = "work"
+variants = ["スキップとローファー", "スキップとローファー OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第7回〜第13回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、\"OP\" はオープニングを示すだけの付加情報。rows が各 1 行、DJ が異なるが同一作品の別バリエーションとして確定。"
+
+[[work]]
+id = "work-5fd9f7a2"
+canonical = "江戸前エルフ"
+kind = "work"
+variants = ["江戸前エルフ", "江戸前エルフ OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第7回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、\"OP\" はオープニング曲を示すだけ。rows がそれぞれ 1 行、DJ が異なるが同一作品の表記揺れと判定。"
+
+[[work]]
+id = "work-67a8f622"
+canonical = "艦隊これくしょん -艦これ-"
+kind = "work"
+variants = ["艦隊これくしょん -艦これ-", "艦隊これくしょん-艦これ-"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第5回 おかりん ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 両方とも \"艦隊これくしょん -艦これ-\" と \"艦隊これくしょん-艦これ-\" は agg, bigram, caseonly のエッジで結ばれており、行数 1 件ずつ、DJ が異なるが同一ブランドと判定できるため。"
+
+[[work]]
+id = "work-76a67654"
+canonical = "C3 -シーキューブ-"
+kind = "work"
+variants = ["C3 -シーキューブ-", "C3-シーキューブ"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第8回 あぴす ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg と bigram のエッジで結ばれ、表記の違いはハイフンと空白のみ。行数 1 件ずつ、同一アーティスト (田村ゆかり) が出ている。"
+
+[[work]]
+id = "work-79c3962c"
+canonical = "Kizuna AI"
+kind = "vtuber"
+variants = ["Kizuna AI", "KizunaAI"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第6回〜第13回 あちょ ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg, bigram, caseonly のエッジで結合され、表記差はスペースのみ。行数 1 件ずつ、共通のアーティスト名が含まれている。"
+
+[[work]]
+id = "work-8bb9e291"
+canonical = "魔法少女にあこがれて"
+kind = "work"
+variants = ["魔法少女にあこがれて", "魔法少女にあこがれて OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第9回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg と bigram のエッジで結合。OP 表記は同作品の主題歌であるため同一ブランドと判定。"
+
+[[work]]
+id = "work-8c2389cb"
+canonical = "メカクシティアクターズ"
+kind = "work"
+variants = ["メカクシティアクターズ", "メカクシティアクターズ OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第8回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: agg と bigram のエッジで結び、OP 付与は同一作品の区別であるため同一ブランド。"
+
+[[work]]
+id = "work-90fb945d"
+canonical = "戦姫絶唱シンフォギア"
+kind = "work"
+variants = ["戦姫絶唱シンフォギア", "戦姫絶唱シンフォギアGX"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回 おかりん"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: substr エッジで結合。GX は同シリーズの続編であり、ブランドは同一。"
+
+[[work]]
+id = "work-a2213d2b"
+canonical = "P丸様"
+kind = "work"
+variants = ["P丸様", "P丸様。 楽曲"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第9回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: coArtists に \"P丸様。\" が含まれ、edges が agg,bigram。表記揺れのみで同一作品と判断。"
+
+[[work]]
+id = "work-a4372b5a"
+canonical = "生徒会役員共"
+kind = "work"
+variants = ["生徒会役員共", "生徒会役員共*"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第5回〜第10回 ましゅー ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: coTitles と coArtists が全く異なるが、edges が agg,bigram で「生徒会役員共」系統の同一作品と見なせる。"
+
+[[work]]
+id = "work-a7a1a0f5"
+canonical = "サマータイムレンダ"
+kind = "work"
+variants = ["サマータイムレンダ", "サマータイムレンダ OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第10回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 同一作品名に OP が付加されただけで、edges が agg,bigram。DJ が別でも同一ブランド。"
+
+[[work]]
+id = "work-aae69790"
+canonical = "きらりん☆レボリューション"
+kind = "work"
+variants = ["きらりん☆レボリューション", "きらりんレボリューション"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第6回〜第15回 あぴす ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 文字の有無のみの差異で、edges が agg,bigram。coArtists が同一（\"月島きらり\"）であることから同作品と判定。"
+
+[[work]]
+id = "work-ac56ea28"
+canonical = "NEW GAME!"
+kind = "work"
+variants = ["NEW GAME!", "TVアニメ「NEW GAME!」 OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第5回 ふっちー ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: タイトルに \"OP\" が付いただけで、edges が agg,bigram。DJ が別でも同一アニメ作品。"
+
+[[work]]
+id = "work-beb40acf"
+canonical = "侵略!?イカ娘"
+kind = "work"
+variants = ["侵略!?イカ娘", "侵略!イカ娘 OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第6回〜第7回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges が agg,bigram。OP の有無だけの違いで、同一アニメ作品。"
+
+[[work]]
+id = "work-d42efa03"
+canonical = "映像研には手を出すな!"
+kind = "work"
+variants = ["映像研には手を出すな!", "映像研には手を出すな! OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第9回〜第14回 ha"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、両方とも同一DJと同一曲名・アーティストが一致している (例: rows=1, djs=[ha], coTitles=[Easy Breezy], coArtists=[chelmico])."
+
+[[work]]
+id = "work-ef6d51bf"
+canonical = "干物妹!うまるちゃん"
+kind = "work"
+variants = ["干妹うまるちゃん", "干物妹!うまるちゃん"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第4回〜第8回 あぴす ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に bigram があり、文字列はほぼ同一で表記揺れと判定 (例: rows=1, djs=[あぴす] と rows=1, djs=[マスオ]、coArtists がそれぞれ橘・シルフィンフォード、土間うまる)。"
+
+[[work]]
+id = "work-f0cf7a26"
+canonical = "パリピ孔明"
+kind = "work"
+variants = ["TVアニメ「パリピ孔明」 ED", "パリピ孔明"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第7回 せーや ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、ED 表記と作品名自体が同一ブランドと確定 (例: rows=1, djs=[ふっちー] と rows=1, djs=[せーや]、coArtists が同一の EIKO starring 96猫 等)。"
+
+[[work]]
+id = "work-f19afc5d"
+canonical = "メジャー"
+kind = "work"
+variants = ["メジャー", "メジャー 第3シーズン OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第10回〜第14回 ha ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、シーズン表記の違いだけで同一作品と判断できる (例: rows=1, djs=[おかりん] と rows=1, djs=[ha]、coArtists が共に ロードオブメジャー)。"
+
+[[work]]
+id = "work-f5645add"
+canonical = "NHKにようこそ"
+kind = "work"
+variants = ["NHKにようこそ", "NHKにようこそ!"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第5回〜第12回 がっきー ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 両方の表記はそれぞれ 1 行ずつ (rows=1) があり、DJ が異なるが同一 DJ が使用した例はなくても、edges に agg,bigram があり「NHKにようこそ」と「NHKにようこそ!」が同一作品と明示されている。"
+
+[[work]]
+id = "work-fae510f7"
+canonical = "ばくおん!"
+kind = "work"
+variants = ["ばくおん!", "ばくおん!!"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第11回〜第15回 せーや ほか"
+decided_at = "2026-08-02T07:00:08+09:00"
+reason = "自動承認（規則 v1）: 両方とも 1 行ずつ (rows=1) があり、edges に agg,bigram が付いているため「ばくおん!」と「ばくおん!!」は同一ブランドの表記揺れと判断できる。"
