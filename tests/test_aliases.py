@@ -1437,7 +1437,7 @@ class AskTest(unittest.TestCase):
 
     def test_keep_apart_blocks_the_detour_through_annotated_variants(self) -> None:
         # 「アイカツ!」ではなく「アイカツ」（注記違い）で来ても同じく塞がる。
-        # cli._blocked_pair・block.build_edges と同じ条件で見ている。
+        # store.blocked_pair・block.build_edges と同じ条件で見ている。
         with self.fixture(keep_apart=True):
             result, _, _ = self.run_ask(
                 self.reply(

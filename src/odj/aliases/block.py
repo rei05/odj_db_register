@@ -48,7 +48,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 from odj import paths
-from odj.aliases import rules
+from odj.aliases import rules, store
 
 # ---------------------------------------------------------------------------
 # 閾値
@@ -533,20 +533,43 @@ def load_keep_apart() -> set[frozenset[str]]:
 
 
 def load_decided() -> set[str]:
-    """判断済みの生値。却下したものが毎回出てくるとレビューが終わらない。"""
-    path = paths.DECISIONS_PATH
-    if not path.exists():
-        return set()
+    """判断済みの生値。却下したものが毎回出てくるとレビューが終わらない。
+
+    出典は2つある。
+
+      ① decisions.jsonl の accept / reject の variants … 人間が値そのものを
+         決着させた記録。defer（まだ決めない）と keep-apart（この2つは別物と
+         決めただけ）は値を判断していないので数えない。もともとこの2つは
+         variants を書かないので、実際に落ちる行は auto-accept だけ
+      ② works.auto.toml / artists.auto.toml の生表記 … odj.aliases auto が
+         自動承認したぶん
+
+    ②を辞書ファイルのほうから読み、decisions.jsonl の auto-accept を見ないのは、
+    **自動承認は取り消せる必要がある**ため。decisions.jsonl は追記専用で
+    「無かったこと」にできないので、そこを判断済みの根拠にすると
+    `auto --undo` してもクラスタが候補に戻らない。auto.toml のほうは undo が
+    空にするので、消した瞬間に候補へ戻る。
+    """
     decided: set[str] = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            rec = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        decided.update(rec.get("variants", []))
+    path = paths.DECISIONS_PATH
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if rec.get("action") not in ("accept", "reject"):
+                continue
+            decided.update(rec.get("variants", []))
+    # work / artist の両方を見る。この関数は field を取らない（呼ぶ側の build が
+    # 片方ずつ回すが、値が混ざっても実害が無い程度に元ネタ名とアーティスト名は
+    # 重ならない）ので、auto のぶんも同じ粒度で足しておく。
+    for field_name in store.FIELDS:
+        for entry in store.load_auto_entries(field_name):
+            decided.update(store.class_values(entry))
     return decided
 
 
@@ -655,6 +678,30 @@ def build(field_name: str, plays: list[dict]) -> dict:
         "singletons": singles,
         "clusters": clusters,
     }
+
+
+def where_hint(cluster: dict) -> str:
+    """クラスタの events / djs から「第2回 せーや ほか」を作る。
+
+    辞書に書く where（後で人が現物に当たるための手掛かり）の中身。判断の経路が
+    2つある（人間の decide が省略したとき ＝ cli._auto_where と、自動承認が
+    毎回埋めるとき ＝ auto.py）ので、クラスタ JSON の形を知っているここに置く。
+
+    数え上げではなく手掛かりなので、開催回は範囲、DJ は代表1人で足りる。
+    """
+    events: set[int] = set()
+    djs: set[str] = set()
+    for value in cluster.get("values", []):
+        events.update(value.get("events", []))
+        djs.update(value.get("djs", []))
+    order = sorted(events)
+    head = ""
+    if order:
+        head = f"第{order[0]}回" if len(order) == 1 else f"第{order[0]}回〜第{order[-1]}回"
+    name = sorted(djs)[0] if djs else ""
+    if len(djs) > 1:
+        name += " ほか"
+    return " ".join(x for x in (head, name) if x)
 
 
 def load_plays() -> list[dict]:

@@ -31,6 +31,8 @@ PYTHONPATH=src python3 -m odj.aliases fetch --field work   # 外部APIで裏取�
 PYTHONPATH=src python3 -m odj.aliases block --field work   # 候補クラスタ。fetch の後に回す
 PYTHONPATH=src python3 -m odj.aliases ask --field work      # LLM に提案させる。要 GROQ_API_KEY
 PYTHONPATH=src python3 -m odj.aliases ask --field work --dry-run   # 投げる文字列とリクエスト数だけ見る。キー不要
+PYTHONPATH=src python3 -m odj.aliases auto --field work --dry-run  # 規則に合う提案の件数と、人間に残る理由の内訳
+PYTHONPATH=src python3 -m odj.aliases auto --field work            # 自動承認 → works.auto.toml（--undo で全部取り消し）
 cd web && npm run review   # 5174。1件ずつ承認する GUI。dev 専用でビルドには入らない
 PYTHONPATH=src python3 -m odj.aliases export               # 承認済み → aliases.json
 ```
@@ -39,6 +41,13 @@ PYTHONPATH=src python3 -m odj.aliases export               # 承認済み → al
 なので clone しただけでは無い。**先に `fetch` → `block` の順で回す**（`block` が外部 API の
 リダイレクトを辺として使うため。「ナナシス」と「Tokyo 7th シスターズ」は文字列類似では
 繋がらない）。候補の生成そのものは GitHub Actions の `aliases.yml` が回して PR で運んでくる。
+
+`auto` は LLM の提案のうち**規則で安全と言い切れるものだけ**を人手を通さず承認し、
+`data/aliases/works.auto.toml` / `artists.auto.toml`（人が育てる works.toml とは別の、
+機械が丸ごと書き直すファイル）に書く。規則と、なぜその線引きなのか（`artist-as-work`
+のヒントが付いたクラスタには合同名義の分解が混ざっていた）は
+[src/odj/aliases/auto.py](src/odj/aliases/auto.py) の冒頭にある。work では 150 クラスタ中
+71 個が対象。取り消しは `--undo` で、消した値は再び候補に戻る。
 
 `ask` だけ外部 API（Groq）を叩く。GitHub Models → OpenAI 直叩き → Gemini と渡り歩いた末、
 Gemini は無料枠が1日20リクエストしかなく完走できないため Groq に落ち着いた（経緯の詳細は

@@ -1059,7 +1059,7 @@ def no_groups_reason(response: dict) -> str:
 def blocked_pair(a: str, b: str, keep_apart: set[frozenset[str]]) -> bool:
     """keep_apart.toml が「別物」と決めた組か。
 
-    cli._blocked_pair と block.build_edges() の add() と同じ条件。生の組だけを
+    store.blocked_pair と block.build_edges() の add() と同じ条件。生の組だけを
     見ると「アイカツ! 楽曲」と「アイカツスターズ」のような注記違いの迂回路を
     すり抜けるので、注記を剥がしたキーの組でも見る。
     """

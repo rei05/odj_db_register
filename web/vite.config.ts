@@ -187,16 +187,50 @@ function parseArrayOfTables(text: string): Record<string, string | string[]>[] {
  *   reject      … そのクラスタの値すべて（統合しないと決めた）
  *   defer       … 何も判断していない
  *   keep-apart  … 組を登録しただけ。値そのものは未判断のまま残す
+ *
+ * 加えて `<field>s.auto.toml`（危険信号ゼロの候補を機械が承認するコマンドが書く、
+ * decisions.jsonl とは別の出力）に載っている生表記も「もう出さなくていい」に
+ * 数える。これをやらないと、機械が既に承認したクラスタがキューに出続ける
+ * （decisions.jsonl には action: "auto-accept" として積まれるだけで accept とは
+ * 区別されるため、下のループでは拾えない）。auto.toml は自動承認を1度も
+ * 回していなければ存在しない（今までどおり動く）。
  */
-async function readDecidedValues(field: ReviewField): Promise<Set<string>> {
+async function readAutoApproved(
+  field: ReviewField,
+): Promise<{ values: Set<string>; clusters: number }> {
+  const p = path.join(repoRoot, 'data', 'aliases', `${field}s.auto.toml`)
+  let text: string
+  try {
+    text = await readFile(p, 'utf8')
+  } catch {
+    return { values: new Set(), clusters: 0 } // 自動承認を1度も回していなければ無い
+  }
+  const values = new Set<string>()
+  let clusters = 0
+  for (const row of parseArrayOfTables(text)) {
+    const canonical = row.canonical
+    if (typeof canonical !== 'string') continue
+    clusters++
+    values.add(canonical)
+    for (const v of Array.isArray(row.variants) ? row.variants : []) values.add(v)
+  }
+  return { values, clusters }
+}
+
+async function readDecidedValues(
+  field: ReviewField,
+  autoValues: Set<string>,
+): Promise<Set<string>> {
+  // 自動承認ぶんは呼ぶ側が読んだものを受け取る。件数の表示にも使うので、
+  // ここで読み直すと同じ応答の中で別のスナップショットを見ることになる。
+  const done = new Set(autoValues)
   const p = path.join(repoRoot, 'data', 'aliases', 'decisions.jsonl')
   let text: string
   try {
     text = await readFile(p, 'utf8')
   } catch {
-    return new Set() // まだ1件も判断していない
+    return done // decisions.jsonl はまだ1件も判断していない（auto.toml 分だけ返す）
   }
-  const done = new Set<string>()
   for (const line of text.split('\n')) {
     const trimmed = line.trim()
     if (!trimmed) continue
@@ -217,28 +251,49 @@ async function readDecidedValues(field: ReviewField): Promise<Set<string>> {
   return done
 }
 
-/**
- * 既に辞書に入っている生表記 → その正準名。
- *
- * カードに判断済みの兄弟を出すとき「どれに登録済みか」を添えるために使う。
- * 新しい表記を既存の正準名へ足すのが、データが増える運用での主な操作になる。
- */
-async function readAssignedCanonicals(field: ReviewField): Promise<Map<string, string>> {
-  const p = path.join(repoRoot, 'data', 'aliases', `${field}s.toml`)
-  let text: string
-  try {
-    text = await readFile(p, 'utf8')
-  } catch {
-    return new Map() // まだ1件も承認していない
-  }
-  const map = new Map<string, string>()
+/** row 1件分の canonical/variants を into に足し込む。同じ生表記が既にあれば触らない
+ * （＝先に読んだファイルが勝つ）。readAssignedCanonicals が手動ファイルを先に読み、
+ * auto.toml をあとから「足りない分だけ補う」形で使うためのヘルパー。 */
+function collectCanonicals(text: string, into: Map<string, string>): void {
   for (const row of parseArrayOfTables(text)) {
     const canonical = row.canonical
     if (typeof canonical !== 'string') continue
     const variants = Array.isArray(row.variants) ? row.variants : []
     for (const raw of [...variants, canonical]) {
-      if (!map.has(raw)) map.set(raw, canonical)
+      if (!into.has(raw)) into.set(raw, canonical)
     }
+  }
+}
+
+/**
+ * 既に辞書に入っている生表記 → その正準名。
+ *
+ * カードに判断済みの兄弟を出すとき「どれに登録済みか」を添えるために使う。
+ * 新しい表記を既存の正準名へ足すのが、データが増える運用での主な操作になる。
+ *
+ * `<field>s.toml`（人手で承認したぶん）と `<field>s.auto.toml`（機械が自動承認した
+ * ぶん）の両方を読んで1つの Map にする。**同じ生表記が両方にあれば手動ファイル側を
+ * 優先する**（人間の判断が最終的に勝つ、という方針。自動承認はあくまで「危険信号
+ * ゼロ」の機械的な判断で、あとから人間が別の正準名へ寄せ直すことはあり得る）。
+ * どちらのファイルも無ければ空の Map（まだ1件も承認していない）。
+ */
+async function readAssignedCanonicals(field: ReviewField): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  try {
+    collectCanonicals(
+      await readFile(path.join(repoRoot, 'data', 'aliases', `${field}s.toml`), 'utf8'),
+      map,
+    )
+  } catch {
+    // 手動ファイルがまだ無い（1件も承認していない）
+  }
+  try {
+    collectCanonicals(
+      await readFile(path.join(repoRoot, 'data', 'aliases', `${field}s.auto.toml`), 'utf8'),
+      map,
+    )
+  } catch {
+    // 自動承認を1度も回していなければ無い
   }
   return map
 }
@@ -301,12 +356,52 @@ async function readProposals(field: ReviewField): Promise<Map<string, Proposal>>
   return map
 }
 
+/**
+ * キューを組み立てる前に `odj.aliases auto` を回して、規則で安全と言い切れる候補を
+ * 先に片付けてしまう。
+ *
+ * **この画面は「人間の判断が要るものだけ」を出すところ**という位置付けにしてある。
+ * 自動承認の対象（work では 150 クラスタ中 71 個）は人間の判断が不要と決めた層
+ * なので、承認ボタンを押させること自体が無駄な作業になる。CLI を手で回すのを
+ * 前提にすると回し忘れたぶんがそのままキューに出てしまうので、画面を開いた
+ * ときに必ず最新化されるよう、ここから呼ぶ。
+ *
+ * 規則そのものは src/odj/aliases/auto.py に1か所だけ置く。TS 側に移植すると
+ * 「画面が出さないクラスタ」と「auto が承認するクラスタ」が静かにずれる。
+ *
+ * auto は冪等（2回目以降は 0 件）で、ネットワークにも出ない。失敗しても
+ * キューを落とす理由にはならないので、警告だけ出して先へ進む
+ * （_proposed が無い、clusters.json が古い、といった状況でも画面は開きたい）。
+ */
+function runAutoApprove(field: ReviewField): Promise<void> {
+  return new Promise((resolve) => {
+    execFile(
+      'python3',
+      ['-m', 'odj.aliases', 'auto', '--field', field],
+      { cwd: repoRoot, env: { ...process.env, PYTHONPATH: 'src' }, maxBuffer: 16 * 1024 * 1024 },
+      (error, _stdout, stderr) => {
+        if (error) {
+          console.warn(
+            `[review-api] odj.aliases auto --field ${field} に失敗しました` +
+              `（自動承認ぶんを飛ばして続行）: ${stderr.trim() || error.message}`,
+          )
+        }
+        resolve()
+      },
+    )
+  })
+}
+
 async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
   const field = url.searchParams.get('field')
   if (field !== 'work' && field !== 'artist') {
     sendJson(res, 400, { ok: false, error: 'field は work か artist を指定してください' })
     return
   }
+  // 規則で片付くぶんを先に承認してしまう。これを通ったクラスタは下の
+  // decidedValues に載るので、この画面には最初から出てこない。
+  await runAutoApprove(field)
+
   const clustersPath = path.join(repoRoot, 'out', 'aliases', `clusters.${field}.json`)
   let raw: string
   try {
@@ -337,8 +432,9 @@ async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
     return
   }
 
+  const autoApproved = await readAutoApproved(field)
   const [decidedValues, proposals] = await Promise.all([
-    readDecidedValues(field),
+    readDecidedValues(field, autoApproved.values),
     readProposals(field),
   ])
 
@@ -379,6 +475,10 @@ async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
     field,
     total: parsed.clusters.length,
     decided: parsed.clusters.length - clusters.length,
+    // 規則で自動承認したクラスタ数。decided の内数で、画面には
+    // 「見なくてよかったぶん」として出す。黙って消すと「候補が減っている」のか
+    // 「画面が壊れている」のか利用者から区別が付かない。
+    autoApproved: autoApproved.clusters,
     clusters,
   })
 }

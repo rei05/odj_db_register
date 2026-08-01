@@ -78,6 +78,32 @@ function byRows(values: ClusterValue[]): ClusterValue[] {
 }
 
 /**
+ * 初期チェック。**提案があるときは提案の variants だけ**をチェックする。
+ *
+ * LLM は1つのクラスタから「まとめる根拠があるものだけ」を返す契約で（llm.py の
+ * 絶対規則1「迷ったら分ける」）、variants に入らなかった値は**別物と判断された値**
+ * である。全部チェックした状態で出していた頃は、その分を人間が毎回手で外していた
+ * （実データで work 21 件・artist 22 件の提案がクラスタの一部を除外している）。
+ *
+ * 判断済みの値（decidedAs）はどちらの経路でもチェックしない。既存の正準名へ足す
+ * 相手として見せるだけで、もう一度送るとサーバに already-decided で弾かれる。
+ *
+ * 提案の variants が1つも残らなかったときは全部チェックへ戻す。queue 側が未判断の
+ * 値だけに絞る（vite.config.ts）ため起こり得るが、0件のカードは採用ボタンが
+ * disabled で判断できなくなるため。
+ *
+ * ClusterCard.tsx（1件ずつモード）と BulkReviewList.tsx（一括承認モード）の
+ * 両方が「その候補でまとめる生表記」を同じ規則で決めるためにここで共有する。
+ * 判断基準がモードによってずれると、同じクラスタなのに結果が変わってしまう。
+ */
+export function initialChecked(cluster: Cluster): Set<string> {
+  const alive = cluster.values.filter((v) => !v.decidedAs).map((v) => v.raw)
+  const proposed = cluster.proposal?.variants ?? []
+  const picked = alive.filter((raw) => proposed.includes(raw))
+  return new Set(picked.length > 0 ? picked : alive)
+}
+
+/**
  * 選んだ名前が、他の値から剥がした形で始まっているなら、そちらへ短くする。
  *
  * strip_notes が知らない注記がある。実データの「ふつうの軽音部 コラボMV」と

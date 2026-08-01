@@ -1,20 +1,25 @@
 """名寄せ辞書（data/aliases/*.toml と decisions.jsonl）の読み書き。
 
-    works.toml      [[work]]    元ネタ名の同値クラス
-    artists.toml    [[artist]]  アーティスト名の同値クラス
-    keep_apart.toml [[pair]]    統合してはいけない組
-    decisions.jsonl             1件1行の判断ログ
+    works.toml       [[work]]    元ネタ名の同値クラス（人が育てる）
+    works.auto.toml  [[work]]    そのうち odj.aliases auto が自動承認したぶん
+    artists.toml     [[artist]]  アーティスト名の同値クラス（人が育てる）
+    artists.auto.toml            同上の自動承認ぶん
+    keep_apart.toml  [[pair]]    統合してはいけない組
+    decisions.jsonl              1件1行の判断ログ
 
-**`approved = true` を書くのは人間の判断（odj.aliases decide）だけ**で、
-`export_json()` は approved なものしか公開データ（web/public/data/aliases.json）に
-出さない。この2つが守られている限り、誤った統合が公開サイトに出ることは
-構造的に起こらない。LLM の提案は `_proposed/` に置き、ここには入らない。
+**`approved = true` を書くのは人間の判断（odj.aliases decide）と、人間が承認した
+規則に合致したときだけ書く自動承認（odj.aliases auto）の2つ**で、`export_json()` は
+approved なものしか公開データ（web/public/data/aliases.json）に出さない。
+LLM の提案は `_proposed/` に置き、ここには入らない（提案がそのまま辞書に入る経路は
+無く、auto も「提案どおりか」を規則で確かめてから別ファイルに書く）。
 
 TOML の書き出しを自前で持っているのは、tomllib が読み取り専用で、標準ライブラリに
-ライターが無く、そして依存を増やせないため。**書き出しは追記だけ**にしてある。
-ファイル全体を再シリアライズすると、人が手で書いた reason の改行や節ごとの
-コメント（keep_apart.toml がそうなっている）が毎回崩れるからで、ここは
-「機械が足す・人が直す」の両方が起きるファイルである。
+ライターが無く、そして依存を増やせないため。**人が育てるファイルへの書き出しは
+追記だけ**にしてある。ファイル全体を再シリアライズすると、人が手で書いた reason の
+改行や節ごとのコメント（keep_apart.toml がそうなっている）が毎回崩れるからで、
+ここは「機械が足す・人が直す」の両方が起きるファイルである。*.auto.toml と
+_proposed/ だけは丸ごと書き直す（人が手を入れない機械専用のファイルなので、
+取り消しが「作り直す」だけで済むことのほうが得）。
 """
 
 from __future__ import annotations
@@ -26,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from odj import paths
+from odj.aliases import rules
 
 
 class AliasError(Exception):
@@ -76,6 +82,25 @@ _WORKS_HEADER = """\
 """
 
 _ARTISTS_HEADER = _WORKS_HEADER.replace("元ネタ名", "アーティスト名")
+
+# *.auto.toml の見出し。**人が直すのはこちらではない**ことを最初の行に書く。
+_AUTO_HEADER = """\
+# {label}の同値クラスのうち、odj.aliases auto が規則で自動承認したぶん。
+#
+# **これは機械が作るファイル。人が直すのは {human} のほう。**
+# 実行のたび丸ごと書き直すので、ここに手で足した行やコメントは次回で消える。
+# 取り消しは `PYTHONPATH=src python3 -m odj.aliases auto --field {field} --undo`
+# （このファイルを空にする。取り消した値は再び候補に戻る）。
+#
+# source = "{source}" が自動承認の目印。人間が1件ずつ見たものは "human"。
+# reason は LLM の提案の理由に前置きを付けたもので、承認の規則そのものは
+# src/odj/aliases/auto.py に書いてある。
+"""
+
+# 自動承認が entry の source に書く値と、reason の前置き。規則を変えたら v2 に
+# するために版を持たせてある（後から grep で「どの版が入れた行か」を追える）。
+AUTO_SOURCE = "auto:v1"
+AUTO_REASON_PREFIX = "自動承認（規則 v1）: "
 
 _KEEP_APART_HEADER = """\
 # 絶対に統合しないペア。
@@ -198,15 +223,85 @@ def entries_path(field: str) -> Path:
     return paths.ALIASES_DIR / name
 
 
-def load_entries(field: str, *, path: Path | None = None) -> list[dict]:
-    """既存の同値クラスを読む。ファイルが無ければ空。"""
-    target = path or entries_path(field)  # 不正な field はここで弾かれる
-    _, table = FIELDS[field]
+def auto_entries_path(field: str) -> Path:
+    """自動承認（odj.aliases auto）の書き先。works.auto.toml / artists.auto.toml。
+
+    人が育てるファイルと分けてあるのは、works.toml が追記専用（人の手が入った
+    整形やコメントを壊さないため）だからで、同じファイルに機械が書くと
+    「auto のぶんだけ取り消す」が全体の再シリアライズになってしまう。別ファイル
+    なら取り消しは作り直すだけで済む。
+    """
+    if field not in FIELDS:
+        raise AliasError(f"field は work か artist です: {field!r}")
+    name, _ = FIELDS[field]
+    return paths.ALIASES_DIR / (name.removesuffix(".toml") + ".auto.toml")
+
+
+def _table(field: str) -> str:
+    """field の配列テーブル名。不正な field はここで AliasError にする。"""
+    if field not in FIELDS:
+        raise AliasError(f"field は work か artist です: {field!r}")
+    return FIELDS[field][1]
+
+
+def _read_entries(target: Path, table: str) -> list[dict]:
     if not target.exists():
         return []
     with target.open("rb") as fh:
         data = tomllib.load(fh)
     return list(data.get(table, []))
+
+
+def load_entries(
+    field: str, *, path: Path | None = None, include_auto: bool = True
+) -> list[dict]:
+    """既存の同値クラスを読む。ファイルが無ければ空。
+
+    既定では**人手のファイルと *.auto.toml を連結**して返す。呼ぶ側
+    （export_json / variant_index / cli の重複検査）にとって auto のぶんは
+    「既に決まっている同値クラス」であって人手のぶんと区別する理由が無く、
+    区別を各所に持たせると「auto を見落とした検査」が生まれるため。
+    人手のぶんだけ・auto のぶんだけを見たいのは追記先と取り消しの2か所しか
+    無いので、そちらが include_auto / load_auto_entries で切り分ける。
+    """
+    table = _table(field)  # 不正な field はここで弾かれる
+    if path is not None:
+        return _read_entries(path, table)
+    entries = _read_entries(entries_path(field), table)
+    if include_auto:
+        entries += _read_entries(auto_entries_path(field), table)
+    return entries
+
+
+def load_auto_entries(field: str, *, path: Path | None = None) -> list[dict]:
+    """自動承認したぶんだけを読む。"""
+    return _read_entries(path or auto_entries_path(field), _table(field))
+
+
+def write_auto_entries(
+    field: str, entries: list[dict[str, Any]], *, path: Path | None = None
+) -> Path:
+    """*.auto.toml を丸ごと書き直す。**追記ではない。**
+
+    _proposed/ と同じ扱いで、ここは人が手を入れないファイルなので、毎回同じ
+    入力から同じ内容を作れるほうが得（--undo は空の配列で呼ぶだけで済む）。
+
+    approved = true を書けるのはこの関数と append_entry の2つだが、こちらを
+    呼んでよいのは auto.py の規則を通ったエントリだけで、規則の中身は
+    src/odj/aliases/auto.py に1か所だけ書いてある。
+    """
+    table = _table(field)
+    target = path or auto_entries_path(field)
+    header = _AUTO_HEADER.format(
+        label="元ネタ名" if field == "work" else "アーティスト名",
+        human=FIELDS[field][0],
+        field=field,
+        source=AUTO_SOURCE,
+    )
+    body = "".join("\n" + _fmt_block(table, entry) for entry in entries)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(header + body, encoding="utf-8")
+    return target
 
 
 def append_entry(field: str, entry: dict[str, Any], *, path: Path | None = None) -> Path:
@@ -359,24 +454,34 @@ def proposals_path(field: str) -> Path:
     return paths.ALIASES_DIR / "_proposed" / name
 
 
+def load_proposal_groups(field: str, *, path: Path | None = None) -> dict[str, list[dict]]:
+    """クラスタ id → その id の提案**すべて**。
+
+    1つのクラスタを複数グループに割った提案は同じ id のブロックが並ぶ
+    （llm.to_entry の説明を参照）。「クラスタ全体を1つにまとめる提案が
+    ちょうど1件か」を見たい自動承認（auto.py）はこちらを使う。
+    """
+    table = _table(field)  # 不正な field はここで弾かれる
+    out: dict[str, list[dict]] = {}
+    for entry in _read_entries(path or proposals_path(field), table):
+        cluster_id = (entry.get("id") or "").strip()
+        if cluster_id:
+            out.setdefault(cluster_id, []).append(entry)
+    return out
+
+
 def load_proposals(field: str, *, path: Path | None = None) -> dict[str, dict]:
     """data/aliases/_proposed/{works,artists}.toml をクラスタ id で引ける形に。
 
     提案は **approved を持たない**（人間が decide して初めて works.toml に入る）。
     ここを読むのは「canonical が提案の中にあるか」を確かめるためだけ。
+    同じ id が並んでいたら先頭を採る（分割提案を1件にまとめたいわけではなく、
+    canonical の候補を1つ得られればよいだけなので）。
     """
-    target = path or proposals_path(field)  # 不正な field はここで弾かれる
-    _, table = FIELDS[field]
-    if not target.exists():
-        return {}
-    with target.open("rb") as fh:
-        data = tomllib.load(fh)
-    out: dict[str, dict] = {}
-    for entry in data.get(table, []):
-        cluster_id = (entry.get("id") or "").strip()
-        if cluster_id:
-            out.setdefault(cluster_id, entry)
-    return out
+    return {
+        cluster_id: groups[0]
+        for cluster_id, groups in load_proposal_groups(field, path=path).items()
+    }
 
 
 def write_proposals(
@@ -404,6 +509,131 @@ def write_proposals(
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(_PROPOSED_HEADER + body, encoding="utf-8")
     return target
+
+
+# ---------------------------------------------------------------------------
+# 承認を書く前の検査
+#
+# 人間の判断（cli.decide の accept）と自動承認（auto.py）が**同じ検査**を通る
+# ようにここに集めてある。片方にしか無い検査があると、そちらを通らない経路から
+# 壊れた同値クラスが辞書に入る。状態（keep_apart の集合・生表記の索引・判断済み）
+# は引数で受け取る。auto は 1 回の実行で何十件も承認するので、その途中で増えた
+# ぶんを含んだ索引を渡す必要があるため（ファイルを読み直す作りにすると、
+# 同じ実行の中で作った衝突を見逃す）。
+# ---------------------------------------------------------------------------
+
+
+def blocked_pair(a: str, b: str, keep_apart: set[frozenset[str]]) -> bool:
+    """keep_apart.toml が「別物」と決めた組か。
+
+    block.build_edges() の add() が辺を張らない条件と同じにしてある。生の組だけを
+    見ると「アイカツ! 楽曲」と「アイカツスターズ」のような注記違いの迂回路を
+    すり抜ける。
+    """
+    if frozenset((a, b)) in keep_apart:
+        return True
+    ka = rules.agg_key(rules.strip_notes(a))
+    kb = rules.agg_key(rules.strip_notes(b))
+    return bool(ka and kb and ka != kb and frozenset((ka, kb)) in keep_apart)
+
+
+def check_keep_apart(values: list[str], keep_apart: set[frozenset[str]]) -> None:
+    """人間が「別物」と決めた組を含んでいないか。keep_apart のほうが常に強い。"""
+    for i in range(len(values)):
+        for j in range(i + 1, len(values)):
+            if blocked_pair(values[i], values[j], keep_apart):
+                raise AliasError(
+                    "keep_apart.toml で別物と決めた組が含まれています: "
+                    f"「{values[i]}」と「{values[j]}」",
+                    code="keep-apart",
+                )
+
+
+def check_conflict(values: list[str], canonical: str, index: dict[str, str]) -> None:
+    """同じ表記を別の正準名にも寄せていないか。両方が生きると検索が割れる。
+
+    index は variant_index() の結果（生表記 → 正準表記）。
+    """
+    for raw in values:
+        if raw in index and index[raw] != canonical:
+            raise AliasError(
+                f"「{raw}」は既に「{index[raw]}」に寄せられています"
+                f"（今回は「{canonical}」）。先に既存の項目を直してください",
+                code="conflict",
+            )
+
+
+def decided_index(field: str) -> dict[str, dict]:
+    """生表記 → その値を決着させた判断ログ1件。
+
+    見るのはクラスタ id ではなく**個々の生表記**。id で弾くと、1枚のカードで
+    一度判断した時点で残りの値を扱えなくなる。実データの「とある」系のように
+    1枚に複数の作品が混じるカードや、artist 側のように1枚から複数のグループを
+    作るのが常態のカードでは、部分採用を繰り返せる必要がある。
+
+    数えるのは accept と reject だけ。defer と keep-apart は値を判断していない
+    （「まだ決めない」「この2つは別物」と決めただけ）。auto-accept も数えない
+    ——自動承認を取り消せる必要があり、追記専用の decisions.jsonl からは消せない
+    ので、自動承認ぶんの決着は *.auto.toml の中身のほうで見る
+    （block.load_decided() を参照）。
+    """
+    done: dict[str, dict] = {}
+    for rec in load_decisions():
+        if rec.get("field") != field or rec.get("action") not in ("accept", "reject"):
+            continue
+        for raw in rec.get("variants") or []:
+            done.setdefault(raw, rec)
+    return done
+
+
+def check_already_decided(values: list[str], decided: dict[str, dict]) -> None:
+    """同じ値を二度判断させない。decided は decided_index() の結果。"""
+    for raw in values:
+        hit = decided.get(raw)
+        if hit is not None:
+            raise AliasError(
+                f"「{raw}」は既に判断済みです"
+                f"（{hit.get('action')} / {hit.get('at', '時刻不明')}）",
+                code="already-decided",
+            )
+
+
+def check_canonical(
+    field: str, cluster_id: str, canonical: str, variants: list[str]
+) -> None:
+    """正準名の創作を許さない。ただし**既に辞書にある正準名は創作ではない**。
+
+    新しい開催回で「ラブライブ！」（全角）が現れたとき、判断済みの
+    「ラブライブ!」に足せないと、その表記は永久に検索から漏れる。variants だけに
+    限っていた頃はこれができず、追加された表記がレビュー対象外のまま溜まっていた。
+
+    注記を剥がした形も創作ではない。「その着せ替え人形は恋をする 2期」と
+    「〜 OP」しか無いクラスタでは、もっともらしい正準名
+    「その着せ替え人形は恋をする」が生表記のどこにも無く、variants だけに限ると
+    注記付きの名前を正準名にするしかなくなる。落とすのは rules.strip_notes が
+    規則で書ける注記だけなので、推測は入らない。
+
+    **strip_notes は work だけ。** 元ネタ列の注記を落とす関数で、アーティスト名に
+    当てると末尾が「劇場版」「映画」「楽曲」で終わる名義を削りかねない
+    （block.py の Value.to_json、llm.allowed_canonicals と同じ線引き）。
+    """
+    proposal = load_proposals(field).get(cluster_id, {})
+    allowed = set(variants)
+    allowed.update(
+        (e.get("canonical") or "").strip() for e in load_entries(field) if e.get("canonical")
+    )
+    if proposal:
+        allowed.add((proposal.get("canonical") or "").strip())
+        allowed.update(v.strip() for v in proposal.get("variants", []) if isinstance(v, str))
+    if field == "work":
+        allowed.update(rules.strip_notes(v) for v in variants)
+    allowed.discard("")
+    if canonical not in allowed:
+        raise AliasError(
+            f"canonical は variants・提案・既存の辞書・注記を剥がした形から"
+            f"選んでください: 「{canonical}」はどれにもありません"
+            "（実データに無い表記は作れません）"
+        )
 
 
 # ---------------------------------------------------------------------------

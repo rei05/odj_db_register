@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { loadData, type Loaded } from '../lib/data.ts'
 import { fetchQueue, postDecide, postExport } from './api.ts'
+import BulkReviewList from './BulkReviewList.tsx'
 import ClusterCard, { type ClusterActions } from './ClusterCard.tsx'
 import type { DecidePayload, Field, QueueResponse } from './types.ts'
 import './review.css'
@@ -10,8 +11,19 @@ const FIELDS: { id: Field; label: string }[] = [
   { id: 'artist', label: 'アーティスト（artist）' },
 ]
 
+type ReviewMode = 'single' | 'bulk'
+
+const MODES: { id: ReviewMode; label: string }[] = [
+  { id: 'single', label: '1件ずつ' },
+  { id: 'bulk', label: 'まとめて' },
+]
+
 /** 説明パネルを閉じたかどうか。**既定は開く**（初めて開いた人に読ませたいので）。 */
 const GUIDE_KEY = 'odj-review-guide'
+
+/** 1件ずつ／まとめての、どちらで開いていたか。Guide の GUIDE_KEY と同じ理屈で
+ * localStorage に覚える（毎回選び直させるのは邪魔なので）。 */
+const MODE_KEY = 'odj-review-mode'
 
 /**
  * この画面が何をするところなのかの説明。
@@ -33,11 +45,17 @@ function Guide({ open, onToggle }: { open: boolean; onToggle: () => void }) {
             書かれている、など）を1つにまとめる作業です。まとめると
             <strong>検索でどれを打っても同じ曲が見つかる</strong>ようになります。
           </p>
+          <p>
+            <strong>ここに出るのは、人間の判断が要るものだけです。</strong>
+            規則で安全と言い切れる候補（提案がクラスタ全体を覆っていて、
+            アーティスト名の混入や大きな塊を割った破片といった危険の印が無いもの）は
+            画面を開いたときに自動で承認済みになるので、もう出てきません。
+          </p>
           <ol className="review-guide-steps">
             <li>
-              <strong>候補を1件ずつ見る。</strong>
-              機械と LLM が「同じかもしれない表記」を集めてあります。
-              提案がある候補は、あらかじめ答えが埋まっています
+              <strong>残った候補を見る。</strong>
+              提案が別物を巻き込んでいたり、LLM が自信を持てなかったり、
+              そもそも提案が無かったりしたものが残っています
             </li>
             <li>
               <strong>同じものにだけチェックを残す。</strong>
@@ -82,10 +100,20 @@ export default function ReviewApp() {
   const [guideOpen, setGuideOpen] = useState(
     () => localStorage.getItem(GUIDE_KEY) !== 'closed',
   )
+  const [mode, setMode] = useState<ReviewMode>(() =>
+    localStorage.getItem(MODE_KEY) === 'bulk' ? 'bulk' : 'single',
+  )
+  // まとめてモードの行から「1件ずつ確認」で飛んできたクラスタ。指定が無ければ
+  // 従来どおり queue.clusters[0]（先頭）を1件ずつモードのカードに出す。
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     localStorage.setItem(GUIDE_KEY, guideOpen ? 'open' : 'closed')
   }, [guideOpen])
+
+  useEffect(() => {
+    localStorage.setItem(MODE_KEY, mode)
+  }, [mode])
 
   useEffect(() => {
     loadData().then(setData, (e: unknown) =>
@@ -106,12 +134,34 @@ export default function ReviewApp() {
     refresh(field)
   }, [field, refresh])
 
+  // selectedId が指すクラスタがまだキューにあればそれを、無ければ（未指定 /
+  // 既に判断済みで消えた）先頭を出す。「まとめて」の行から個別に開いたクラスタを
+  // 見終えたら selectedId をクリアするので、そこでも自然に先頭へ戻る。
   const cluster =
-    queue && queue.clusters.length > 0 && queue.field === field ? queue.clusters[0] : null
+    queue && queue.field === field
+      ? (selectedId ? queue.clusters.find((c) => c.id === selectedId) : undefined) ??
+        queue.clusters[0] ??
+        null
+      : null
 
   const actionsRef = useRef<ClusterActions | null>(null)
   const registerActions = useCallback((a: ClusterActions | null) => {
     actionsRef.current = a
+  }, [])
+
+  // 「まとめて」で1件承認するたびに呼ぶ。1件ずつモードの submit と同じ形で
+  // キューを縮め、残数・判断済み件数の表示を合わせる。
+  const markDecided = useCallback((id: string) => {
+    setQueue((q) =>
+      q ? { ...q, clusters: q.clusters.filter((c) => c.id !== id), decided: q.decided + 1 } : q,
+    )
+  }, [])
+
+  // 「まとめて」の行の「1件ずつ確認」から。1件ずつモードへ切り替えて
+  // そのクラスタをカードに出す。
+  const openSingle = useCallback((id: string) => {
+    setSelectedId(id)
+    setMode('single')
   }, [])
 
   const submit = useCallback(
@@ -133,6 +183,9 @@ export default function ReviewApp() {
                   }
                 : q,
             )
+            // 「まとめて」から個別に開いたクラスタだった場合、判断が付いたので
+            // 指名を解除する（次に出すのは通常どおり先頭のクラスタ）。
+            setSelectedId((id) => (id === payload.id ? null : id))
             return
           }
           // 種別で分ける。以前は status 409 をすべて「二重送信」と見なして
@@ -200,6 +253,7 @@ export default function ReviewApp() {
 
   const remaining = queue?.clusters.length ?? 0
   const total = queue?.total ?? 0
+  const autoApproved = queue?.autoApproved ?? 0
 
   return (
     <div className="review-app">
@@ -220,9 +274,28 @@ export default function ReviewApp() {
               type="button"
               className={f.id === field ? 'tab tab-on' : 'tab'}
               aria-current={f.id === field ? 'page' : undefined}
-              onClick={() => setField(f.id)}
+              onClick={() => {
+                setField(f.id)
+                // 別フィールドの id は「まとめて」から指名しても見つからない
+                // （find が undefined を返して先頭にフォールバックするだけ）が、
+                // 切り替えたのに古い指名が残っているとまぎらわしいので消す。
+                setSelectedId(null)
+              }}
             >
               {f.label}
+            </button>
+          ))}
+        </nav>
+        <nav className="review-mode-toggle" aria-label="表示モード">
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              className={m.id === mode ? 'tab tab-on' : 'tab'}
+              aria-current={m.id === mode ? 'page' : undefined}
+              onClick={() => setMode(m.id)}
+            >
+              {m.label}
             </button>
           ))}
         </nav>
@@ -239,14 +312,17 @@ export default function ReviewApp() {
             残り <strong>{remaining.toLocaleString()}</strong> 件
             <span className="muted">
               {' '}
-              / 全 {total.toLocaleString()} 件（判断済み {queue.decided.toLocaleString()} 件）
+              / 全 {total.toLocaleString()} 件（判断済み {queue.decided.toLocaleString()} 件
+              {/* 自動承認は「見なくてよかったぶん」。黙って総数から引くと、
+                  候補が減ったのか画面が壊れているのか利用者に区別が付かない。 */}
+              {autoApproved > 0 && `。うち自動承認 ${autoApproved.toLocaleString()} 件`}）
             </span>
             {loading && <span className="muted">（更新中…）</span>}
           </p>
         )}
         {!queue && loading && <p className="notice">読み込み中…</p>}
 
-        {data && cluster && (
+        {mode === 'single' && data && cluster && (
           <ClusterCard
             key={cluster.id}
             cluster={cluster}
@@ -255,7 +331,24 @@ export default function ReviewApp() {
             registerActions={registerActions}
           />
         )}
-        {!data && !error && <p className="notice">plays.json を読み込み中…</p>}
+        {mode === 'single' && !data && !error && (
+          <p className="notice">plays.json を読み込み中…</p>
+        )}
+
+        {mode === 'bulk' && queue && queue.field === field && (
+          // key={field} で、フィールドを切り替えるたびに一覧を作り直す
+          // （ClusterCard が key={cluster.id} で1件ごとに作り直すのと同じ理屈）。
+          // 承認が進んでも queue 側の再レンダリングで一覧の入力途中の状態
+          // （チェック・編集した正準名）を消したくないので、この key は field
+          // だけに絞ってあり、承認のたびには変えない。
+          <BulkReviewList
+            key={field}
+            field={field}
+            clusters={queue.clusters}
+            onDecided={markDecided}
+            onOpenSingle={openSingle}
+          />
+        )}
 
         {queue && queue.field === field && queue.clusters.length === 0 && !loading && (
           <div className="card review-done">

@@ -67,6 +67,12 @@ export interface QueueResponse {
   field: Field
   total: number
   decided: number
+  /**
+   * `odj.aliases auto` が規則で自動承認したクラスタ数（decided の内数）。
+   * この画面は人間の判断が要るものだけを出すので、その差分がどこへ行ったかを
+   * 説明するために持つ。古い dev サーバーが返さないこともあるので任意にしてある。
+   */
+  autoApproved?: number
   clusters: Cluster[]
 }
 
@@ -88,6 +94,21 @@ export type ProposalKind =
   | 'odj-self'
   | 'artist-as-work'
   | 'unknown'
+
+/**
+ * ProposalKind の実行時版。ユニオン型はコンパイル時に消えるため、値として
+ * 検証したい場所（ClusterCard.tsx のプルダウンの並び、BulkReviewList.tsx の
+ * 「kind が確定しているか」判定）はここを唯一の正として参照する。二重に持つと
+ * 片方だけ更新して食い違う恐れがあるので、種別を増やすときはここ1か所を直す。
+ */
+export const PROPOSAL_KINDS: readonly ProposalKind[] = [
+  'work',
+  'vocaloid',
+  'vtuber',
+  'odj-self',
+  'artist-as-work',
+  'unknown',
+]
 
 export interface DecidePayload {
   id: string

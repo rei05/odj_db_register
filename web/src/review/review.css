@@ -497,3 +497,129 @@
   font-size: 13px;
   line-height: 1.7;
 }
+
+/* --- 表示モード切り替え（1件ずつ / まとめて） --- */
+
+.review-mode-toggle {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+/* --- まとめてモード --- */
+
+.review-bulk-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ツールバーの承認ボタンはカード内のボタン列と違って1つしか無いので、
+   review-btn の「均等に伸びる」挙動を review-export と同じく打ち消す。 */
+.review-bulk-run {
+  flex: none;
+  max-width: none;
+  width: auto;
+}
+
+.review-bulk-summary {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.review-bulk-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.review-bulk-row {
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+/* kind が決まらず一括承認の対象外にした行。選べないことが一目で分かるよう
+   落ち着かせるが、内容が読めなくなるほどは落とさない。 */
+.review-bulk-row-disabled {
+  background: var(--surface-0);
+  opacity: 0.75;
+}
+
+.review-bulk-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-bulk-canonical {
+  flex: 1 1 260px;
+  min-width: 160px;
+}
+
+.review-bulk-rows {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.review-bulk-open-single {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.review-bulk-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--series-2);
+}
+
+.review-bulk-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.review-bulk-variants {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.review-bulk-reason {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.review-bulk-reason summary {
+  color: var(--accent);
+  cursor: pointer;
+  width: fit-content;
+}
+
+.review-bulk-reason pre {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--surface-0);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.review-bulk-error {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  font-size: 12px;
+}

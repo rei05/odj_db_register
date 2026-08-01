@@ -1,19 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Play } from '../lib/types.ts'
 import SearchPreview from './SearchPreview.tsx'
-import { canonicalOptions, guessCanonical } from './canonical.ts'
+import { canonicalOptions, guessCanonical, initialChecked } from './canonical.ts'
 import { draftReason } from './draft.ts'
 import { CONFIDENCE_LABEL, FIELD_NOUN, hintLabel } from './labels.ts'
 import type { Cluster, DecidePayload, ProposalKind } from './types.ts'
+import { PROPOSAL_KINDS } from './types.ts'
 
-const KIND_OPTIONS: { value: ProposalKind; label: string }[] = [
-  { value: 'work', label: '作品（アニメ・ゲーム等）' },
-  { value: 'vocaloid', label: 'ボーカロイド' },
-  { value: 'vtuber', label: 'VTuber' },
-  { value: 'odj-self', label: 'オタクDJ大会自体' },
-  { value: 'artist-as-work', label: 'アーティスト名を元ネタ欄に書いたもの' },
-  { value: 'unknown', label: '不明' },
-]
+/** プルダウンに出す日本語ラベル。Record<ProposalKind, string> にしてあるので、
+ * ProposalKind に種別を足したのにラベルを足し忘れる、ということが型エラーで
+ * 分かる（PROPOSAL_KINDS 側は types.ts を参照）。 */
+const KIND_LABEL: Record<ProposalKind, string> = {
+  work: '作品（アニメ・ゲーム等）',
+  vocaloid: 'ボーカロイド',
+  vtuber: 'VTuber',
+  'odj-self': 'オタクDJ大会自体',
+  'artist-as-work': 'アーティスト名を元ネタ欄に書いたもの',
+  unknown: '不明',
+}
+const KIND_OPTIONS: { value: ProposalKind; label: string }[] = PROPOSAL_KINDS.map((value) => ({
+  value,
+  label: KIND_LABEL[value],
+}))
 const KNOWN_KINDS = new Set(KIND_OPTIONS.map((k) => k.value))
 
 /** キーボード操作([a][r][s][k][e])から呼ばれるハンドラ一式。ReviewApp が保持する。 */
@@ -24,28 +32,6 @@ export interface ClusterActions {
   toggleKeepApart: () => void
   cancelKeepApart: () => void
   focusReason: () => void
-}
-
-/**
- * 初期チェック。**提案があるときは提案の variants だけ**をチェックする。
- *
- * LLM は1つのクラスタから「まとめる根拠があるものだけ」を返す契約で（llm.py の
- * 絶対規則1「迷ったら分ける」）、variants に入らなかった値は**別物と判断された値**
- * である。全部チェックした状態で出していた頃は、その分を人間が毎回手で外していた
- * （実データで work 21 件・artist 22 件の提案がクラスタの一部を除外している）。
- *
- * 判断済みの値（decidedAs）はどちらの経路でもチェックしない。既存の正準名へ足す
- * 相手として見せるだけで、もう一度送るとサーバに already-decided で弾かれる。
- *
- * 提案の variants が1つも残らなかったときは全部チェックへ戻す。queue 側が未判断の
- * 値だけに絞る（vite.config.ts）ため起こり得るが、0件のカードは採用ボタンが
- * disabled で判断できなくなるため。
- */
-function initialChecked(cluster: Cluster): Set<string> {
-  const alive = cluster.values.filter((v) => !v.decidedAs).map((v) => v.raw)
-  const proposed = cluster.proposal?.variants ?? []
-  const picked = alive.filter((raw) => proposed.includes(raw))
-  return new Set(picked.length > 0 ? picked : alive)
 }
 
 /**
