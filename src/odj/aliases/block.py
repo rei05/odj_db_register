@@ -103,7 +103,7 @@ class Value:
     # 実データで 116 種・288 行あり、Ado / TRUE / Avicii など。
     cross_field: bool = False
 
-    def to_json(self) -> dict:
+    def to_json(self, *, with_base: bool = False) -> dict:
         out = {
             "raw": self.raw,
             "rows": self.rows,
@@ -116,6 +116,23 @@ class Value:
             out["coArtists"] = sorted(self.co_artists)[:SAMPLE]
         if self.co_works:
             out["coWorks"] = sorted(self.co_works)[:SAMPLE]
+        # 注記（OP・ED・「2期」・TVアニメ「」…）を剥がした形。レビュー GUI が
+        # 正準名を自動で推定するのに使う（web/src/review/canonical.ts）。
+        # 「その着せ替え人形は恋をする 2期」と「〜 OP」しか無いクラスタでは、
+        # もっともらしい正準名「その着せ替え人形は恋をする」が生表記のどこにも
+        # 無い。剥がす規則は rules.strip_notes 1か所に置いたままにしたいので、
+        # TS 側へ移植せず**ここで剥がした結果を JSON に載せて渡す**。
+        #
+        # **work のときだけ。** strip_notes は元ネタ列の注記を落とす関数で、
+        # アーティスト名に当てると末尾が「劇場版」「映画」「楽曲」で終わる名義を
+        # 削りかねない。artist の正準名は従来どおり rows の多い生表記から選ぶ
+        # （llm.py の _FIELD_TEXT["artist"]["rule3"] と同じ方針）。
+        # 生表記と同じときは出さない。大半の値がそうなので、載せると JSON が
+        # 膨らむだけで読む側の分岐も増える。
+        if with_base:
+            base = rules.strip_notes(self.raw)
+            if base and base != self.raw:
+                out["base"] = base
         if self.cross_field:
             out["crossField"] = True
         return out
@@ -617,7 +634,11 @@ def build(field_name: str, plays: list[dict]) -> dict:
                 "rows": rows,
                 "hints": hints,
                 "edgeKinds": sorted(kinds),
-                "values": [values[m].to_json() for m in members if m in values],
+                "values": [
+                    values[m].to_json(with_base=field_name == "work")
+                    for m in members
+                    if m in values
+                ],
                 "edges": pairs,
             }
         )

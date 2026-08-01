@@ -159,6 +159,8 @@ def _cmd_ask(args: argparse.Namespace) -> int:
     print(f"[{args.field}] {result['path']}")
     print(f"  提案 {result['proposed']} 件 / 捨てた {len(result['rejected'])} 件"
           f"（呼び出し {result['calls']} 回・キャッシュ {result['cached']} 回）")
+    if result.get("nonJapanese"):
+        print(f"  うち理由が日本語でないもの {len(result['nonJapanese'])} 件")
     return 0
 
 
@@ -297,10 +299,23 @@ def _accept(payload: dict, field: str, cluster_id: str, reason: str, where: str)
     if proposal:
         allowed.add((proposal.get("canonical") or "").strip())
         allowed.update(v.strip() for v in proposal.get("variants", []) if isinstance(v, str))
+    # 注記を剥がした形も創作ではない。「その着せ替え人形は恋をする 2期」と
+    # 「〜 OP」しか無いクラスタでは、もっともらしい正準名
+    # 「その着せ替え人形は恋をする」が生表記のどこにも無く、variants だけに
+    # 限ると注記付きの名前を正準名にするしかなくなる。落とすのは
+    # rules.strip_notes が規則で書ける注記だけなので、推測は入らない。
+    #
+    # **work だけ。** strip_notes は元ネタ列の注記を落とす関数で、アーティスト名に
+    # 当てると末尾が「劇場版」「映画」「楽曲」で終わる名義を削りかねない
+    # （block.py の Value.to_json、llm.allowed_canonicals と同じ線引き）。
+    if field == "work":
+        allowed.update(rules.strip_notes(v) for v in variants)
+    allowed.discard("")
     if canonical not in allowed:
         raise AliasError(
-            f"canonical は variants・提案・既存の辞書から選んでください: 「{canonical}」は"
-            "どれにもありません（実データに無い表記は作れません）"
+            f"canonical は variants・提案・既存の辞書・注記を剥がした形から"
+            f"選んでください: 「{canonical}」はどれにもありません"
+            "（実データに無い表記は作れません）"
         )
 
     # 人間が「別物」と決めた組を含んでいないか。keep_apart のほうが常に強い。

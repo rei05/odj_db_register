@@ -312,6 +312,29 @@ class ComponentsCappedTest(unittest.TestCase):
         self.assertFalse(was_split)
 
 
+class ClusterValueJsonTest(unittest.TestCase):
+    """clusters.<field>.json に載る1値ぶんの形。
+
+    レビュー GUI（web/src/review/canonical.ts）が正準名を推定するのに base を
+    読むので、**出す条件がここで決まる**。剥がす規則そのものは
+    rules.strip_notes 1か所に置いたままにして、TS へは移植していない。
+    """
+
+    def test_base_carries_the_value_with_its_notes_stripped(self) -> None:
+        out = Value(raw="アイカツ! 楽曲", rows=1).to_json(with_base=True)
+        self.assertEqual(out["base"], "アイカツ!")
+
+    def test_base_is_omitted_when_there_is_nothing_to_strip(self) -> None:
+        # 大半の値がこれ。生表記と同じ base を全部載せると JSON が膨らむだけで、
+        # 読む側の分岐も増える。
+        self.assertNotIn("base", Value(raw="アイカツ!", rows=1).to_json(with_base=True))
+
+    def test_artists_get_no_base(self) -> None:
+        # strip_notes をアーティスト名に当てると、末尾が「楽曲」「劇場版」で
+        # 終わる名義を削る。build() は field_name == "work" のときだけ渡す。
+        self.assertNotIn("base", Value(raw="猫叉Master 楽曲", rows=1).to_json())
+
+
 class BuildEdgesTest(unittest.TestCase):
     """辺を張る側の、張ってはいけない条件。"""
 
@@ -684,6 +707,52 @@ class DecideTest(unittest.TestCase):
                 "decide",
                 "--json",
                 decide_payload(canonical="ラブライブ!シリーズ総合", reason="創作"),
+            )
+        self.assertEqual(code, 1)
+        self.assertEqual(res["code"], "invalid")
+
+    def test_a_canonical_with_the_notes_stripped_is_allowed(self) -> None:
+        """注記を剥がした形は正準名にできること。
+
+        「その着せ替え人形は恋をする 2期」と「〜 OP」しか無いクラスタでは、
+        もっともらしい正準名が生表記のどこにも無い。variants だけに限っていた
+        頃はどちらかの注記付きの名前を正準名にするしかなく、検索の見出しに
+        「OP」が付いた。剥がすのは rules.strip_notes が規則で書ける注記だけ
+        なので、ここに推測は入らない。
+        """
+        with sandbox():
+            code, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(
+                    canonical="その着せ替え人形は恋をする",
+                    variants=["その着せ替え人形は恋をする 2期", "その着せ替え人形は恋をする OP"],
+                    reason="注記だけの違い",
+                ),
+            )
+            entries = store.load_entries("work")
+        self.assertEqual((code, res["ok"]), (0, True))
+        self.assertEqual(entries[0]["canonical"], "その着せ替え人形は恋をする")
+
+    def test_the_notes_are_not_stripped_for_artists(self) -> None:
+        """artist では注記剥がしを許さないこと。
+
+        strip_notes は元ネタ列の注記（OP・ED・「2期」・「楽曲」）を落とす関数で、
+        アーティスト名に当てると末尾がその語で終わる名義を削る。ここを work と
+        同じにすると、`ずっと真夜中でいいのに。 楽曲` のような値から作った名前が
+        通ってしまう。llm.allowed_canonicals・block.Value.to_json と同じ線引き。
+        """
+        with sandbox():
+            code, res = run_cli(
+                "decide",
+                "--json",
+                decide_payload(
+                    field="artist",
+                    kind="",
+                    canonical="猫叉Master",
+                    variants=["猫叉Master 楽曲", "猫叉master 楽曲"],
+                    reason="大小差だけ",
+                ),
             )
         self.assertEqual(code, 1)
         self.assertEqual(res["code"], "invalid")
@@ -1452,6 +1521,130 @@ class AskTest(unittest.TestCase):
             entries = store.load_proposals("work")
         self.assertEqual(result["proposed"], 1)
         self.assertEqual(entries["work-bbb"]["canonical"], "Tokyo 7th シスターズ")
+
+    # 注記を剥がした形は check_group を直に呼んで見る。CLUSTERS に注記付きだけの
+    # クラスタを足すと、バッチの詰め方やプロンプトの本数を見ている他のテストの
+    # 前提まで動くため。
+    NOTE_ONLY_CLUSTER: dict = {
+        "id": "work-ccc",
+        "field": "work",
+        "rows": 2,
+        "hints": ["series-mark-mismatch"],
+        "edgeKinds": ["agg"],
+        "values": [
+            {"raw": "その着せ替え人形は恋をする 2期", "rows": 1, "events": [14], "djs": ["ha"]},
+            {"raw": "その着せ替え人形は恋をする OP", "rows": 1, "events": [15], "djs": ["ha"]},
+        ],
+        "edges": [],
+    }
+
+    def test_a_canonical_with_the_notes_stripped_is_allowed(self) -> None:
+        """注記付きの表記しか無いクラスタでは、剥がした形を正準名にできること。
+
+        実データの work-34c16681 がこの形。生表記から選ぶと必ず「2期」か「OP」が
+        検索の見出しに残る。
+        """
+        group = {
+            "cluster_id": "work-ccc",
+            "canonical": "その着せ替え人形は恋をする",
+            "series": "",
+            "kind": "work",
+            "variants": ["その着せ替え人形は恋をする 2期", "その着せ替え人形は恋をする OP"],
+            "confidence": "high",
+            "reason": "同じ DJ ha が両方を使っており、注記だけの違い。1行ずつ。",
+        }
+        self.assertEqual(llm.check_group(group, self.NOTE_ONLY_CLUSTER, {}, set(), "work"), "")
+
+    def test_the_notes_are_not_stripped_for_artists(self) -> None:
+        # strip_notes は元ネタ列の注記を落とす関数。アーティスト名に当てると
+        # 末尾が「楽曲」「劇場版」で終わる名義を削る。cli._accept と
+        # block.Value.to_json も同じ線引きにしてある。
+        allowed = llm.allowed_canonicals(self.NOTE_ONLY_CLUSTER, {}, "artist")
+        self.assertNotIn("その着せ替え人形は恋をする", allowed)
+        self.assertIn("その着せ替え人形は恋をする OP", allowed)
+
+    def test_a_lone_variant_with_a_different_canonical_is_kept(self) -> None:
+        """生表記が1つでも、canonical がそれと違えば提案には中身があること。
+
+        「その表記を別の名前に寄せる」という中身があるので捨ててはいけない。
+        以前は keep_apart 検査用の集合（raws に無い canonical を外したもの）を
+        数えていたため、**API 由来・注記剥がしの正準名を持つ1件の提案が
+        丸ごと消えていた**。
+        """
+        group = {
+            "cluster_id": "work-ccc",
+            "canonical": "その着せ替え人形は恋をする",
+            "series": "",
+            "kind": "work",
+            "variants": ["その着せ替え人形は恋をする OP"],
+            "confidence": "medium",
+            "reason": "DJ ha の1行。注記 OP を外した形に寄せる。",
+        }
+        self.assertEqual(llm.check_group(group, self.NOTE_ONLY_CLUSTER, {}, set(), "work"), "")
+
+    def test_the_prompt_and_the_schema_both_ask_for_japanese_reasons(self) -> None:
+        """理由を日本語で書けという要求が、文面とスキーマの両方にあること。
+
+        プロンプトの文言だけでは守られない（_proposed/works.toml の 136 件の
+        およそ半分が英語で返ってきた）。description はスキーマ側から同じことを
+        言う唯一の手段なので、片方だけ消さない。
+        """
+        for field in ("work", "artist"):
+            with self.subTest(field=field):
+                self.assertIn("日本語", llm.system_prompt(field))
+                schema = llm.response_format(field)["json_schema"]["schema"]
+                reason = schema["properties"]["groups"]["items"]["properties"]["reason"]
+                self.assertIn("日本語", reason.get("description", ""))
+
+    def test_a_reason_written_in_english_is_reported_not_dropped(self) -> None:
+        """英語で返ってきた理由は数えて出すだけで、提案は捨てないこと。
+
+        捨てる側に回すと、規則4を守った中身のある提案まで言語だけを理由に
+        消える。理由の文面はレビュー画面で人間が直せるが、消えた提案は
+        戻ってこない。
+
+        理由の文面は実データ（_proposed/works.toml）から採ってある。**作品名の
+        引用でカタカナと漢字が混ざる**のが英語の理由の実際の姿で、「かなが1文字
+        でもあれば日本語」という見方では捕まらない。
+        """
+        with self.fixture():
+            result, logs, _ = self.run_ask(
+                self.reply(
+                    self.group(
+                        reason=(
+                            'API result for "アイカツ" redirects to "アイカツ!" and '
+                            "the Wikidata entry exists. All listed variants share the "
+                            "same DJ(s) and co-artists across entries and edges include "
+                            "agg/bigram links. Rows range from 1-14."
+                        )
+                    )
+                )
+            )
+        self.assertEqual(result["proposed"], 1)
+        self.assertEqual(len(result["nonJapanese"]), 1)
+        self.assertIn("work-aaa", result["nonJapanese"][0])
+        self.assertTrue(any("日本語で書かれていない" in line for line in logs))
+
+    def test_a_japanese_reason_is_not_reported(self) -> None:
+        with self.fixture():
+            result, _, _ = self.run_ask(self.reply(self.group()))
+        self.assertEqual(result["nonJapanese"], [])
+
+    def test_a_japanese_reason_quoting_english_names_is_not_reported(self) -> None:
+        # 逆向きの誤判定。日本語の理由も edges の種別やアーティスト名の引用で
+        # 英字が並ぶ（実データの理由の多くがこの形）。
+        with self.fixture():
+            result, _, _ = self.run_ask(
+                self.reply(
+                    self.group(
+                        reason=(
+                            'edges に agg,bigram があり、api_results の "ClariS" が '
+                            "正式表記。rows は 6 行と 3 行で、どちらも DJ tri が使っている。"
+                        )
+                    )
+                )
+            )
+        self.assertEqual(result["nonJapanese"], [])
 
     def test_evidence_reaches_the_prompt(self) -> None:
         with self.fixture(evidence=self.EVIDENCE):

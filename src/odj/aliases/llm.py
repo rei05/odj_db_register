@@ -32,12 +32,13 @@ bigram でも編集距離でも部分一致でも一度も同じクラスタに�
 固定費をクラスタ数ぶん払うことになる。刻みは **Groq 無料枠の TPM 8,000** から
 逆算していて、推定入力 3,600 に下振れ ぶんの係数を掛けた 4,500 と出力 3,000 の
 合計 7,500 が1リクエストの上限（TPM_LIMIT と TOKEN_ESTIMATE_SLACK の説明を参照）。
-実測（--dry-run）で work の 151 クラスタが 29 リクエスト、
+実測（--dry-run）で work の 150 クラスタが 30 リクエスト、
 artist の 105 クラスタが 34 リクエスト（work は「ブランド単位でまとめる」方針転換で
-keep_apart の組を消した結果クラスタが繋がり、152 → 151 に減っている）。
+keep_apart の組を消した結果クラスタが繋がって 152 → 151 に減り、さらに全員が
+判断済みになったクラスタを block が落とすので 150）。
 artist はクラスタが少ないのにリクエストが多い。1クラスタが大きい
 （`わか・ふうり・すなお from STAR☆ANIS` のような長い生表記が並ぶ）ことと、
-system_prompt が field 固有の規則ぶん長い（work 1543tok に対して artist 2168tok）
+system_prompt が field 固有の規則ぶん長い（work 1656tok に対して artist 2187tok）
 ことの両方が効いている。プロンプトを足すときは system_prompt の説明を先に読む。
 
 プロンプト全文の SHA256 で data/raw/llm/ にキャッシュするので、**入力が同じなら
@@ -218,7 +219,13 @@ def response_format(field: str) -> dict[str, Any]:
         **(_WORK_ONLY_PROPERTIES if field == "work" else {}),
         "variants": {"type": "array", "items": {"type": "string"}},
         "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-        "reason": {"type": "string"},
+        # description はスキーマの中で唯一「文面ではなく構造として」効く指示。
+        # プロンプト（規則4と出力節）にも日本語で書けと明記してあるが、gpt-oss は
+        # 実際に英語で返してくる（_proposed/works.toml の 136 件のうち3件が全文
+        # 英語で、ほかに「候補は agg・bigram で結ばれ、both appear as artists…」の
+        # ように節ごと英語のものが十数件ある）。プロンプトの文言だけでは守られない
+        # ので、スキーマ側にも同じ要求を置いて二重にしてある。
+        "reason": {"type": "string", "description": "日本語で書くこと"},
     }
     return {
         "type": "json_schema",
@@ -506,8 +513,11 @@ _FIELD_TEXT: dict[str, dict[str, str]] = {
         # 組み立てさせてはいけない（check_group が弾くが、弾けば提案が丸ごと消える）。
         "rule3": """api_results にある正式名称やシリーズ記事名を優先します
    （「ナナシス」→「Tokyo 7th シスターズ」、「アイマス」→「アイドルマスターシリーズ」）。
-   無ければ rows の多い表記（api_results に無いシリーズ名は作らない）。一覧記事や
-   関連商品（「〜の楽曲一覧」「〜 Solo Collection」）は canonical にしないこと。""",
+   次に注記の付いていない表記のうち rows の多いもの。**候補が全部注記付きなら注記
+   (OP・ED・2期・劇中曲・TVアニメ「」)を剥がした形を選べます**（「その着せ替え人形は
+   恋をする OP」→「その着せ替え人形は恋をする」）。剥がす以外の言い換えと、
+   api_results に無いシリーズ名は作らないこと。一覧記事や関連商品
+   （「〜の楽曲一覧」）は canonical にしない。""",
         # 規則4の後半。work では「同じブランドだから」が正当な根拠に変わった
         # （artist 側は現状のまま「同じシリーズだから」を却下する）。引用の義務は
         # 骨格側に残してあるので、ここで免除しないことだけ言っておく。
@@ -640,13 +650,16 @@ def system_prompt(field: str) -> str:
     1バッチに詰められる量は SAFE_INPUT_TOKENS からこの長さを引いた残りになる。
     artist で実測すると、work と同じ文面（当時 1447tok）のままなら 22 リクエスト、
     固有規則を書きたいだけ書いた 2577tok では **50 リクエスト**まで膨らみ、
-    削って 2168tok / 34 リクエストに落としてある。100tok につき 2 リクエストほど
+    削って 2168tok / 34 リクエストに落としてある（reason を日本語で書けという要求を
+    足した現在は 2187tok。リクエスト数は 34 のまま）。100tok につき 2 リクエストほど
     増える勘定。規則を1つ足すときは、実データで実際に踏んだ組を1〜2個挙げるだけに
     して、一般論や他の規則と重なる説明は書かないこと。
 
-    2168tok は「どのバッチも SAFE_INPUT_TOKENS に収まる」上限でもある
-    （artist で一番大きいクラスタが単独で 1363tok あり、これ以上固定費が増えると
-    そのクラスタだけ 1件で枠を超える。pack_batches は1件だけのバッチを割れない）。
+    **artist 側はもう伸ばす余地がほとんど無い。** 「どのバッチも SAFE_INPUT_TOKENS に
+    収まる」ためには、一番大きいクラスタ（単独で 1363tok）と足して 3600 に収まる
+    必要があり、現在の 2187tok では残り 50tok しかない。これを超えるとそのクラスタ
+    だけ1件で枠を超える（pack_batches は1件だけのバッチを割れない）。artist の規則を
+    足すときは、同じだけどこかを削ること。
     """
     label, thing = _FIELD_LABEL[field]
     text = _FIELD_TEXT[field]
@@ -671,8 +684,8 @@ def system_prompt(field: str) -> str:
    **実際にある文字列**からのみ選ぶこと。**創作は禁止**で、「正式名称はこうあるべき」
    と考えて書いてはいけません。{text["rule3"]}
 
-4. reason には**与えられた材料を引用**すること。rows（行数）、djs、coTitles、
-   coArtists、api_results の title か note のいずれかを必ず含めてください。
+4. reason は**日本語で**書き、**与えられた材料を引用**すること。rows（行数）、djs、
+   coTitles、coArtists、api_results の title か note のいずれかを必ず含めてください。
    {text["rule4"]}
 
 5. **確信が持てなければ confidence="low"。** low の提案は公開データには出ませんが、
@@ -699,7 +712,7 @@ groups は配列。1つのクラスタから 0 個・1 個・複数個を出せ�
 - variants … 同じと判断した生表記。**必ず candidates[].raw のどれか**
 - canonical … variants か api_results[].title にある文字列{text["output"]}
 - confidence … high / medium / low
-- reason … 規則4の通り、実データの引用を含めた日本語
+- reason … 規則4の通り実データの引用を含める。**必ず日本語**（英語で書かない）
 """
 
 
@@ -1057,16 +1070,53 @@ def blocked_pair(a: str, b: str, keep_apart: set[frozenset[str]]) -> bool:
     return bool(ka and kb and ka != kb and frozenset((ka, kb)) in keep_apart)
 
 
+def allowed_canonicals(
+    cluster: dict, evidence: dict[str, list[dict]], field: str
+) -> set[str]:
+    """そのクラスタで canonical に選んでよい文字列。
+
+    3系統ある。**どれも1文字も創作していない**（実データか外部 API の応答から
+    そのまま採るか、注記を機械的に剥がすだけ）ことが、この関数の存在理由。
+
+      ① candidates[].raw … 生表記そのまま
+      ② api_results[].title … 外部 API が返した正式名称・シリーズ記事名
+         （「ナナシス」→「Tokyo 7th シスターズ」）
+      ③ ②の生表記から注記を剥がした形 … **work のときだけ**
+
+    ③ を足したのは、もっともらしい正準名が生表記のどこにも無いクラスタが実際に
+    あるため。「その着せ替え人形は恋をする 2期」と「その着せ替え人形は恋をする OP」
+    しか無いクラスタでは、①②のどちらを選んでも注記付きの名前が正準名になる
+    （「ふつうの軽音部 劇中曲」「君のことが大大大大大好きな100人の彼女 2期 ED」も同じ）。
+    剥がすのは rules.strip_notes の規則で書けるものだけなので、「正式名称はこう
+    あるべき」という**推測は依然として禁止**のまま。
+
+    artist で ③ を足さないのは、strip_notes が元ネタ列の注記（OP・ED・「2期」）を
+    落とす関数で、アーティスト名に当てると末尾が「劇場版」「映画」「楽曲」で終わる
+    名義を削りかねないため。block.py の Value.to_json が base を work にだけ載せて
+    いるのと同じ理由。
+    """
+    raws = [v.get("raw", "") for v in cluster.get("values", [])]
+    out = set(raws) | evidence_titles(cluster, evidence)
+    if field == "work":
+        out |= {rules.strip_notes(r) for r in raws if r}
+    out.discard("")
+    return out
+
+
 def check_group(
     group: dict,
     cluster: dict | None,
     evidence: dict[str, list[dict]],
     keep_apart: set[frozenset[str]],
+    field: str = "work",
 ) -> str:
     """提案1件を検証する。問題なければ空文字、あれば捨てる理由を返す。
 
     ここは「LLM がプロンプトを守らなかったとき」に効く。守られている限り何も
     起きないが、守られなかったときに黙って辞書の手前まで通すわけにいかない。
+
+    field は canonical に許す文字列の範囲を決めるためだけに要る
+    （allowed_canonicals の説明を参照）。
     """
     if cluster is None:
         return f"知らない cluster_id: {group.get('cluster_id')!r}"
@@ -1086,14 +1136,22 @@ def check_group(
     canonical = (group.get("canonical") or "").strip()
     if not canonical:
         return "canonical が空"
-    allowed = set(raws) | evidence_titles(cluster, evidence)
-    if canonical not in allowed:
-        return f"canonical が候補にも API の結果にも無い（創作）: 「{canonical}」"
+    if canonical not in allowed_canonicals(cluster, evidence, field):
+        return (
+            "canonical が候補にも API の結果にも注記を剥がした形にも無い（創作）: "
+            f"「{canonical}」"
+        )
 
-    # 重複を除いた実際の同値クラス。canonical が API 由来なら plays.json に
-    # 無いので、keep_apart の検査からは外す（実データの組ではないため）。
+    # 重複を除いた実際の同値クラス。canonical が API 由来か注記を剥がした形なら
+    # plays.json に無いので、keep_apart の検査からは外す（実データの組ではない）。
     values = list(dict.fromkeys(variants + ([canonical] if canonical in raws else [])))
-    if len(values) < 2:
+    # 中身が無い提案を弾く。数えるのは**canonical を含めた同値クラスの大きさ**で、
+    # 生表記が1つでも canonical がそれと違えば「その表記を別の名前に寄せる」という
+    # 中身がある（「ふつうの軽音部 劇中曲」→「ふつうの軽音部」、
+    # 「ナナシス」→「Tokyo 7th シスターズ」）。raws に無い canonical を values から
+    # 外しているのは keep_apart の検査のためなので、こちらでその集合を数えると
+    # **API 由来・注記剥がしの正準名を持つ1件の提案が丸ごと消える**。
+    if len({*variants, canonical}) < 2:
         return "variants が1件だけで、canonical も同じ（提案の中身が無い）"
     for i in range(len(values)):
         for j in range(i + 1, len(values)):
@@ -1106,6 +1164,35 @@ def check_group(
     if not (group.get("reason") or "").strip():
         return "reason が空"
     return ""
+
+
+# 日本語の文とみなすひらがなの割合。実測（_proposed/works.toml の 136 件）では、
+# 英語で返ってきた3件が 0.004〜0.016、日本語の 133 件が 0.072 以上ときれいに
+# 分かれた。その間に置いてある。
+HIRAGANA_MIN_RATIO = 0.04
+
+
+def looks_japanese(text: str) -> bool:
+    """日本語の文になっているか。**ひらがなの割合**で見る。
+
+    「かなが1文字でもあれば日本語」では足りない。英語で書かれた理由も、規則4が
+    求める引用のために作品名をそのまま載せるので、カタカナと漢字は普通に混ざる
+    （実データの「API results for VOCALOID, ボカロ, ボーカロイド all redirect to
+    the Wikipedia/Wikidata entry ...」がまさにこれで、この基準では日本語になって
+    しまう）。助詞の「が」「の」「で」が並ぶひらがなだけが、日本語の文であることの
+    印になる。
+
+    **提案を捨てるための関数ではない。** 英語で返ってきた件数をログに出すためだけの
+    もので、捨てる側に回すと規則4を守った中身のある提案まで言語だけを理由に消える
+    （理由の文面はレビュー画面で人間が直せるが、消えた提案は戻ってこない）。
+    割合で見る以上どこかで外すが、外しても起きるのはログの1行だけ。
+    """
+    if not text:
+        return False
+    # U+3041..U+309F = ひらがなブロック。境界の文字は未割り当てだったり
+    # 見分けの付かない記号だったりするので、文字リテラルでは書かない。
+    hiragana = sum(1 for c in text if 0x3041 <= ord(c) <= 0x309F)
+    return hiragana / len(text) >= HIRAGANA_MIN_RATIO
 
 
 def to_entry(group: dict, model: str) -> dict[str, Any]:
@@ -1280,7 +1367,7 @@ def ask(
             say(f"  [{i}] 提案なし: {no_groups_reason(response)}")
         for group in groups:
             cluster = by_id.get((group.get("cluster_id") or "").strip())
-            problem = check_group(group, cluster, evidence, keep_apart)
+            problem = check_group(group, cluster, evidence, keep_apart, field)
             if problem:
                 label = (group.get("cluster_id") or "?") + " " + str(group.get("canonical"))
                 rejected.append(f"{label}: {problem}")
@@ -1292,9 +1379,24 @@ def ask(
     order = {c.get("id"): n for n, c in enumerate(load_clusters(field))}
     entries.sort(key=lambda e: order.get(e["id"], len(order)))
 
+    # 理由が日本語で書かれていないもの。**捨てずに数えて出すだけ。**
+    # プロンプト（規則4・出力節）と出力スキーマの description で日本語を要求して
+    # いるが、gpt-oss はそれでも英語で返すことがある。黙って混ざると、レビュー
+    # 画面で英語の理由をひとつずつ書き直すことになって初めて気づく。
+    non_japanese = [
+        f"{e['id']} {e['canonical']}" for e in entries if not looks_japanese(e["reason"])
+    ]
+
     path = store.write_proposals(field, entries)
     for line in rejected:
         say(f"  捨てた提案: {line}")
+    if non_japanese:
+        say(
+            f"  ⚠ 理由が日本語で書かれていない提案 {len(non_japanese)} 件"
+            "（提案自体は残してあります。文面はレビュー画面で直せます）:"
+        )
+        for line in non_japanese:
+            say(f"    {line}")
     if skipped:
         # 黙って減らさない。**もう一度回せばこのバッチだけ拾い直せる**
         # （確率的な失敗なので、次は通ることが多い。成功したぶんは
@@ -1311,4 +1413,5 @@ def ask(
         "proposed": len(entries),
         "rejected": rejected,
         "skipped": skipped,
+        "nonJapanese": non_japanese,
     }
