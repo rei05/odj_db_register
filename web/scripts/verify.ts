@@ -4,7 +4,9 @@
  */
 import { readFileSync } from 'node:fs'
 import { toPlays } from '../src/lib/data.ts'
+import { canonicalOptions, guessCanonical } from '../src/review/canonical.ts'
 import { draftReason } from '../src/review/draft.ts'
+import type { Cluster } from '../src/review/types.ts'
 import { baseKey, matchesQuery, normKey } from '../src/lib/normalize.ts'
 import { checkPlayed, perEvent, topTitles, topWorks } from '../src/lib/stats.ts'
 import type { Aliases, Dataset } from '../src/lib/types.ts'
@@ -306,6 +308,119 @@ check(
 // 「無関係な語の部分一致は統合してはいけない」の両方があり得ると書く
 // （draft.ts の HINT_LABEL_BY_FIELD.work を参照）。
 check('下書きが series-risk の警告を書く（work）', draft.includes('同じブランドのシリーズ作品'))
+
+// --- 正準名の自動推定 -------------------------------------------------------
+// 出典は実データのクラスタ（out/aliases/clusters.work.json）だが、あれは
+// gitignore なので CI には無い。draftFixture と同じくここに写してある。
+type GuessValue = { raw: string; rows: number; base?: string }
+function guessFixture(values: GuessValue[], over: Partial<Cluster> = {}): Cluster {
+  return {
+    id: 'work-test',
+    field: 'work',
+    rows: values.reduce((n, v) => n + v.rows, 0),
+    hints: [],
+    edgeKinds: [],
+    edges: [],
+    ...over,
+    values: values.map((v) => ({ events: [], djs: [], coArtists: [], coTitles: [], ...v })),
+  }
+}
+const all = (c: Cluster) => new Set(c.values.map((v) => v.raw))
+
+// work-ff929834。注記なしの表記があるので、行数の多いそれを選ぶ。
+const aikatsu = guessFixture([
+  { raw: 'アイカツ! 楽曲', rows: 14, base: 'アイカツ!' },
+  { raw: 'アイカツ!', rows: 8 },
+  { raw: 'アイカツ', rows: 3 },
+])
+check(
+  '注記なしの表記があればそれを正準名にする',
+  guessCanonical(aikatsu, all(aikatsu)) === 'アイカツ!',
+  guessCanonical(aikatsu, all(aikatsu)),
+)
+check(
+  '行数が一番多いだけの注記付きは選ばない',
+  guessCanonical(aikatsu, all(aikatsu)) !== 'アイカツ! 楽曲',
+)
+
+// work-34c16681。候補が全部注記付きなので、剥がした形に寄せる。
+const kisekae = guessFixture([
+  { raw: 'その着せ替え人形は恋をする 2期', rows: 1, base: 'その着せ替え人形は恋をする' },
+  { raw: 'その着せ替え人形は恋をする OP', rows: 1, base: 'その着せ替え人形は恋をする' },
+])
+check(
+  '注記付きしか無ければ注記を外した名前を作る',
+  guessCanonical(kisekae, all(kisekae)) === 'その着せ替え人形は恋をする',
+  guessCanonical(kisekae, all(kisekae)),
+)
+check(
+  '外した名前がプルダウンにも並ぶ',
+  canonicalOptions(kisekae, all(kisekae)).some(
+    (o) => o.value === 'その着せ替え人形は恋をする' && o.derived,
+  ),
+)
+
+// 剥がした結果がクラスタ内で1つしかない値は拾わない。
+// 「【MAD】 けいおん! 『ハリケーン!! たくあん!!』」を剥がすと曲名まで残る。
+const keion = guessFixture([
+  { raw: '【MAD】 けいおん! 『ハリケーン!! たくあん!!』', rows: 2, base: 'MAD けいおん! ハリケーン!! たくあん!!' },
+  { raw: '映画けいおん!', rows: 1, base: 'けいおん!' },
+  { raw: 'けいおん!! 挿入歌', rows: 1, base: 'けいおん!!' },
+])
+check(
+  '剥がした形が1つしか無い値を正準名にしない',
+  !guessCanonical(keion, all(keion)).includes('ハリケーン'),
+  guessCanonical(keion, all(keion)),
+)
+
+// work-26a2ac8f。strip_notes は「劇中曲」を落とすが「コラボMV」は知らない。
+// 片方だけが「注記なし」に見えるので、剥がした形の前方一致で短くする。
+const keionbu = guessFixture([
+  { raw: 'ふつうの軽音部 コラボMV', rows: 1 },
+  { raw: 'ふつうの軽音部 劇中曲', rows: 1, base: 'ふつうの軽音部' },
+])
+check(
+  '他の値から剥がした形で始まっていればそこまで短くする',
+  guessCanonical(keionbu, all(keionbu)) === 'ふつうの軽音部',
+  guessCanonical(keionbu, all(keionbu)),
+)
+
+// 逆向きには動かさない。シーズン付きの S を正準名に引き上げてしまう。
+const railgun = guessFixture([
+  { raw: 'とある科学の超電磁砲', rows: 9 },
+  { raw: 'TVアニメ「とある科学の超電磁砲S」 ED', rows: 1, base: 'とある科学の超電磁砲S' },
+])
+check(
+  '剥がした形のほうが長ければ引き上げない',
+  guessCanonical(railgun, all(railgun)) === 'とある科学の超電磁砲',
+  guessCanonical(railgun, all(railgun)),
+)
+
+// 判断済みの兄弟がいるなら、その正準名へ足す（別の名前を立てると検索が割れる）。
+const joining = guessFixture([
+  { raw: 'ラブライブ！', rows: 2 },
+  { raw: 'ラブライブ!', rows: 9 },
+])
+joining.values[1].decidedAs = 'ラブライブ!'
+check(
+  '判断済みの兄弟がいれば既存の正準名へ足す',
+  guessCanonical(joining, new Set(['ラブライブ！'])) === 'ラブライブ!',
+)
+
+// LLM の提案があれば、外部 API まで見て決めた結果なのでそれを優先する。
+const nanasis = guessFixture([
+  { raw: 'ナナシス', rows: 4 },
+  { raw: 'ナナシス!', rows: 1 },
+])
+nanasis.proposal = {
+  canonical: 'Tokyo 7th シスターズ',
+  variants: ['ナナシス', 'ナナシス!'],
+  reason: 'redirect',
+}
+check(
+  'LLM の提案があればそれを正準名にする',
+  guessCanonical(nanasis, all(nanasis)) === 'Tokyo 7th シスターズ',
+)
 
 console.log(failed === 0 ? '\nすべて通過' : `\n${failed} 件失敗`)
 process.exit(failed === 0 ? 0 : 1)

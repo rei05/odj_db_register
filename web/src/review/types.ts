@@ -17,6 +17,12 @@ export interface ClusterValue {
   djs: string[]
   coArtists: string[]
   coTitles: string[]
+  /**
+   * 注記（OP・ED・「2期」・TVアニメ「」…）を剥がした形。生表記と同じときと、
+   * field が artist のときは入らない（src/odj/aliases/block.py の Value.to_json）。
+   * 正準名の自動推定に使う（canonical.ts）。
+   */
+  base?: string
   /** 曲名欄など、work/artist 以外の列にも同じ文字列が出ている（要注意フラグ） */
   crossField?: boolean
   /**

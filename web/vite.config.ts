@@ -32,6 +32,8 @@ interface RawClusterValue {
   djs: string[]
   coArtists: string[]
   coTitles: string[]
+  /** 注記を剥がした形。work のときだけ、生表記と違うときだけ入る */
+  base?: string
   crossField?: boolean
   /** 既に判断済みの値。どの正準名に登録されたか（カードでは編集させない） */
   decidedAs?: string
@@ -115,6 +117,26 @@ function parseArrayOfTables(text: string): Record<string, string | string[]>[] {
     if (arrayMatch) {
       current[arrayMatch[1]] = [...arrayMatch[2].matchAll(/"([^"]*)"/g)].map((m) => m[1])
       i++
+      continue
+    }
+    // 複数行に分けて書かれた配列。**閉じ括弧まで読む。**
+    // store._write_toml は変換後の1行が長くなる variants を折り返して書く
+    // （tests/test_aliases.py の test_long_variant_lists_stay_readable）。
+    // 1行で閉じる形しか読めなかった頃は、折り返された variants が丸ごと
+    // undefined になり、queue が `variants.length > 0` で proposal ごと落として
+    // いた。**表記の多いクラスタほど折り返される**ので、一番提案が欲しい
+    // カードだけ「提案なし」に見える、という形の抜けだった
+    // （_proposed/works.toml の 136 件中 10 件）。
+    const arrayStart = trimmed.match(/^([A-Za-z_][\w-]*)\s*=\s*\[$/)
+    if (arrayStart) {
+      const buf: string[] = []
+      i++
+      while (i < lines.length && lines[i].trim() !== ']') {
+        buf.push(lines[i])
+        i++
+      }
+      i++ // 閉じ括弧の行
+      current[arrayStart[1]] = [...buf.join('\n').matchAll(/"([^"]*)"/g)].map((m) => m[1])
       continue
     }
     const tripleStart = trimmed.match(/^([A-Za-z_][\w-]*)\s*=\s*"""(.*)$/)
@@ -252,6 +274,15 @@ async function readProposals(field: ReviewField): Promise<Map<string, Proposal>>
       if (typeof id !== 'string' || typeof canonical !== 'string' || typeof reason !== 'string') {
         continue // id/canonical/reason を欠く行は契約を満たさないので proposal 扱いしない
       }
+      // **先に書いてある提案を採る。** LLM が1つのクラスタを複数のグループに
+      // 割ると同じ id のブロックが並ぶ（work-ff929834 が「アイカツ!」と
+      // 「アイカツスターズ!」の2つ）。ここは以前 set で後勝ちにしていたが、
+      // 正準名の妥当性を検査する src/odj/aliases/store.py の load_proposals は
+      // setdefault で**先勝ち**なので、画面が2つ目の提案を出しているのに
+      // サーバは1つ目を見る、という食い違いになっていた。合わせてある。
+      // なお id が重複したぶんの2つ目以降は画面に出ない（1つのカードに
+      // 提案は1つしか載らない）。
+      if (map.has(id)) continue
       map.set(id, {
         canonical,
         series: typeof row.series === 'string' ? row.series : undefined,

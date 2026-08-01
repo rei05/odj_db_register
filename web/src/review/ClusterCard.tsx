@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Play } from '../lib/types.ts'
 import SearchPreview from './SearchPreview.tsx'
+import { canonicalOptions, guessCanonical } from './canonical.ts'
 import { draftReason } from './draft.ts'
+import { CONFIDENCE_LABEL, FIELD_NOUN, hintLabel } from './labels.ts'
 import type { Cluster, DecidePayload, ProposalKind } from './types.ts'
 
 const KIND_OPTIONS: { value: ProposalKind; label: string }[] = [
@@ -62,12 +64,6 @@ function proposalExcluded(cluster: Cluster, initial: Set<string>): Set<string> {
   )
 }
 
-function initialCanonical(cluster: Cluster): string {
-  if (cluster.proposal?.canonical) return cluster.proposal.canonical
-  const byRows = [...cluster.values].sort((a, b) => b.rows - a.rows)
-  return byRows[0]?.raw ?? ''
-}
-
 function initialKind(cluster: Cluster): ProposalKind {
   const k = cluster.proposal?.kind
   return k && KNOWN_KINDS.has(k as ProposalKind) ? (k as ProposalKind) : 'unknown'
@@ -94,7 +90,14 @@ export default function ClusterCard({
     () => proposalExcluded(cluster, initialChecked(cluster)),
     [cluster],
   )
-  const [canonical, setCanonical] = useState(() => initialCanonical(cluster))
+  const [canonical, setCanonical] = useState(() =>
+    guessCanonical(cluster, initialChecked(cluster)),
+  )
+  // 人間が自分でプルダウンを動かしたか。**動かすまでは推定し直す。**
+  // チェックを付け外しすると「もっともらしい名前」は変わる（注記なしの値を
+  // 外せば、残りから剥がした形が正解になる）ので、触っていない間は追随させる。
+  // 一度選んだあとに勝手に戻ると、選び直しても効かない画面になるので触らない。
+  const canonicalTouched = useRef(false)
   const [series, setSeries] = useState(() => cluster.proposal?.series ?? '')
   const [kind, setKind] = useState<ProposalKind>(() => initialKind(cluster))
   // 提案が無いクラスタほど判断が難しい（series-risk で LLM が答えを出さなかった
@@ -108,29 +111,18 @@ export default function ClusterCard({
   const [keepApartError, setKeepApartError] = useState<string | null>(null)
   const reasonRef = useRef<HTMLTextAreaElement>(null)
 
-  const canonicalOptions = useMemo(() => {
-    const opts: string[] = []
-    for (const v of cluster.values) {
-      if (checked.has(v.raw) && !opts.includes(v.raw)) opts.push(v.raw)
-    }
-    if (cluster.proposal?.canonical && !opts.includes(cluster.proposal.canonical)) {
-      opts.push(cluster.proposal.canonical)
-    }
-    // 判断済みの兄弟が属する正準名も選べるようにする。新しい開催回で増えた
-    // 表記を既存のクラスへ足す操作が、これが無いとできない。
-    for (const v of cluster.values) {
-      if (v.decidedAs && !opts.includes(v.decidedAs)) opts.push(v.decidedAs)
-    }
-    return opts
-  }, [cluster, checked])
+  const options = useMemo(() => canonicalOptions(cluster, checked), [cluster, checked])
+  const selected = options.find((o) => o.value === canonical)
 
-  // チェックを外して canonical が選べなくなったら、選べる候補へ寄せる
-  // （正準名は「創作」させず、必ず variants か proposal の中から選ばせる契約のため）。
+  // チェックを変えたら推定し直す。人間が自分で選んだ後は、その選択肢が
+  // 消えたときだけ推定に戻す（正準名は「創作」させず、必ず候補・提案・
+  // 注記を剥がした形の中から選ばせる契約なので、消えたまま送れない）。
   useEffect(() => {
-    if (canonicalOptions.length > 0 && !canonicalOptions.includes(canonical)) {
-      setCanonical(canonicalOptions[0])
-    }
-  }, [canonicalOptions, canonical])
+    if (options.length === 0) return
+    if (canonicalTouched.current && options.some((o) => o.value === canonical)) return
+    const next = guessCanonical(cluster, checked)
+    if (next && next !== canonical) setCanonical(next)
+  }, [options, canonical, cluster, checked])
 
   function toggleChecked(raw: string) {
     setChecked((prev) => {
@@ -256,17 +248,38 @@ export default function ClusterCard({
     return () => registerActions(null)
   }, [actions, registerActions])
 
+  // 判断の対象になる値（判断済みは数えない）。問いかけの件数に使う。
+  const pending = cluster.values.filter((v) => !v.decidedAs)
+  const notes = cluster.hints
+    .map((h) => ({ hint: h, label: hintLabel(h, cluster.field) }))
+    .filter((n): n is { hint: string; label: NonNullable<typeof n.label> } => !!n.label)
+
   return (
     <div className="card review-card">
       <div className="review-card-head">
-        <span className="review-card-id">{cluster.id}</span>
-        <span className="review-card-rows">rows {cluster.rows}</span>
-        {cluster.hints.map((h) => (
-          <span className="tag" key={h}>
-            {h}
-          </span>
-        ))}
+        {/* **画面で答えるべき問いを最初に置く。** これが無いと、初めて開いた人には
+            チェックボックスの並びが何を意味するのか分からない。 */}
+        <h2 className="review-question">
+          この {pending.length} 個の表記は同じ{FIELD_NOUN[cluster.field]}ですか？
+        </h2>
+        <p className="review-card-meta muted">
+          候補 {cluster.id} ・ 合わせて {cluster.rows} 行
+        </p>
       </div>
+
+      {notes.length > 0 && (
+        <ul className="review-notes">
+          {notes.map((n) => (
+            <li key={n.hint} className="review-note">
+              <span className="review-note-title">{n.label.title}</span>
+              <span className="review-note-detail muted">{n.label.detail}</span>
+              <span className="review-note-slug muted" title="block.py が付けた内部の名前">
+                {n.hint}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <ul className="review-values">
         {cluster.values.map((v) => (
@@ -309,9 +322,10 @@ export default function ClusterCard({
       </ul>
       {!keepApartMode && (
         <p className="review-hint muted">
-          ↑ チェックを外すと、その値だけ採用から除ける（次回のキューに単独で出てくる）
+          <strong>同じものにだけチェックを残してください。</strong>
+          外した値は今回まとめられず、次回に単独の候補として出てきます
           {excluded.size > 0 &&
-            '。提案が別グループと判断した値は最初から外してある — 同じものだと思うなら足し直してよい'}
+            '。「提案では別グループ」の印が付いた値は LLM が別物と判断したもので、最初から外してあります — 同じだと思うなら足し直して構いません'}
         </p>
       )}
       {keepApartMode && (
@@ -332,16 +346,21 @@ export default function ClusterCard({
           <div className="review-proposal">
             <div className="review-field-row">
               <label className="review-field">
-                正準名
+                まとめた後の名前（自動で推定）
                 <select
                   className="field"
                   value={canonical}
-                  onChange={(e) => setCanonical(e.target.value)}
-                  disabled={canonicalOptions.length === 0}
+                  onChange={(e) => {
+                    canonicalTouched.current = true
+                    setCanonical(e.target.value)
+                  }}
+                  disabled={options.length === 0}
                 >
-                  {canonicalOptions.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
+                  {options.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.value}
+                      {o.derived ? '（注記を外した形）' : ''}
+                      {o.registered ? '（登録済み）' : ''}
                     </option>
                   ))}
                 </select>
@@ -376,15 +395,32 @@ export default function ClusterCard({
               )}
             </div>
 
+            {/* 何を根拠に自動で入ったのかを一行で言う。黙って埋まっていると
+                「直してよいのか」が分からない。 */}
+            <p className="review-proposal-meta muted">
+              {selected?.derived
+                ? '名前は注記（OP・ED・「2期」など）を外して組み立てました。この表記は元データには現れません'
+                : selected?.registered
+                  ? '判断済みの表記が既にこの名前で登録されているので、そこへ足します'
+                  : cluster.proposal
+                    ? '名前は LLM の提案です'
+                    : '名前は行数の多い表記から選びました'}
+              。合っていなければプルダウンから選び直してください
+            </p>
+
             {cluster.proposal && (
               <p className="review-proposal-meta muted">
-                提案（confidence: {cluster.proposal.confidence ?? '?'}
-                {cluster.proposal.source ? ` / source: ${cluster.proposal.source}` : ''}）
+                上の欄と下の理由は LLM の提案で埋めてあります（確信度:{' '}
+                {CONFIDENCE_LABEL[cluster.proposal.confidence ?? ''] ??
+                  cluster.proposal.confidence ??
+                  '不明'}
+                {cluster.proposal.source ? ` / ${cluster.proposal.source}` : ''}）。
+                <strong>そのまま採用せず、必ず自分で確かめてください。</strong>
               </p>
             )}
 
             <label className="review-reason-label">
-              理由（必須）
+              理由（必須。あとで判断を見直すときの手がかりになります）
               <textarea
                 ref={reasonRef}
                 className={
@@ -407,21 +443,50 @@ export default function ClusterCard({
         </>
       )}
 
+      {/* **どれを押せばよいかを画面で説明する。** 却下と「別物として固定」の違いは
+          名前だけでは伝わらない（前者はこの候補を見送るだけ、後者は今後の候補生成
+          からも外す）。一行ずつ添えてあるのはそのため。 */}
       <div className="review-actions">
-        <button type="button" className="review-btn" onClick={actions.accept} disabled={checked.size === 0}>
-          <kbd>a</kbd> 採用
+        <button
+          type="button"
+          className="review-btn review-btn-primary"
+          onClick={actions.accept}
+          disabled={checked.size === 0}
+        >
+          <span className="review-btn-name">
+            <kbd>a</kbd> 採用
+          </span>
+          <span className="review-btn-desc">
+            {checked.size === 0
+              ? 'チェックを1つ以上入れてください'
+              : `チェックした ${checked.size} 個を「${canonical}」にまとめる`}
+          </span>
         </button>
         <button type="button" className="review-btn" onClick={actions.reject}>
-          <kbd>r</kbd> 却下
+          <span className="review-btn-name">
+            <kbd>r</kbd> 却下
+          </span>
+          <span className="review-btn-desc">この候補はまとめない（別々のままにする）</span>
         </button>
         <button type="button" className="review-btn" onClick={actions.defer}>
-          <kbd>s</kbd> 保留
+          <span className="review-btn-name">
+            <kbd>s</kbd> 保留
+          </span>
+          <span className="review-btn-desc">判断を後回しにする（次回また出てくる）</span>
         </button>
         <button type="button" className="review-btn" onClick={actions.toggleKeepApart}>
-          <kbd>k</kbd> 別物として固定
+          <span className="review-btn-name">
+            <kbd>k</kbd> 別物として固定
+          </span>
+          <span className="review-btn-desc">2つを選んで「今後も一緒にしない」と記録する</span>
         </button>
         <button type="button" className="review-btn" onClick={actions.focusReason}>
-          <kbd>e</kbd> 理由編集
+          <span className="review-btn-name">
+            <kbd>e</kbd> 理由欄へ
+          </span>
+          <span className="review-btn-desc">
+            <kbd>Esc</kbd> で入力を抜ける
+          </span>
         </button>
       </div>
     </div>

@@ -140,23 +140,108 @@
   text-decoration: underline;
 }
 
+/* --- 使い方の説明 --- */
+
+.review-guide {
+  margin-bottom: 16px;
+}
+
+.review-guide-toggle {
+  padding: 4px 0;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.review-guide-toggle:hover {
+  color: var(--text-primary);
+}
+
+.review-guide-body {
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.review-guide-body p {
+  margin: 0 0 10px;
+}
+
+.review-guide-body p:last-child {
+  margin-bottom: 0;
+}
+
+.review-guide-steps {
+  margin: 0 0 10px;
+  padding-left: 1.3em;
+}
+
+.review-guide-steps li {
+  margin-bottom: 4px;
+}
+
 /* --- カード本体 --- */
 
 .review-card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin-bottom: 12px;
 }
 
-.review-card-id {
-  font-weight: 600;
+.review-question {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.review-card-meta {
+  margin: 4px 0 0;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
-.review-card-rows {
-  color: var(--text-secondary);
-  font-size: 13px;
+/* 候補に付いた注意書き。内部の識別子は末尾に小さく添えるだけにする。 */
+.review-notes {
+  margin: 0 0 12px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.review-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--surface-0);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.review-note + .review-note {
+  margin-top: 4px;
+}
+
+.review-note-title {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.review-note-detail {
+  flex: 1 1 260px;
+}
+
+.review-note-slug {
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .review-values {
@@ -318,17 +403,45 @@
   border-top: 1px solid var(--line-soft);
 }
 
+/* ボタンは「名前 + 一行の説明」の縦積み。名前だけでは却下と
+   「別物として固定」の違いが伝わらないため。 */
 .review-btn {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex: 1 1 160px;
+  max-width: 260px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-1);
   color: var(--text-primary);
   cursor: pointer;
   font-size: 13px;
+  text-align: left;
+}
+
+.review-btn-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.review-btn-desc {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* 一番よく押す操作を目立たせる。 */
+.review-btn-primary {
+  border-color: var(--accent);
+}
+
+.review-btn-primary:not(:disabled) .review-btn-name {
+  color: var(--accent);
 }
 
 .review-btn:hover {
@@ -355,4 +468,32 @@
   margin-top: 24px;
   padding-top: 12px;
   border-top: 1px solid var(--line-soft);
+}
+
+.review-footer-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.review-footer-note {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* 書き出しは1つしかない操作なので、カード内のボタンのように伸ばさない。 */
+.review-export {
+  flex: none;
+  max-width: none;
+  width: auto;
+}
+
+.review-done p {
+  margin: 0 0 6px;
+}
+
+.review-done p:last-child {
+  margin-bottom: 0;
+  font-size: 13px;
+  line-height: 1.7;
 }
