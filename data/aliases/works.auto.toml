@@ -890,3 +890,137 @@ source = "auto:v1"
 where = "第11回〜第15回 せーや ほか"
 decided_at = "2026-08-02T07:00:08+09:00"
 reason = "自動承認（規則 v1）: 両方とも 1 行ずつ (rows=1) があり、edges に agg,bigram が付いているため「ばくおん!」と「ばくおん!!」は同一ブランドの表記揺れと判断できる。"
+
+[[work]]
+id = "work-9cf4e208"
+canonical = "ソードアート・オンライン"
+kind = "work"
+variants = ["ソードアートオンライン", "ソードアート・オンライン", "ソードアート・オンラインII", "劇場版 ソードアート・オンライン -オーディナル・スケール-"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第2回〜第15回 あぴす ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: API の \"ソードアート・オンライン\" が正式タイトルとして存在し、edges で各表記が agg,bigram や substr で相互に結ばれている。\"II\" や映画版も同ブランド（ソードアート・オンラインシリーズ）に属し、行数や DJ の使用状況が一致するため同一グループにまとめた。"
+
+[[work]]
+id = "work-cf183685"
+canonical = "ストライクウィッチーズ"
+kind = "work"
+variants = ["ストライクウィッチーズ", "ストライクウィッチーズ2"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第1回〜第13回 あぴす ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: 両方の表記は同一ブランド『ストライクウィッチーズ』に属し、api_results に \"ストライクウィッチーズ\" が正式名称として存在する。rows=6 と rows=1、DJ が重複せず共通の曲タイトル \"STRIKE WITCHES 2~笑顔の魔法~\" などが確認できるため同一作品と判断した。"
+
+[[work]]
+id = "work-25b22528"
+canonical = "Engage Kiss"
+series = "Project Engage"
+kind = "work"
+variants = ["Engage Kiss", "Engage Kiss ED", "TVアニメ「Engage Kiss」 ED"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第11回 ha ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: edges は agg・bigram で結ばれ、\"Engage Kiss\" 系列は同一作品と判断できる。api_results に \"Project Engage\"（シリーズ名）が存在し、\"Engage Kiss\" を canonical とし series に記載。"
+
+[[work]]
+id = "work-2b597292"
+canonical = "ヤマノススメ"
+kind = "work"
+variants = ["ヤマノススメ", "ヤマノススメ サードシーズン"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第15回 tri ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: API の \"ヤマノススメ\" が作品として存在し、両候補は substr 関係で同一ブランドのシーズン違いである（rows: 3,1）。同一ブランドなので統合できる。"
+
+[[work]]
+id = "work-a16bda46"
+canonical = "PSYCHO-PASS"
+kind = "work"
+variants = ["PSYCHO-PASS", "PSYCHO-PASS サイコパス", "PYCHO-PASS", "サイコパス"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第3回〜第12回 あちょ ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: 複数のエッジ（substr, bigram）で全て同一作品と結びつき、表記揺れはタイポや注記の除去によるもの。作品名は実際に使われている \"PSYCHO-PASS\" が最も頻出。"
+
+[[work]]
+id = "work-05489300"
+canonical = "君のことが大大大大大好きな100人の彼女"
+kind = "work"
+variants = ["君のことが大大大大大好きな100人の彼女 2期 ED", "君のことが大大大大大好きな100人の彼女 2期 OP", "君のことが大大大大大好きな100人の彼女 OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第9回〜第13回 ha"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: エッジが全て \"agg\"／\"bigram\" で結びつき、OP・ED という注記を除けば同一作品であることが示されている。"
+
+[[work]]
+id = "work-8c5d1fc7"
+canonical = "青春ブタ野郎はバニーガール先輩の夢を見ない"
+series = "青春ブタ野郎シリーズ"
+kind = "work"
+variants = ["青春ブタ野郎はバニーガール先輩の夢を見ない", "青春ブタ野郎はバニーガール先輩の夢を見ない OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第7回〜第13回 ha ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: edges に agg,bigram があり、OP 表記は agg によって「OP」だけが付いた形である。api_results の title \"青春ブタ野郎シリーズ\" がシリーズ名として存在する。rows は 2, 1 行で、DJ が異なるが同一作品の別バージョンと確実に結びつく。"
+
+[[work]]
+id = "work-ec49e8e4"
+canonical = "ドラえもん"
+kind = "work"
+variants = ["ドラえもん", "ドラえもん のび太のワンニャン時空伝"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第5回〜第15回 あちょ ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: API の結果に \"ドラえもん\" が正式名称として存在し、両方とも \"ドラえもん\" 系列の作品である (rows: 2,1)。同一ブランドなのでまとめられる。"
+
+[[work]]
+id = "work-26a2ac8f"
+canonical = "ふつうの軽音部"
+kind = "work"
+variants = ["ふつうの軽音部 コラボMV", "ふつうの軽音部 劇中曲"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第13回〜第15回 ha"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: edges が substr で結ばれ、\"ふつうの軽音部\" が共通のシリーズ名。両方とも同じ DJ (ha) が使用している (rows: 1,1)。"
+
+[[work]]
+id = "work-273854c0"
+canonical = "Fate/stay night"
+kind = "work"
+variants = ["Fate/stay night", "Fate/stay night [Unlimited Blade Works]"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第8回〜第11回 おかりん ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: edges が substr で結び、\"Fate/stay night\" 系列の作品。DJ が別々だが同一ブランドであり、rows がそれぞれ 1。"
+
+[[work]]
+id = "work-34c16681"
+canonical = "その着せ替え人形は恋をする"
+kind = "work"
+variants = ["その着せ替え人形は恋をする 2期", "その着せ替え人形は恋をする OP"]
+approved = true
+confidence = "high"
+source = "auto:v1"
+where = "第9回〜第15回 ha ほか"
+decided_at = "2026-08-02T07:01:24+00:00"
+reason = "自動承認（規則 v1）: edges に agg と bigram があり、\"その着せ替え人形は恋をする\" が共通部分。OP と 2期は同一シリーズの別形態なので統合できる。"
