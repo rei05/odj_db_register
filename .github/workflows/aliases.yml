@@ -63,10 +63,16 @@ jobs:
           # 手元に届かず、レビュー GUI に 71 件が出たままになる。**
           # decisions.jsonl は追記専用の監査ログで、手元の判断と衝突し得るが、
           # 衝突しても両方を残せば済む（行の順序に意味は無い）。
+          #
+          # **auto.toml は回している field のぶんだけ書く。** 両方を並べると、
+          # work の実行では artists.auto.toml が存在せず
+          # `fatal: pathspec 'data/aliases/artists.auto.toml' did not match any files`
+          # で git add が丸ごと落ち、**1ファイルもステージされないまま commit に
+          # 進んで PR が作られない**（実際にそれで失敗した）。auto は承認 0 件でも
+          # ファイルを作るので、この1行は常に実在する。
           add-paths: |
             data/aliases/_proposed/
-            data/aliases/works.auto.toml
-            data/aliases/artists.auto.toml
+            data/aliases/${{ inputs.field }}s.auto.toml
             data/aliases/decisions.jsonl
           title: Alias candidates for ${{ inputs.field }} field
           body: |

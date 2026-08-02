@@ -287,11 +287,19 @@ def run(field: str, *, dry_run: bool = False) -> dict[str, Any]:
     """規則に合うクラスタを承認して *.auto.toml に書く。"""
     result = plan(field)
     result["wrote"] = []
-    if dry_run or not result["accepted"]:
+    if dry_run:
         return result
     # 既にあるぶんを読んでから連結して丸ごと書き直す（追記だと同じ id が積み上がる）。
+    #
+    # **承認が0件でも書く。** ファイルが実在することをこのコマンドの後条件に
+    # しておかないと、.github/workflows/aliases.yml の add-paths が指すパスが
+    # 無いまま git add に渡り、pathspec エラーで**1ファイルもステージされない
+    # まま commit に進んで PR が作られない**（実際にそれで失敗した）。
+    # 中身は同じ入力から同じバイト列になるので、0件なら差分は出ない。
     entries = store.load_auto_entries(field) + [a["entry"] for a in result["accepted"]]
     written = store.write_auto_entries(field, entries)
+    if not result["accepted"]:
+        return result  # 中身を変えていないので「書いた」とは報告しない
     log = None
     for item in result["accepted"]:
         log = store.append_decision(_decision(field, "auto-accept", item["entry"]))

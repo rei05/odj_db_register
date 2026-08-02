@@ -189,7 +189,14 @@ class AutoSkipTest(unittest.TestCase):
         self.assertEqual(skip_codes(), [code])
         run_auto("--field", "work")
         self.assertEqual(store.load_auto_entries("work"), [])
-        self.assertFalse(store.auto_entries_path("work").exists())
+        # ファイル自体は作る（中身は空）。**実在することがこのコマンドの後条件**で、
+        # aliases.yml の add-paths が固定のパスを指すため。詳細は auto.run() を参照。
+        self.assertTrue(store.auto_entries_path("work").exists())
+        # 承認していないので判断ログに auto-accept は積まない（already-decided の
+        # ケースでは人手の判断が先に入っているので、ファイルの有無では見ない）。
+        self.assertEqual(
+            [r for r in store.load_decisions() if r.get("action") == "auto-accept"], []
+        )
 
     def test_artist_as_work_hint_is_left_to_a_human(self) -> None:
         # 実データではここに「星街すいせい ← さくらみこ」のような合同名義の
@@ -346,6 +353,41 @@ class AutoSkipTest(unittest.TestCase):
                 },
             )
             self.assert_only_skipped("conflict")
+
+
+class AutoOutputPathTest(unittest.TestCase):
+    """*.auto.toml は「実行したら必ず在る」。
+
+    .github/workflows/aliases.yml の add-paths が固定のパスを指しており、
+    そこに無いファイルを並べると `git add` が
+    `fatal: pathspec '…' did not match any files` で丸ごと落ちる。**1ファイルも
+    ステージされないまま commit に進んで PR が作られない**（実際にそれで
+    ワークフローが失敗した）ので、承認 0 件でもファイルは作る。
+    """
+
+    def test_the_file_exists_even_when_nothing_is_approved(self) -> None:
+        with sandbox():
+            # 危険なヒント付き＝1件も承認されないクラスタだけを置く。
+            write_clusters(
+                "work",
+                [make_cluster("work-0001", ["けいおん!", "けいおん"],
+                              hints=("artist-as-work",))],
+            )
+            code, _out = run_auto("--field", "work")
+            self.assertEqual(code, 0)
+            self.assertTrue(store.auto_entries_path("work").exists())
+            self.assertEqual(store.load_auto_entries("work"), [])
+
+    def test_the_file_stays_byte_identical_when_nothing_is_approved(self) -> None:
+        # 0 件の実行で中身が変わると、ワークフローが毎回中身の無い差分で PR を
+        # 作ってしまう。同じ入力からは同じバイト列になることを担保する。
+        with sandbox():
+            setup_work()
+            run_auto("--field", "work")
+            path = store.auto_entries_path("work")
+            before = path.read_bytes()
+            run_auto("--field", "work")  # 2回目は承認 0 件
+            self.assertEqual(path.read_bytes(), before)
 
 
 class AutoDryRunTest(unittest.TestCase):
