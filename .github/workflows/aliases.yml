@@ -46,12 +46,34 @@ jobs:
           # リポジトリの Settings > Secrets に GROQ_API_KEY を事前に手動登録しておく必要がある。
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
+      # 規則で安全と言い切れるぶんは、候補を作った**この時点で**承認まで済ませる。
+      # 人間に判断を求める対象を、PR が届く前に絞りきるのが狙い（work では 150
+      # クラスタ中 71 個がここで消え、レビュー GUI には最初から出てこない）。
+      # ask の後でなければならない。auto は _proposed/ の提案を規則に当てる処理で、
+      # 提案が無いクラスタは「提案が無い」として人間に回すため。
+      # ネットワークには出ないので、ここが失敗しても外部要因ではない。
+      - name: Auto-approve the candidates that rules can settle
+        run: PYTHONPATH=src python -m odj.aliases auto --field ${{ inputs.field }}
+
       - name: Create pull request with candidates
         uses: peter-evans/create-pull-request@v7
         with:
           branch: aliases/${{ inputs.field }}-proposal
-          add-paths: data/aliases/_proposed/
+          # _proposed/ だけでなく auto が書いたぶんも運ぶ。**これが無いと自動承認が
+          # 手元に届かず、レビュー GUI に 71 件が出たままになる。**
+          # decisions.jsonl は追記専用の監査ログで、手元の判断と衝突し得るが、
+          # 衝突しても両方を残せば済む（行の順序に意味は無い）。
+          add-paths: |
+            data/aliases/_proposed/
+            data/aliases/works.auto.toml
+            data/aliases/artists.auto.toml
+            data/aliases/decisions.jsonl
           title: Alias candidates for ${{ inputs.field }} field
           body: |
-            Groq API が生成した候補です。**中身のレビューは不要**。すべて approved=false なので公開データ（aliases.json）には出ません。マージ後、ローカルで `npm run review` を実行して1件ずつ判断してください。
+            Groq API が生成した候補と、そのうち**規則で安全と言い切れるぶんの自動承認**です。
+
+            - `data/aliases/_proposed/` … 提案。approved を持たないので公開データ（aliases.json）には出ません
+            - `data/aliases/*.auto.toml` … 規則を全部満たしたぶん。**approved=true** なので、`odj.aliases export` を回すと公開データに入ります。規則は `src/odj/aliases/auto.py` の冒頭にあります
+
+            **中身のレビューは不要です。** 自動承認したぶんはレビュー GUI に出てこないので、マージ後にローカルで `npm run review` を実行し、**残った候補だけ**を判断してください。自動承認をやり直したいときは `python3 -m odj.aliases auto --field ${{ inputs.field }} --undo` で全部取り消せます（取り消した値は再び候補に戻ります）。
           delete-branch: false

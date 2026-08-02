@@ -49,7 +49,7 @@ function Guide({ open, onToggle }: { open: boolean; onToggle: () => void }) {
             <strong>ここに出るのは、人間の判断が要るものだけです。</strong>
             規則で安全と言い切れる候補（提案がクラスタ全体を覆っていて、
             アーティスト名の混入や大きな塊を割った破片といった危険の印が無いもの）は
-            画面を開いたときに自動で承認済みになるので、もう出てきません。
+            候補を作る側で承認済みになっているので、ここには出てきません。
           </p>
           <ol className="review-guide-steps">
             <li>

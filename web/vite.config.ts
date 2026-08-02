@@ -357,51 +357,24 @@ async function readProposals(field: ReviewField): Promise<Map<string, Proposal>>
 }
 
 /**
- * キューを組み立てる前に `odj.aliases auto` を回して、規則で安全と言い切れる候補を
- * 先に片付けてしまう。
+ * キューを組み立てる。**この画面は「人間の判断が要るものだけ」を出すところ**で、
+ * 規則で安全と言い切れる候補（work では 150 クラスタ中 71 個）は
+ * `<field>s.auto.toml` に載っているぶんとして下の decidedValues から外れ、
+ * 最初から出てこない。
  *
- * **この画面は「人間の判断が要るものだけ」を出すところ**という位置付けにしてある。
- * 自動承認の対象（work では 150 クラスタ中 71 個）は人間の判断が不要と決めた層
- * なので、承認ボタンを押させること自体が無駄な作業になる。CLI を手で回すのを
- * 前提にすると回し忘れたぶんがそのままキューに出てしまうので、画面を開いた
- * ときに必ず最新化されるよう、ここから呼ぶ。
- *
- * 規則そのものは src/odj/aliases/auto.py に1か所だけ置く。TS 側に移植すると
- * 「画面が出さないクラスタ」と「auto が承認するクラスタ」が静かにずれる。
- *
- * auto は冪等（2回目以降は 0 件）で、ネットワークにも出ない。失敗しても
- * キューを落とす理由にはならないので、警告だけ出して先へ進む
- * （_proposed が無い、clusters.json が古い、といった状況でも画面は開きたい）。
+ * **ここで `odj.aliases auto` は回さない。** 自動承認は候補を作る側の仕事で、
+ * .github/workflows/aliases.yml が fetch → block → ask → auto の順に回し、
+ * 結果を PR で運んでくる（人間に判断を求める対象は、PR が届く時点で絞りきる）。
+ * 画面を開くたびに回す作りにもできるが、そうすると `auto --undo` で取り消した
+ * 直後に画面を開いただけで復活してしまい、取り消しが機能しなくなる。
+ * 手元で block をやり直したときは CLAUDE.md のとおり auto も回す。
  */
-function runAutoApprove(field: ReviewField): Promise<void> {
-  return new Promise((resolve) => {
-    execFile(
-      'python3',
-      ['-m', 'odj.aliases', 'auto', '--field', field],
-      { cwd: repoRoot, env: { ...process.env, PYTHONPATH: 'src' }, maxBuffer: 16 * 1024 * 1024 },
-      (error, _stdout, stderr) => {
-        if (error) {
-          console.warn(
-            `[review-api] odj.aliases auto --field ${field} に失敗しました` +
-              `（自動承認ぶんを飛ばして続行）: ${stderr.trim() || error.message}`,
-          )
-        }
-        resolve()
-      },
-    )
-  })
-}
-
 async function handleQueue(url: URL, res: ServerResponse): Promise<void> {
   const field = url.searchParams.get('field')
   if (field !== 'work' && field !== 'artist') {
     sendJson(res, 400, { ok: false, error: 'field は work か artist を指定してください' })
     return
   }
-  // 規則で片付くぶんを先に承認してしまう。これを通ったクラスタは下の
-  // decidedValues に載るので、この画面には最初から出てこない。
-  await runAutoApprove(field)
-
   const clustersPath = path.join(repoRoot, 'out', 'aliases', `clusters.${field}.json`)
   let raw: string
   try {
